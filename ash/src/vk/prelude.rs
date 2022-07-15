@@ -1,3 +1,5 @@
+use std::ptr::{addr_of, addr_of_mut};
+
 use crate::vk;
 
 /// Holds 24 bits in the least significant bits of memory,
@@ -57,9 +59,37 @@ impl From<vk::Extent2D> for vk::Rect2D {
     }
 }
 
+pub unsafe trait Extends<Base: ?Sized> {}
+
 /// Structures implementing this trait are layout-compatible with [`vk::BaseInStructure`] and
 /// [`vk::BaseOutStructure`]. Such structures have an `s_type` field indicating its type, which
 /// must always match the value of [`TaggedStructure::STRUCTURE_TYPE`].
 pub unsafe trait TaggedStructure {
     const STRUCTURE_TYPE: vk::StructureType;
+
+    /// Prepends the given extension struct between the root and the first pointer. This
+    /// method only exists on structs that can be passed to a function directly. Only
+    /// valid extension structs can be pushed into the chain.
+    /// If the chain looks like `A -> B -> C`, and you call `x.push_next(&mut D)`, then the
+    /// chain will look like `A -> D -> B -> C`.
+    fn push_next<T: TaggedStructure + Extends<Self>>(mut self, next: &mut T) -> Self
+    where
+        Self: Sized,
+    {
+        unsafe {
+            // `next` here can contain a pointer chain. This means that we must correctly
+            // attach he head to the root and the tail to the rest of the chain
+            // For example:
+            //
+            // next = A -> B
+            // Before: `Root -> C -> D -> E`
+            // After: `Root -> A -> B -> C -> D -> E`
+            //                 ^^^^^^
+            //                 next chain
+            let last_next = vk::ptr_chain_iter(next).last().unwrap();
+            (*last_next).p_next = (*(addr_of!(self) as *const vk::BaseOutStructure)).p_next;
+            (*(addr_of_mut!(self) as *mut vk::BaseOutStructure)).p_next = <*mut T>::cast(next) as *mut vk::BaseOutStructure;
+        }
+        self
+    }
 }

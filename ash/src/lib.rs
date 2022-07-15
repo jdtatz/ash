@@ -175,7 +175,7 @@ macro_rules! match_in_struct {
 
 #[cfg(test)]
 mod tests {
-    use super::vk;
+    use super::{vk, prelude::*};
     #[test]
     fn test_ptr_chains() {
         let mut variable_pointers = vk::PhysicalDeviceVariablePointerFeatures::default();

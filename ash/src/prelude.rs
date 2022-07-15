@@ -3,6 +3,7 @@ use std::convert::TryInto;
 use std::fmt;
 
 use crate::vk;
+pub use crate::vk::prelude::*;
 pub type VkResult<T> = Result<T, vk::Result>;
 
 impl vk::Result {

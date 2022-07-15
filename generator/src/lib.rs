@@ -1516,7 +1516,6 @@ pub fn derive_debug(
 
 pub fn derive_setters(
     struct_: &vkxml::Struct,
-    root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
 ) -> Option<TokenStream> {
     if &struct_.name == "VkBaseInStructure"
@@ -1737,55 +1736,13 @@ pub fn derive_setters(
         })
     });
 
-    let extends_name = format_ident!("Extends{}", name);
-
-    // The `p_next` field should only be considered if this struct is also a root struct
-    let root_struct_next_field = next_field.filter(|_| root_structs.contains(&name));
-
-    // We only implement a next methods for root structs with a `pnext` field.
-    let next_function = if let Some(next_field) = root_struct_next_field {
-        assert_eq!(next_field.basetype, "void");
-        let mutability = if next_field.is_const {
-            quote!(const)
-        } else {
-            quote!(mut)
-        };
-        quote! {
-            /// Prepends the given extension struct between the root and the first pointer. This
-            /// method only exists on structs that can be passed to a function directly. Only
-            /// valid extension structs can be pushed into the chain.
-            /// If the chain looks like `A -> B -> C`, and you call `x.push_next(&mut D)`, then the
-            /// chain will look like `A -> D -> B -> C`.
-            pub fn push_next<T: #extends_name>(mut self, next: &'a mut T) -> Self {
-                unsafe {
-                    let next_ptr = <*#mutability T>::cast(next);
-                    // `next` here can contain a pointer chain. This means that we must correctly
-                    // attach he head to the root and the tail to the rest of the chain
-                    // For example:
-                    //
-                    // next = A -> B
-                    // Before: `Root -> C -> D -> E`
-                    // After: `Root -> A -> B -> C -> D -> E`
-                    //                 ^^^^^^
-                    //                 next chain
-                    let last_next = ptr_chain_iter(next).last().unwrap();
-                    (*last_next).p_next = self.p_next as _;
-                    self.p_next = next_ptr;
-                }
-                self
-            }
-        }
-    } else {
-        quote!()
-    };
-
-    // Root structs come with their own trait that structs that extend
-    // this struct will implement
-    let next_trait = if root_struct_next_field.is_some() {
-        quote!(pub unsafe trait #extends_name {})
-    } else {
-        quote!()
-    };
+    // // Root structs come with their own trait that structs that extend
+    // // this struct will implement
+    // let next_trait = if root_struct_next_field.is_some() {
+    //     quote!(pub unsafe trait #extends_name {})
+    // } else {
+    //     quote!()
+    // };
 
     let lifetime = has_lifetimes.contains(&name).then(|| quote!(<'a>));
 
@@ -1794,10 +1751,10 @@ pub fn derive_setters(
         .extends
         .iter()
         .flat_map(|extends| extends.split(','))
-        .map(|extends| format_ident!("Extends{}", name_to_tokens(extends)))
+        .map(|extends| name_to_tokens(extends))
         .map(|extends| {
             // Extension structs always have a pNext, and therefore always have a lifetime.
-            quote!(unsafe impl #extends for #name<'_> {})
+            quote!(unsafe impl Extends<#extends<'_>> for #name<'_> {})
         });
 
     let impl_structure_type_trait = structure_type_field.map(|s_type| {
@@ -1819,12 +1776,9 @@ pub fn derive_setters(
     let q = quote! {
         #impl_structure_type_trait
         #(#impl_extend_trait)*
-        #next_trait
 
         impl #lifetime #name #lifetime {
             #(#setters)*
-
-            #next_function
         }
     };
 
@@ -1844,7 +1798,6 @@ pub fn manual_derives(struct_: &vkxml::Struct) -> TokenStream {
 }
 pub fn generate_struct(
     struct_: &vkxml::Struct,
-    root_structs: &HashSet<Ident>,
     union_types: &HashSet<&str>,
     has_lifetimes: &HashSet<Ident>,
 ) -> TokenStream {
@@ -1946,7 +1899,7 @@ pub fn generate_struct(
 
     let debug_tokens = derive_debug(struct_, union_types, has_lifetime);
     let default_tokens = derive_default(struct_, has_lifetime);
-    let setter_tokens = derive_setters(struct_, root_structs, has_lifetimes);
+    let setter_tokens = derive_setters(struct_, has_lifetimes);
     let manual_derive_tokens = manual_derives(struct_);
     let dbg_str = if debug_tokens.is_none() {
         quote!(#[cfg_attr(feature = "debug", derive(Debug))])
@@ -2067,7 +2020,6 @@ pub fn root_structs(definitions: &[&vkxml::DefinitionsElement]) -> HashSet<Ident
 pub fn generate_definition(
     definition: &vkxml::DefinitionsElement,
     union_types: &HashSet<&str>,
-    root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
     bitflags_cache: &mut HashSet<Ident>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
@@ -2080,7 +2032,6 @@ pub fn generate_definition(
         vkxml::DefinitionsElement::Typedef(ref typedef) => Some(generate_typedef(typedef)),
         vkxml::DefinitionsElement::Struct(ref struct_) => Some(generate_struct(
             struct_,
-            root_structs,
             union_types,
             has_lifetimes,
         )),
@@ -2499,14 +2450,12 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         };
     }
 
-    let root_structs = root_structs(&definitions);
     let definition_code: Vec<_> = definitions
         .into_iter()
         .filter_map(|def| {
             generate_definition(
                 def,
                 &union_types,
-                &root_structs,
                 &has_lifetimes,
                 &mut bitflags_cache,
                 &mut const_values,
@@ -2566,7 +2515,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         use std::marker::PhantomData;
         use std::fmt;
         use std::os::raw::*;
-        use crate::vk::{Handle, ptr_chain_iter};
+        use crate::vk::Handle;
         use crate::vk::aliases::*;
         use crate::vk::bitflags::*;
         use crate::vk::constants::*;
