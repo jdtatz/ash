@@ -22,6 +22,8 @@ mod extensions;
 pub use extensions::*;
 mod feature_extensions;
 pub use feature_extensions::*;
+mod formats;
+pub use formats::*;
 mod features;
 pub use features::*;
 mod prelude;

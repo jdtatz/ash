@@ -1347,6 +1347,172 @@ pub fn generate_enum<'a>(
     }
 }
 
+fn generate_format_component(name: &str, bits: &str, numeric_format: &str) -> TokenStream {
+    let kind = match name {
+        "R" => quote!(FormatComponentKind::R),
+        "G" => quote!(FormatComponentKind::G),
+        "B" => quote!(FormatComponentKind::B),
+        "A" => quote!(FormatComponentKind::A),
+        "D" => quote!(FormatComponentKind::D),
+        "S" => quote!(FormatComponentKind::S),
+        _ => unimplemented!(),
+    };
+    let bits = if let Ok(n) = bits.parse::<u8>() {
+        quote!(FormatComponentBits::Bits(#n))
+    } else if "compressed" == bits {
+        quote!(FormatComponentBits::Compressed)
+    } else {
+        unimplemented!()
+    };
+    let numerical_type = match numeric_format {
+        "SFLOAT" => quote!(NumericalType::SFLOAT),
+        "SINT" => quote!(NumericalType::SINT),
+        "SNORM" => quote!(NumericalType::SNORM),
+        "SRGB" => quote!(NumericalType::SRGB),
+        "SSCALED" => quote!(NumericalType::SSCALED),
+        "UFLOAT" => quote!(NumericalType::UFLOAT),
+        "UINT" => quote!(NumericalType::UINT),
+        "UNORM" => quote!(NumericalType::UNORM),
+        "USCALED" => quote!(NumericalType::USCALED),
+        _ => unimplemented!(),
+    };
+    quote!(FormatComponent {
+        kind: #kind,
+        bits: #bits,
+        numerical_type: #numerical_type,
+    })
+}
+
+pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
+    let vk_parse::Format {
+        name,
+        class,
+        blockSize,
+        texelsPerBlock,
+        blockExtent,
+        packed,
+        compressed,
+        chroma,
+        children,
+        ..
+    } = format;
+
+    let packed = packed.map_or_else(|| quote!(None), |p| quote!(Some(#p)));
+    let compressed = compressed
+        .as_deref()
+        .map_or_else(|| quote!(None), |c| quote!(Some(#c)));
+    let chroma = match chroma.as_deref() {
+        Some("420") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_420)),
+        Some("422") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_422)),
+        Some("444") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_444)),
+        None => quote!(None),
+        _ => unimplemented!(),
+    };
+    let block_extent = if let Some(block_extent) = blockExtent {
+        let mut block_extents = block_extent.split(',');
+        let width = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
+        let height = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
+        let depth = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
+        quote!(Some(Extent3D { width: #width, height: #height, depth: #depth }))
+    } else {
+        quote!(None)
+    };
+
+    // let compressed = match compressed.as_deref() {
+    //     Some("BC") => quote!(Some(VideoCompressionTypeFlagsKHR::BC)),
+    //     Some("ETC2") => quote!(Some(VideoCompressionTypeFlagsKHR::ETC2)),
+    //     Some("EAC") => quote!(Some(VideoCompressionTypeFlagsKHR::EAC)),
+    //     Some("ASTC LDR") => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_LDR)),
+    //     Some("PVRTC") => quote!(Some(VideoCompressionTypeFlagsKHR::PVRTC)),
+    //     Some("ASTC HDR") => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_HDR)),
+    //     None => quote!(None),
+    //     _ => unimplemented!()
+    // };
+
+    let spirv_image_format = children
+        .iter()
+        .filter_map(get_variant!(vk_parse::FormatChild::SpirvImageFormat {
+            name
+        }))
+        .next()
+        .map_or_else(|| quote!(None), |f| quote!(Some(#f)));
+
+    let flat_components = children
+        .iter()
+        .filter_map(|c| match c {
+            vk_parse::FormatChild::Component {
+                name,
+                bits,
+                numericFormat,
+                planeIndex: None,
+                ..
+            } => Some(generate_format_component(name, bits, numericFormat)),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let planar_components = children
+        .iter()
+        .filter_map(|c| match c {
+            vk_parse::FormatChild::Component {
+                name,
+                bits,
+                numericFormat,
+                planeIndex: Some(p),
+                ..
+            } => Some((*p, generate_format_component(name, bits, numericFormat))),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_ne!(flat_components.is_empty(), planar_components.is_empty());
+    let components = if flat_components.is_empty() {
+        let planes = children
+            .iter()
+            .filter_map(get_variant!(vk_parse::FormatChild::Plane {
+                index,
+                widthDivisor,
+                heightDivisor,
+                compatible
+            }))
+            .map(|(&index, width_divisor, height_divisor, compatible)| {
+                let components =
+                    planar_components
+                        .iter()
+                        .filter_map(|(i, c)| if *i == index { Some(c) } else { None });
+
+                let compatible = variant_ident("VkFormat", compatible);
+                quote! {
+                    FormatPlane {
+                        width_divisor: #width_divisor,
+                        height_divisor: #height_divisor,
+                        compatible: Format::#compatible,
+                        components: &[ #(#components),* ]
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+        quote! { FormatComponents::Planar(&[ #(#planes),* ]) }
+    } else {
+        quote! { FormatComponents::Flat(&[ #(#flat_components),* ]) }
+    };
+
+    (
+        variant_ident("VkFormat", name),
+        quote! {
+            FormatDesc {
+                class: #class,
+                block_size: #blockSize,
+                texels_per_block: #texelsPerBlock,
+                block_extent: #block_extent,
+                packed: #packed,
+                compressed: #compressed,
+                chroma: #chroma,
+                spirv_image_format: #spirv_image_format,
+                components: #components,
+            }
+        },
+    )
+}
+
 pub fn generate_result(ident: Ident, enum_: &vk_parse::Enums) -> TokenStream {
     let notation = enum_.children.iter().filter_map(|elem| {
         let (variant_name, notation) = match *elem {
@@ -2437,6 +2603,18 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .flat_map(|constants| &constants.elements)
         .collect();
 
+    let formats: Vec<&vk_parse::Format> = spec2
+        .0
+        .iter()
+        .filter_map(get_variant!(vk_parse::RegistryChild::Formats))
+        .flat_map(|fs| &fs.children)
+        .collect();
+
+    let format_matches = formats.iter().map(|f| {
+        let (name, desc) = generate_format(f);
+        quote!(Format::#name => Some(#desc))
+    });
+
     let mut fn_cache = HashSet::new();
     let mut bitflags_cache = HashSet::new();
     let mut const_cache = HashSet::new();
@@ -2568,6 +2746,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         File::create(vk_dir.join("extensions.rs")).expect("vk/extensions.rs");
     let mut vk_feature_extensions_file =
         File::create(vk_dir.join("feature_extensions.rs")).expect("vk/feature_extensions.rs");
+    let mut vk_formats_file = File::create(vk_dir.join("formats.rs")).expect("vk/formats.rs");
     let mut vk_const_debugs_file =
         File::create(vk_dir.join("const_debugs.rs")).expect("vk/const_debugs.rs");
     let mut vk_aliases_file = File::create(vk_dir.join("aliases.rs")).expect("vk/aliases.rs");
@@ -2611,6 +2790,104 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         #(#constants_code)*
     };
 
+    let formats_code = quote! {
+        use crate::vk::bitflags::*;
+        use crate::vk::enums::*;
+        use crate::vk::definitions::*;
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub enum NumericalType {
+            #[doc="The components are signed floating-point numbers"]
+            SFLOAT,
+            #[doc="The components are signed integer values in the range `[-2^(n-1),2^(n-1)-1]`"]
+            SINT,
+            #[doc="The components are signed normalized values in the range `[-1,1]`"]
+            SNORM,
+            #[doc="The R, G, and B components are unsigned normalized values that represent values using sRGB nonlinear encoding, while the A component (if one exists) is a regular unsigned normalized value"]
+            SRGB,
+            #[doc="The components are signed integer values that get converted to floating-point in the range `[-2^(n-1),2^(n-1)-1]`"]
+            SSCALED,
+            #[doc="The components are unsigned floating-point numbers (used by packed, shared exponent, and some compressed formats)"]
+            UFLOAT,
+            #[doc="The components are unsigned integer values in the range `[0,2^n-1]`"]
+            UINT,
+            #[doc="The components are unsigned normalized values in the range `[0,1]`"]
+            UNORM,
+            #[doc="The components are unsigned integer values that get converted to floating-point in the range `[0,2^n-1]`"]
+            USCALED,
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub enum FormatComponentKind {
+            R,
+            G,
+            B,
+            A,
+            D,
+            S,
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub enum FormatComponentBits {
+            Compressed,
+            Bits(u8),
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub struct FormatComponent {
+            pub kind: FormatComponentKind,
+            pub bits: FormatComponentBits,
+            pub numerical_type: NumericalType,
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub struct FormatPlane {
+            pub width_divisor: u8,
+            pub height_divisor: u8,
+            pub compatible: Format,
+            pub components: &'static [ FormatComponent ]
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        pub enum FormatComponents {
+            Flat(&'static [FormatComponent]),
+            Planar(&'static [FormatPlane]),
+        }
+
+        #[cfg_attr(feature = "debug", derive(Debug))]
+        #[derive(Clone, Copy)]
+        #[non_exhaustive]
+        pub struct FormatDesc {
+            pub class: &'static str,
+            pub block_size: u8,
+            pub texels_per_block: u8,
+            pub block_extent: Option<Extent3D>,
+            pub packed: Option<u8>,
+            pub compressed: Option<&'static str>,
+            pub chroma: Option<VideoChromaSubsamplingFlagsKHR>,
+            pub spirv_image_format: Option<&'static str>,
+            pub components: FormatComponents,
+        }
+
+        pub const fn format_desc(format: Format) -> Option<FormatDesc> {
+            match format {
+                #(#format_matches,)*
+                _ => None,
+            }
+        }
+    };
+
     let extension_code = quote! {
         use std::os::raw::*;
         use crate::vk::platform_types::*;
@@ -2649,6 +2926,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     write!(&mut vk_enums_file, "{}", enum_code).expect("Unable to write vk/enums.rs");
     write!(&mut vk_bitflags_file, "{}", bitflags_code).expect("Unable to write vk/bitflags.rs");
     write!(&mut vk_constants_file, "{}", constants_code).expect("Unable to write vk/constants.rs");
+    write!(&mut vk_formats_file, "{}", formats_code).expect("Unable to write vk/formats.rs");
     write!(&mut vk_extensions_file, "{}", extension_code)
         .expect("Unable to write vk/extensions.rs");
     write!(
