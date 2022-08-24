@@ -4028,6 +4028,366 @@ impl fmt::Debug for SparseMemoryBindFlags {
         debug_flags(f, KNOWN, self.0)
     }
 }
+impl fmt::Debug for StdVideoDecodeH264FieldOrderCount {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TOP => Some("TOP"),
+            Self::BOTTOM => Some("BOTTOM"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264AspectRatioIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::UNSPECIFIED => Some("UNSPECIFIED"),
+            Self::SQUARE => Some("SQUARE"),
+            Self::TYPE_12_11 => Some("TYPE_12_11"),
+            Self::TYPE_10_11 => Some("TYPE_10_11"),
+            Self::TYPE_16_11 => Some("TYPE_16_11"),
+            Self::TYPE_40_33 => Some("TYPE_40_33"),
+            Self::TYPE_24_11 => Some("TYPE_24_11"),
+            Self::TYPE_20_11 => Some("TYPE_20_11"),
+            Self::TYPE_32_11 => Some("TYPE_32_11"),
+            Self::TYPE_80_33 => Some("TYPE_80_33"),
+            Self::TYPE_18_11 => Some("TYPE_18_11"),
+            Self::TYPE_15_11 => Some("TYPE_15_11"),
+            Self::TYPE_64_33 => Some("TYPE_64_33"),
+            Self::TYPE_160_99 => Some("TYPE_160_99"),
+            Self::TYPE_4_3 => Some("TYPE_4_3"),
+            Self::TYPE_3_2 => Some("TYPE_3_2"),
+            Self::TYPE_2_1 => Some("TYPE_2_1"),
+            Self::EXTENDED_SAR => Some("EXTENDED_SAR"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264CabacInitIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TYPE_0 => Some("TYPE_0"),
+            Self::TYPE_1 => Some("TYPE_1"),
+            Self::TYPE_2 => Some("TYPE_2"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264ChromaFormatIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::MONOCHROME => Some("MONOCHROME"),
+            Self::TYPE_420 => Some("TYPE_420"),
+            Self::TYPE_422 => Some("TYPE_422"),
+            Self::TYPE_444 => Some("TYPE_444"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264DisableDeblockingFilterIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::DISABLED => Some("DISABLED"),
+            Self::ENABLED => Some("ENABLED"),
+            Self::PARTIAL => Some("PARTIAL"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264Level {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TYPE_1_0 => Some("TYPE_1_0"),
+            Self::TYPE_1_1 => Some("TYPE_1_1"),
+            Self::TYPE_1_2 => Some("TYPE_1_2"),
+            Self::TYPE_1_3 => Some("TYPE_1_3"),
+            Self::TYPE_2_0 => Some("TYPE_2_0"),
+            Self::TYPE_2_1 => Some("TYPE_2_1"),
+            Self::TYPE_2_2 => Some("TYPE_2_2"),
+            Self::TYPE_3_0 => Some("TYPE_3_0"),
+            Self::TYPE_3_1 => Some("TYPE_3_1"),
+            Self::TYPE_3_2 => Some("TYPE_3_2"),
+            Self::TYPE_4_0 => Some("TYPE_4_0"),
+            Self::TYPE_4_1 => Some("TYPE_4_1"),
+            Self::TYPE_4_2 => Some("TYPE_4_2"),
+            Self::TYPE_5_0 => Some("TYPE_5_0"),
+            Self::TYPE_5_1 => Some("TYPE_5_1"),
+            Self::TYPE_5_2 => Some("TYPE_5_2"),
+            Self::TYPE_6_0 => Some("TYPE_6_0"),
+            Self::TYPE_6_1 => Some("TYPE_6_1"),
+            Self::TYPE_6_2 => Some("TYPE_6_2"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264MemMgmtControlOp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::END => Some("END"),
+            Self::UNMARK_SHORT_TERM => Some("UNMARK_SHORT_TERM"),
+            Self::UNMARK_LONG_TERM => Some("UNMARK_LONG_TERM"),
+            Self::MARK_LONG_TERM => Some("MARK_LONG_TERM"),
+            Self::SET_MAX_LONG_TERM_INDEX => Some("SET_MAX_LONG_TERM_INDEX"),
+            Self::UNMARK_ALL => Some("UNMARK_ALL"),
+            Self::MARK_CURRENT_AS_LONG_TERM => Some("MARK_CURRENT_AS_LONG_TERM"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264ModificationOfPicNumsIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::SHORT_TERM_SUBTRACT => Some("SHORT_TERM_SUBTRACT"),
+            Self::SHORT_TERM_ADD => Some("SHORT_TERM_ADD"),
+            Self::LONG_TERM => Some("LONG_TERM"),
+            Self::END => Some("END"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264NonVclNaluType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::SPS => Some("SPS"),
+            Self::PPS => Some("PPS"),
+            Self::AUD => Some("AUD"),
+            Self::PREFIX => Some("PREFIX"),
+            Self::END_OF_SEQUENCE => Some("END_OF_SEQUENCE"),
+            Self::END_OF_STREAM => Some("END_OF_STREAM"),
+            Self::PRECODED => Some("PRECODED"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264PictureType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::P => Some("P"),
+            Self::B => Some("B"),
+            Self::I => Some("I"),
+            Self::IDR => Some("IDR"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264PocType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TYPE_0 => Some("TYPE_0"),
+            Self::TYPE_1 => Some("TYPE_1"),
+            Self::TYPE_2 => Some("TYPE_2"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264ProfileIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::BASELINE => Some("BASELINE"),
+            Self::MAIN => Some("MAIN"),
+            Self::HIGH => Some("HIGH"),
+            Self::HIGH_444_PREDICTIVE => Some("HIGH_444_PREDICTIVE"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264SliceType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::P => Some("P"),
+            Self::B => Some("B"),
+            Self::I => Some("I"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH264WeightedBipredIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::DEFAULT => Some("DEFAULT"),
+            Self::EXPLICIT => Some("EXPLICIT"),
+            Self::IMPLICIT => Some("IMPLICIT"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH265ChromaFormatIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::MONOCHROME => Some("MONOCHROME"),
+            Self::TYPE_420 => Some("TYPE_420"),
+            Self::TYPE_422 => Some("TYPE_422"),
+            Self::TYPE_444 => Some("TYPE_444"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH265Level {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TYPE_1_0 => Some("TYPE_1_0"),
+            Self::TYPE_2_0 => Some("TYPE_2_0"),
+            Self::TYPE_2_1 => Some("TYPE_2_1"),
+            Self::TYPE_3_0 => Some("TYPE_3_0"),
+            Self::TYPE_3_1 => Some("TYPE_3_1"),
+            Self::TYPE_4_0 => Some("TYPE_4_0"),
+            Self::TYPE_4_1 => Some("TYPE_4_1"),
+            Self::TYPE_5_0 => Some("TYPE_5_0"),
+            Self::TYPE_5_1 => Some("TYPE_5_1"),
+            Self::TYPE_5_2 => Some("TYPE_5_2"),
+            Self::TYPE_6_0 => Some("TYPE_6_0"),
+            Self::TYPE_6_1 => Some("TYPE_6_1"),
+            Self::TYPE_6_2 => Some("TYPE_6_2"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH265PictureType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::P => Some("P"),
+            Self::B => Some("B"),
+            Self::I => Some("I"),
+            Self::IDR => Some("IDR"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH265ProfileIdc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::MAIN => Some("MAIN"),
+            Self::MAIN_10 => Some("MAIN_10"),
+            Self::MAIN_STILL_PICTURE => Some("MAIN_STILL_PICTURE"),
+            Self::FORMAT_RANGE_EXTENSIONS => Some("FORMAT_RANGE_EXTENSIONS"),
+            Self::SCC_EXTENSIONS => Some("SCC_EXTENSIONS"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for StdVideoH265SliceType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::B => Some("B"),
+            Self::P => Some("P"),
+            Self::I => Some("I"),
+            Self::INVALID => Some("INVALID"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
 impl fmt::Debug for StencilFaceFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[

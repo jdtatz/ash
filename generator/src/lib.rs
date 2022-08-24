@@ -680,8 +680,6 @@ impl FieldExt for vk_parse::NameWithType {
 
         match &self.array_shape {
             Some(shape) => {
-                assert!(self.pointer_kind.is_none());
-
                 // Make sure we also rename the constant, that is
                 // used inside the static array
                 let shape = shape.iter().rev().fold(quote!(#ty), |ty, size| match size {
@@ -700,7 +698,8 @@ impl FieldExt for vk_parse::NameWithType {
                 if is_ffi_param {
                     quote!(*const #shape)
                 } else {
-                    shape
+                    let pointer = self.pointer_kind.as_ref().map(|r| r.to_tokens());
+                    quote!(#pointer #shape)
                 }
             }
             _ => {
@@ -1010,12 +1009,10 @@ pub fn generate_extension_commands<'a>(
         }
     }
 
+    let upper_ext_name = extension_name.to_upper_camel_case();
     let ident = format_ident!(
         "{}Fn",
-        extension_name
-            .to_upper_camel_case()
-            .strip_prefix("Vk")
-            .unwrap()
+        upper_ext_name.strip_prefix("Vk").unwrap_or(&upper_ext_name)
     );
     let fp = generate_function_pointers(ident.clone(), &commands, &aliases, fn_cache);
 
@@ -1027,8 +1024,11 @@ pub fn generate_extension_commands<'a>(
         .find(|e| e.name.contains("SPEC_VERSION"))
         .and_then(|e| {
             if let vk_parse::EnumSpec::Value { value, .. } = &e.spec {
-                let v: u32 = str::parse(value).unwrap();
-                Some(quote!(pub const SPEC_VERSION: u32 = #v;))
+                if let Ok(v) = str::parse::<u32>(value) {
+                    Some(quote!(pub const SPEC_VERSION: u32 = #v;))
+                } else {
+                    None
+                }
             } else {
                 None
             }
@@ -1180,8 +1180,7 @@ pub fn generate_bitmask(
         return None;
     }
 
-    let name = bitmask.name.strip_prefix("Vk").unwrap();
-    let ident = format_ident!("{}", name);
+    let ident = name_to_tokens(&bitmask.name);
     if !bitflags_cache.insert(ident.clone()) {
         return None;
     };
@@ -1291,9 +1290,7 @@ pub fn generate_enum<'a>(
     bitflags_cache: &mut HashSet<Ident>,
 ) -> EnumType {
     let name = enum_.name.as_ref().unwrap();
-    let clean_name = name.strip_prefix("Vk").unwrap();
-    let clean_name = clean_name.replace("FlagBits", "Flags");
-    let ident = format_ident!("{}", clean_name.as_str());
+    let ident = name_to_tokens(&name);
     let constants = enum_
         .children
         .iter()
@@ -1320,8 +1317,6 @@ pub fn generate_enum<'a>(
     let khronos_link = khronos_link(name);
 
     if name.contains("Bit") {
-        let ident = format_ident!("{}", clean_name.as_str());
-
         let type_ = if enum_.bitwidth == Some(64u32) {
             quote!(Flags64)
         } else {
@@ -1343,9 +1338,9 @@ pub fn generate_enum<'a>(
             EnumType::Bitflags(q)
         }
     } else {
-        let (struct_attribute, special_quote) = match clean_name.as_str() {
+        let (struct_attribute, special_quote) = match name.as_str() {
             //"StructureType" => generate_structure_type(&_name, _enum, create_info_constants),
-            "Result" => (quote!(#[must_use]), generate_result(ident.clone(), enum_)),
+            "VkResult" => (quote!(#[must_use]), generate_result(ident.clone(), enum_)),
             _ => (quote!(), quote!()),
         };
 
@@ -1678,7 +1673,10 @@ pub fn derive_debug(
     let contains_union = members
         .iter()
         .any(|field| union_types.contains(field.definition.type_name.as_str()));
-    if !(contains_union || contains_static_array || contains_pfn) {
+    let is_bitfield = members
+        .iter()
+        .any(|field| field.definition.bitfield_size.is_some());
+    if !(contains_union || contains_static_array || contains_pfn || is_bitfield) {
         return None;
     }
     let debug_fields = members.iter().map(|field| {
@@ -1696,6 +1694,9 @@ pub fn derive_debug(
             }
         } else if union_types.contains(field.definition.type_name.as_str()) {
             quote!(&"union")
+        } else if is_bitfield {
+            let getter = format_ident!("get_{}", param_str);
+            quote!(&self.#getter())
         } else {
             quote! {
                 &self.#param_ident
@@ -1748,6 +1749,10 @@ pub fn derive_setters(
     // Must either have both, or none:
     assert_eq!(next_field.is_some(), structure_type_field.is_some());
 
+    let is_bitfield = members
+        .iter()
+        .any(|field| field.definition.bitfield_size.is_some());
+
     let nofilter_count_members = [
         ("VkPipelineViewportStateCreateInfo", "pViewports"),
         ("VkPipelineViewportStateCreateInfo", "pScissors"),
@@ -1786,6 +1791,9 @@ pub fn derive_setters(
         .collect();
 
     let setters = members.iter().filter_map(|field| {
+        if is_bitfield {
+            return None;
+        }
         let param_ident = field.definition.param_ident();
         let param_ty_tokens = field.definition.safe_type_tokens(quote!('a));
 
@@ -1955,6 +1963,66 @@ pub fn derive_setters(
         })
     });
 
+    let bitfield_fns = if is_bitfield {
+        Some(members.iter().scan(0u8, |offset, field| {
+            let param_ident = field.definition.param_ident();
+            let param_ident_string = param_ident.to_string();
+            let getter_ident = format_ident!("get_{}", param_ident_string);
+
+            let size = field.definition.bitfield_size.unwrap();
+
+            let bit_len = size.get();
+            let val_ty = if bit_len <= 1 {
+                quote!(bool)
+            } else if bit_len <= 8 {
+                quote!(u8)
+            } else if bit_len <= 16 {
+                quote!(u16)
+            } else if bit_len <= 32 {
+                quote!(u32)
+            } else if bit_len <= 64 {
+                quote!(u64)
+            } else if bit_len <= 128 {
+                quote!(u128)
+            } else {
+                unreachable!()
+            };
+
+            let shift = *offset;
+            let param_ty = name_to_tokens(&field.definition.type_name);
+            let into_val_ty = if bit_len == 1 {
+                quote!(!=0)
+            } else {
+                quote!(as #val_ty)
+            };
+
+            *offset += bit_len;
+            Some(quote! {
+                #[inline]
+                pub fn #param_ident(mut self, #param_ident: #val_ty) -> Self {
+                    const SHIFT: u8 = #shift;
+                    const BIT_LEN: u8 = #bit_len;
+                    const MASK: #param_ty = (1 << BIT_LEN) - 1;
+                    const CLEAR_MASK: #param_ty = !(MASK << SHIFT);
+                    self.bytes &= CLEAR_MASK;
+                    self.bytes |= ((#param_ident as #param_ty) & MASK) << SHIFT;
+                    self
+                }
+
+                #[inline]
+                pub fn #getter_ident(&self) -> #val_ty {
+                    const SHIFT: u8 = #shift;
+                    const BIT_LEN: u8 = #bit_len;
+                    const MASK: #param_ty = (1 << BIT_LEN) - 1;
+                    ((self.bytes >> SHIFT) & MASK) #into_val_ty
+                }
+            })
+        }))
+    } else {
+        None
+    };
+    let bitfield_fns = bitfield_fns.into_iter().flatten();
+
     let extends_name = format_ident!("Extends{}", name);
 
     // The `p_next` field should only be considered if this struct is also a root struct
@@ -2045,6 +2113,7 @@ pub fn derive_setters(
 
         impl #lifetime #name #lifetime {
             #(#setters)*
+            #(#bitfield_fns)*
 
             #next_function
         }
@@ -2139,24 +2208,50 @@ pub fn generate_struct(
         };
     }
 
-    let params = members.iter().map(|field| {
-        let param_ident = field.definition.param_ident();
-        let param_ty_tokens = if field.definition.type_name == name_ {
-            let pointer = field
-                .definition
-                .pointer_kind
-                .as_ref()
-                .map(|k| k.to_tokens());
-            quote!(#pointer Self)
-        } else {
-            let lifetime = has_lifetimes
-                .contains(&name_to_tokens(&field.definition.type_name))
-                .then(|| quote!(<'a>));
-            let ty = field.definition.type_tokens(false);
-            quote!(#ty #lifetime)
-        };
-        quote! {pub #param_ident: #param_ty_tokens}
-    });
+    let is_bitfield = members
+        .iter()
+        .any(|field| field.definition.bitfield_size.is_some());
+    let bitfield_ty = if is_bitfield {
+        assert!(
+            members
+                .iter()
+                .all(|field| { field.definition.bitfield_size.is_some() }),
+            "If any member is a bitfield, than all most be one"
+        );
+        assert!(
+            members
+                .windows(2)
+                .all(|fs| fs[0].definition.type_name == fs[1].definition.type_name),
+            "All bitfields must have the same primitive they fit in"
+        );
+        Some(name_to_tokens(&members[0].definition.type_name))
+    } else {
+        None
+    };
+
+    let params = members
+        .iter()
+        .filter_map(|field| {
+            let param_ident = field.definition.param_ident();
+            let param_ty_tokens = if field.definition.type_name == name_ {
+                let pointer = field
+                    .definition
+                    .pointer_kind
+                    .as_ref()
+                    .map(|k| k.to_tokens());
+                quote!(#pointer Self)
+            } else if let Some(_) = field.definition.bitfield_size {
+                return None;
+            } else {
+                let lifetime = has_lifetimes
+                    .contains(&name_to_tokens(&field.definition.type_name))
+                    .then(|| quote!(<'a>));
+                let ty = field.definition.type_tokens(false);
+                quote!(#ty #lifetime)
+            };
+            Some(quote! {pub #param_ident: #param_ty_tokens})
+        })
+        .chain(bitfield_ty.map(|ty| quote! {pub bytes: #ty}));
 
     let has_lifetime = has_lifetimes.contains(&name);
     let (lifetimes, marker) = match has_lifetime {
@@ -2201,7 +2296,7 @@ pub fn generate_handle(handle: &vk_parse::TypeHandle) -> Option<TokenStream> {
     let khronos_link = khronos_link(&handle.name);
     let tokens = match handle.handle_type {
         vk_parse::HandleType::Dispatch => {
-            let name = handle.name.strip_prefix("Vk").unwrap();
+            let name = handle.name.strip_prefix("Vk").unwrap_or(&handle.name);
             let ty = format_ident!("{}", name.to_shouty_snake_case());
             let name = format_ident!("{}", name);
             quote! {
@@ -2209,7 +2304,7 @@ pub fn generate_handle(handle: &vk_parse::TypeHandle) -> Option<TokenStream> {
             }
         }
         vk_parse::HandleType::NoDispatch => {
-            let name = handle.name.strip_prefix("Vk").unwrap();
+            let name = handle.name.strip_prefix("Vk").unwrap_or(&handle.name);
             let ty = format_ident!("{}", name.to_shouty_snake_case());
             let name = format_ident!("{}", name);
             quote! {
@@ -2422,26 +2517,17 @@ pub fn generate_constant<'a>(
 }
 
 pub fn generate_feature_extension<'a>(
-    registry: &'a vk_parse::Registry,
+    feature: &'a vk_parse::Feature,
     const_cache: &mut HashSet<&'a str>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
 ) -> TokenStream {
-    let constants = registry
-        .0
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Feature))
-        .map(|feature| {
-            generate_extension_constants(
-                &feature.name,
-                0,
-                &feature.children,
-                const_cache,
-                const_values,
-            )
-        });
-    quote! {
-        #(#constants)*
-    }
+    generate_extension_constants(
+        &feature.name,
+        0,
+        &feature.children,
+        const_cache,
+        const_values,
+    )
 }
 
 pub struct ConstantMatchInfo {
@@ -2532,57 +2618,7 @@ pub fn generate_const_debugs(const_values: &BTreeMap<Ident, ConstantTypeInfo>) -
         },
     }
 }
-pub fn extract_native_types(registry: &vk_parse::Registry) -> (Vec<(String, String)>, Vec<String>) {
-    // Not a HashMap so that headers are processed in order of definition:
-    let mut header_includes = vec![];
-    let mut header_types = vec![];
 
-    let types = registry
-        .0
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Types))
-        .flat_map(|ty| &ty.children)
-        .filter_map(get_variant!(vk_parse::TypesChild::Type));
-
-    for ty in types {
-        match &ty.spec {
-            vk_parse::TypeSpec::Include { name, quoted: _ } => {
-                // `category="include"` lacking an `#include` directive are generally "irrelevant" system headers.
-                let name = ty
-                    .name
-                    .as_deref()
-                    .or(name.as_deref())
-                    .expect("Include type must provide header name");
-                assert!(
-                    header_includes
-                        .iter()
-                        .all(|(other_name, _)| other_name != &name),
-                    "Header `{}` being redefined",
-                    name
-                );
-
-                let mut path = name.to_string();
-                if !path.ends_with(".h") {
-                    path.push('.');
-                    path.push('h');
-                }
-
-                header_includes.push((name.to_string(), path));
-            }
-            vk_parse::TypeSpec::None => {
-                if let Some(header_name) = ty.requires.clone() {
-                    if header_includes.iter().any(|(name, _)| name == &header_name) {
-                        // Omit types from system and other headers
-                        header_types.push(ty.name.clone().expect("Type must have a name"));
-                    }
-                }
-            }
-            _ => {}
-        };
-    }
-
-    (header_includes, header_types)
-}
 pub fn generate_aliases_of_types(
     types: &vk_parse::Types,
     has_lifetimes: &HashSet<Ident>,
@@ -2613,19 +2649,21 @@ pub fn generate_aliases_of_types(
 }
 pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     let vk_xml = vk_headers_dir.join("registry/vk.xml");
+    let video_xml = vk_headers_dir.join("registry/video.xml");
     use std::fs::File;
     use std::io::Write;
-    let (spec2, _errors) = vk_parse::parse_file(&vk_xml).expect("Invalid xml file");
-    let extensions: &Vec<vk_parse::Extension> = spec2
-        .0
-        .iter()
-        .find_map(get_variant!(vk_parse::RegistryChild::Extensions))
-        .map(|ext| &ext.children)
-        .expect("extension");
+    let (spec, _errors) = vk_parse::parse_file(&vk_xml).expect("Invalid xml file");
+    let (video_spec, _errors) = vk_parse::parse_file(&video_xml).expect("Invalid xml file");
+    let vk_parse::Registry(registry) = spec;
+    let vk_parse::Registry(video_registry) = video_spec;
 
-    // let spec = vk_parse::parse_file_as_vkxml(&vk_xml).expect("Invalid xml file.");
-    let cmd_aliases: HashMap<String, String> = spec2
-        .0
+    let extensions: Vec<&vk_parse::Extension> = registry
+        .iter()
+        .filter_map(get_variant!(vk_parse::RegistryChild::Extensions))
+        .flat_map(|ext| &ext.children)
+        .collect();
+
+    let cmd_aliases: HashMap<String, String> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Commands))
         .flat_map(|cmds| &cmds.children)
@@ -2633,8 +2671,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .map(|(name, alias)| (name.to_string(), alias.to_string()))
         .collect();
 
-    let commands: HashMap<String, &vk_parse::CommandDefinition> = spec2
-        .0
+    let commands: HashMap<String, &vk_parse::CommandDefinition> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Commands))
         .flat_map(|cmds| &cmds.children)
@@ -2642,32 +2679,43 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .map(|cmd| (cmd.proto.name.clone(), cmd))
         .collect();
 
-    let features: Vec<&vk_parse::Feature> = spec2
-        .0
+    let features: Vec<&vk_parse::Feature> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Feature))
-        // .flat_map(|features| &features.children)
         .collect();
 
-    let definitions: Vec<&vk_parse::Type> = spec2
-        .0
+    let definitions: Vec<&vk_parse::Type> = registry
         .iter()
+        .chain(video_registry.iter())
         .filter_map(get_variant!(vk_parse::RegistryChild::Types))
         .flat_map(|definitions| &definitions.children)
         .filter_map(get_variant!(vk_parse::TypesChild::Type))
         .collect();
 
-    let constants: Vec<&vk_parse::Enum> = spec2
-        .0
+    // video.xml diverges from vk.xml in that it doesn't put it's hardcoded constants in a bare <enums>
+    // but instead places them inside the <require> of confusing pseudo-extensions
+    //
+    // This is a hacky workaround, but would need to be fixed upstream in vulkan-docs itself
+    let video_constants = video_registry
+        .iter()
+        .filter_map(get_variant!(vk_parse::RegistryChild::Extensions))
+        .flat_map(|ext| &ext.children)
+        .flat_map(|e| &e.children)
+        .filter_map(get_variant!(vk_parse::ExtensionChild::Require { items }))
+        .flatten()
+        .filter_map(get_variant!(vk_parse::InterfaceItem::Enum))
+        .filter(|e| !e.name.starts_with("VK"));
+
+    let constants: Vec<&vk_parse::Enum> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Enums))
         .filter(|enums| enums.kind.is_none())
         .flat_map(|constants| &constants.children)
         .filter_map(get_variant!(vk_parse::EnumsChild::Enum))
+        .chain(video_constants)
         .collect();
 
-    let formats: Vec<&vk_parse::Format> = spec2
-        .0
+    let formats: Vec<&vk_parse::Format> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Formats))
         .flat_map(|fs| &fs.children)
@@ -2684,9 +2732,9 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
 
     let mut const_values: BTreeMap<Ident, ConstantTypeInfo> = BTreeMap::new();
 
-    let (enum_code, bitflags_code) = spec2
-        .0
+    let (enum_code, bitflags_code) = registry
         .iter()
+        .chain(video_registry.iter())
         .filter_map(get_variant!(vk_parse::RegistryChild::Enums))
         .filter(|enums| enums.kind.is_some())
         .map(|e| generate_enum(e, &mut const_cache, &mut const_values, &mut bitflags_cache))
@@ -2771,8 +2819,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .collect();
 
     let mut ty_cache = HashSet::new();
-    let aliases: Vec<_> = spec2
-        .0
+    let aliases: Vec<_> = registry
         .iter()
         .filter_map(get_variant!(vk_parse::RegistryChild::Types))
         .map(|ty| generate_aliases_of_types(ty, &has_lifetimes, &mut ty_cache))
@@ -2782,8 +2829,10 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .iter()
         .map(|feature| generate_feature(feature, &commands, &mut fn_cache))
         .collect();
-    let feature_extensions_code =
-        generate_feature_extension(&spec2, &mut const_cache, &mut const_values);
+    let feature_extensions_code: Vec<_> = features
+        .iter()
+        .map(|feature| generate_feature_extension(feature, &mut const_cache, &mut const_values))
+        .collect();
 
     let ConstDebugs {
         core: core_debugs,
@@ -2959,7 +3008,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     let feature_extensions_code = quote! {
         use crate::vk::bitflags::*;
         use crate::vk::enums::*;
-       #feature_extensions_code
+       #(#feature_extensions_code)*
     };
 
     let const_debugs = quote! {
