@@ -83,7 +83,7 @@ impl VideoQueue {
     pub unsafe fn get_physical_device_video_capabilities(
         &self,
         physical_device: vk::PhysicalDevice,
-        video_profile: vk::VideoProfileKHR,
+        video_profile: vk::VideoProfileInfoKHR,
         capabilities: &mut vk::VideoCapabilitiesKHR,
     ) -> VkResult<()> {
         (self.fp.get_physical_device_video_capabilities_khr)(
@@ -114,7 +114,7 @@ impl VideoQueue {
     pub unsafe fn get_video_session_memory_requirements(
         &self,
         video_session: vk::VideoSessionKHR,
-    ) -> VkResult<Vec<vk::VideoGetMemoryPropertiesKHR>> {
+    ) -> VkResult<Vec<vk::VideoSessionMemoryRequirementsKHR>> {
         read_into_uninitialized_vector(|count, data| {
             (self.fp.get_video_session_memory_requirements_khr)(
                 self.handle,
@@ -143,7 +143,7 @@ impl VideoQueue {
     pub unsafe fn bind_video_session_memory(
         &self,
         video_session: vk::VideoSessionKHR,
-        video_session_bind_memories: &[vk::VideoBindMemoryKHR],
+        video_session_bind_memories: &[vk::BindVideoSessionMemoryInfoKHR],
     ) -> VkResult<()> {
         (self.fp.bind_video_session_memory_khr)(
             self.handle,
