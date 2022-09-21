@@ -7,23 +7,22 @@ use nom::sequence::pair;
 use nom::{
     branch::alt,
     bytes::streaming::tag,
-    character::complete::{char, digit1, hex_digit1, multispace1, none_of, one_of},
+    character::complete::{char, digit1, hex_digit1, one_of},
     combinator::{complete, map, opt, value},
     error::{ParseError, VerboseError},
-    multi::many1,
     sequence::{delimited, preceded, terminated},
     IResult, Parser,
 };
 use once_cell::sync::Lazy;
-use proc_macro2::{Delimiter, Group, Literal, Span, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Ident, Literal, TokenStream, TokenTree};
 use quote::*;
 use regex::Regex;
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::Display,
+    ops::Deref,
     path::Path,
 };
-use syn::Ident;
 
 macro_rules! get_variant {
     ($variant:path) => {
@@ -110,25 +109,6 @@ fn parse_inverse_number<'a, E: ParseError<&'a str>>(
             };
             (ctyp, expr)
         },
-    ))(i)
-}
-
-// Like a C string, but does not support quote escaping and expects at least one character.
-// If needed, use https://github.com/Geal/nom/blob/8e09f0c3029d32421b5b69fb798cef6855d0c8df/tests/json.rs#L61-L81
-fn parse_c_include_string<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, String, E> {
-    (delimited(
-        char('"'),
-        map(many1(none_of("\"")), |c| {
-            c.iter().map(char::to_string).join("")
-        }),
-        char('"'),
-    ))(i)
-}
-
-fn parse_c_include<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, String, E> {
-    (preceded(
-        tag("#include"),
-        preceded(multispace1, parse_c_include_string),
     ))(i)
 }
 
@@ -234,36 +214,38 @@ impl ConstantExt for vk_parse::Enum {
 
 #[derive(Clone, Debug)]
 pub enum Constant {
-    Number(i32),
-    Hex(String),
+    Value(vk_parse::EnumTypeValue),
+    Size(usize),
     BitPos(u32),
-    CExpr(String),
     Text(String),
     Alias(Ident),
 }
 
 impl quote::ToTokens for Constant {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match *self {
-            Constant::Number(n) => {
-                let number = interleave_number('_', 3, &n.to_string());
-                syn::LitInt::new(&number, Span::call_site()).to_tokens(tokens);
-            }
-            Constant::Hex(ref s) => {
-                let number = interleave_number('_', 4, s);
-                syn::LitInt::new(&format!("0x{}", number), Span::call_site()).to_tokens(tokens);
-            }
+        match self {
+            Constant::Value(v) => match v {
+                vk_parse::EnumTypeValue::I32(v) => {
+                    let number = interleave_number('_', 3, v.to_string().as_str());
+                    number.parse::<Literal>().unwrap().to_tokens(tokens);
+                }
+                vk_parse::EnumTypeValue::U32(v) => Literal::u32_unsuffixed(*v).to_tokens(tokens),
+                vk_parse::EnumTypeValue::U64(v) => Literal::u64_unsuffixed(*v).to_tokens(tokens),
+                vk_parse::EnumTypeValue::F32(v) => Literal::f32_unsuffixed(*v).to_tokens(tokens),
+                vk_parse::EnumTypeValue::Text(v) => Literal::string(v).to_tokens(tokens),
+                vk_parse::EnumTypeValue::Refrence(v) => name_to_tokens(v).to_tokens(tokens),
+                _ => todo!(),
+            },
+            Constant::Size(size) => Literal::usize_unsuffixed(*size).to_tokens(tokens),
             Constant::Text(ref text) => text.to_tokens(tokens),
-            Constant::CExpr(ref expr) => {
-                let (_, (_, rexpr)) =
-                    parse_cexpr::<VerboseError<&str>>(expr).expect("Unable to parse cexpr");
-                tokens.extend(rexpr.parse::<TokenStream>());
-            }
             Constant::BitPos(pos) => {
                 let value = 1u64 << pos;
                 let bit_string = format!("{:b}", value);
                 let bit_string = interleave_number('_', 4, &bit_string);
-                syn::LitInt::new(&format!("0b{}", bit_string), Span::call_site()).to_tokens(tokens);
+                format!("0b{:}", bit_string)
+                    .parse::<Literal>()
+                    .unwrap()
+                    .to_tokens(tokens);
             }
             Constant::Alias(ref value) => tokens.extend(quote!(Self::#value)),
         }
@@ -297,9 +279,13 @@ fn interleave_number(symbol: char, count: usize, n: &str) -> String {
 }
 impl Constant {
     pub fn value(&self) -> Option<ConstVal> {
-        match *self {
-            Constant::Number(n) => Some(ConstVal::U64(n as u64)),
-            Constant::Hex(ref hex) => u64::from_str_radix(hex, 16).ok().map(ConstVal::U64),
+        match self {
+            // Constant::Value(vk_parse::EnumTypeValue::I32(v)) => Some(ConstVal::U64(*v as u64)),
+            Constant::Value(vk_parse::EnumTypeValue::I32(_)) => todo!(),
+            Constant::Value(vk_parse::EnumTypeValue::U32(v)) => Some(ConstVal::U32(*v)),
+            Constant::Value(vk_parse::EnumTypeValue::U64(v)) => Some(ConstVal::U64(*v)),
+            Constant::Value(vk_parse::EnumTypeValue::F32(v)) => Some(ConstVal::Float(*v)),
+            Constant::Size(size) => Some(ConstVal::U64(*size as _)),
             Constant::BitPos(pos) => Some(ConstVal::U64(1u64 << pos)),
             _ => None,
         }
@@ -307,28 +293,29 @@ impl Constant {
 
     pub fn ty(&self) -> Option<CType> {
         match self {
-            Constant::Number(_) | Constant::Hex(_) => Some(CType::USize),
-            Constant::CExpr(expr) => {
-                let (_, (ty, _)) =
-                    parse_cexpr::<VerboseError<&str>>(expr).expect("Unable to parse cexpr");
-                Some(ty)
-            }
+            Constant::Value(vk_parse::EnumTypeValue::I32(_)) => Some(CType::USize),
+            Constant::Value(vk_parse::EnumTypeValue::U32(_)) => Some(CType::U32),
+            Constant::Value(vk_parse::EnumTypeValue::U64(_)) => Some(CType::U64),
+            Constant::Value(vk_parse::EnumTypeValue::F32(_)) => Some(CType::Float),
+            Constant::Size(_) => Some(CType::USize),
             _ => None,
         }
     }
 
     pub fn from_constant(constant: &vk_parse::Enum) -> Option<Self> {
+        let is_size_like = constant.name.contains("SIZE") || constant.name.contains("MAX");
+
         match &constant.spec {
             vk_parse::EnumSpec::Bitpos { bitpos, .. } => Some(Constant::BitPos(*bitpos as _)),
-            vk_parse::EnumSpec::Value { value, .. } => {
-                Some(if let Ok(value) = i32::from_str_radix(&value, 10) {
-                    Constant::Number(value)
-                } else if let Some(hex) = value.strip_prefix("0x") {
-                    Constant::Hex(hex.to_string())
-                } else {
-                    Constant::CExpr(value.to_string())
-                })
-            }
+            vk_parse::EnumSpec::Value {
+                value: vk_parse::EnumTypeValue::U32(u),
+                ..
+            } if is_size_like => Some(Constant::Size(*u as _)),
+            vk_parse::EnumSpec::Value {
+                value: vk_parse::EnumTypeValue::U64(u),
+                ..
+            } if is_size_like => Some(Constant::Size(*u as _)),
+            vk_parse::EnumSpec::Value { value, .. } => Some(Constant::Value(value.clone())),
             _ => None,
         }
     }
@@ -358,14 +345,24 @@ impl Constant {
                     .expect("Need an extension number");
                 let value = ext_base + (extnumber - 1) * ext_block_size + offset;
                 let value = if *positive { value } else { -value };
-                Some((Self::Number(value as i32), Some(extends.clone()), false))
+                Some((
+                    Self::Value(vk_parse::EnumTypeValue::I32(value as _)),
+                    Some(extends.clone()),
+                    false,
+                ))
             }
             EnumSpec::Value { value, extends } => {
-                let value = value
-                    .strip_prefix("0x")
-                    .map(|hex| Self::Hex(hex.to_owned()))
-                    .or_else(|| value.parse::<i32>().ok().map(Self::Number))?;
-                Some((value, extends.clone(), false))
+                let name = enum_name.unwrap_or(enum_.name.as_str());
+                let is_size_like = name.contains("SIZE") || name.contains("MAX");
+                match value {
+                    vk_parse::EnumTypeValue::U32(u) if is_size_like => {
+                        Some((Self::Size(*u as _), extends.clone(), false))
+                    }
+                    vk_parse::EnumTypeValue::U64(u) if is_size_like => {
+                        Some((Self::Size(*u as _), extends.clone(), false))
+                    }
+                    value => Some((Self::Value(value.clone()), extends.clone(), false)),
+                }
             }
             EnumSpec::Alias { alias, extends } => {
                 let base_type = extends.as_deref().or(enum_name)?;
@@ -383,22 +380,14 @@ impl Constant {
 
 pub trait FeatureExt {
     fn version_string(&self) -> String;
-    fn is_version(&self, major: u32, minor: u32) -> bool;
+    fn is_version(&self, major: usize, minor: usize) -> bool;
 }
 impl FeatureExt for vk_parse::Feature {
-    fn is_version(&self, major: u32, minor: u32) -> bool {
-        let version = self.number.parse::<f32>().unwrap();
-        let self_major = version as u32;
-        let self_minor = (version * 10.0) as u32 - self_major * 10;
-        major == self_major && self_minor == minor
+    fn is_version(&self, major: usize, minor: usize) -> bool {
+        major == self.number.major && minor == self.number.minor
     }
     fn version_string(&self) -> String {
-        let mut version = self.number.clone();
-        if version.len() == 1 {
-            version = format!("{}_0", version)
-        }
-
-        version.replace('.', "_")
+        format!("{}_{}", self.number.major, self.number.minor)
     }
 }
 
@@ -1024,10 +1013,17 @@ pub fn generate_extension_commands<'a>(
         .find(|e| e.name.contains("SPEC_VERSION"))
         .and_then(|e| {
             if let vk_parse::EnumSpec::Value { value, .. } = &e.spec {
-                if let Ok(v) = str::parse::<u32>(value) {
-                    Some(quote!(pub const SPEC_VERSION: u32 = #v;))
-                } else {
-                    None
+                match value {
+                    vk_parse::EnumTypeValue::I32(v) => {
+                        // let v = Literal::i32_unsuffixed(*v);
+                        let v = *v as u32;
+                        Some(quote!(pub const SPEC_VERSION: u32 = #v;))
+                    }
+                    vk_parse::EnumTypeValue::U32(v) => {
+                        // let v = Literal::u32_unsuffixed(*v);
+                        Some(quote!(pub const SPEC_VERSION: u32 = #v;))
+                    }
+                    _ => None,
                 }
             } else {
                 None
@@ -1171,22 +1167,19 @@ pub fn generate_typedef(name: &str, basetype: &str) -> TokenStream {
     }
 }
 pub fn generate_bitmask(
-    bitmask: &vk_parse::NameWithType,
+    name: &str,
+    is_64bit: bool,
     bitflags_cache: &mut HashSet<Ident>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
 ) -> Option<TokenStream> {
-    // Workaround for empty bitmask
-    if bitmask.name.is_empty() {
-        return None;
-    }
-
-    let ident = name_to_tokens(&bitmask.name);
+    let ident = name_to_tokens(name);
     if !bitflags_cache.insert(ident.clone()) {
         return None;
     };
     const_values.insert(ident.clone(), Default::default());
-    let khronos_link = khronos_link(&bitmask.name);
-    let type_ = name_to_tokens(&bitmask.type_name);
+    let khronos_link = khronos_link(name);
+    let type_name = if is_64bit { "VkFlags64" } else { "VkFlags" };
+    let type_ = name_to_tokens(type_name);
     Some(quote! {
         #[repr(transparent)]
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1368,34 +1361,39 @@ pub fn generate_enum<'a>(
     }
 }
 
-fn generate_format_component(name: &str, bits: &str, numeric_format: &str) -> TokenStream {
+fn generate_format_component(
+    name: &vk_parse::FormatComponentName,
+    bits: &vk_parse::FormatComponentBits,
+    numeric_format: &vk_parse::FormatComponentNumericFormat,
+) -> TokenStream {
     let kind = match name {
-        "R" => quote!(FormatComponentKind::R),
-        "G" => quote!(FormatComponentKind::G),
-        "B" => quote!(FormatComponentKind::B),
-        "A" => quote!(FormatComponentKind::A),
-        "D" => quote!(FormatComponentKind::D),
-        "S" => quote!(FormatComponentKind::S),
-        _ => unimplemented!(),
+        vk_parse::FormatComponentName::A => quote!(FormatComponentKind::A),
+        vk_parse::FormatComponentName::R => quote!(FormatComponentKind::R),
+        vk_parse::FormatComponentName::G => quote!(FormatComponentKind::G),
+        vk_parse::FormatComponentName::B => quote!(FormatComponentKind::B),
+        vk_parse::FormatComponentName::S => quote!(FormatComponentKind::S),
+        vk_parse::FormatComponentName::D => quote!(FormatComponentKind::D),
+        _ => todo!(),
     };
-    let bits = if let Ok(n) = bits.parse::<u8>() {
-        quote!(FormatComponentBits::Bits(#n))
-    } else if "compressed" == bits {
-        quote!(FormatComponentBits::Compressed)
-    } else {
-        unimplemented!()
+    let bits = match bits {
+        vk_parse::FormatComponentBits::Compressed => quote!(FormatComponentBits::Compressed),
+        vk_parse::FormatComponentBits::Bits(n) => {
+            let n = n.get();
+            quote!(FormatComponentBits::Bits(#n))
+        }
+        _ => todo!(),
     };
     let numerical_type = match numeric_format {
-        "SFLOAT" => quote!(NumericalType::SFLOAT),
-        "SINT" => quote!(NumericalType::SINT),
-        "SNORM" => quote!(NumericalType::SNORM),
-        "SRGB" => quote!(NumericalType::SRGB),
-        "SSCALED" => quote!(NumericalType::SSCALED),
-        "UFLOAT" => quote!(NumericalType::UFLOAT),
-        "UINT" => quote!(NumericalType::UINT),
-        "UNORM" => quote!(NumericalType::UNORM),
-        "USCALED" => quote!(NumericalType::USCALED),
-        _ => unimplemented!(),
+        vk_parse::FormatComponentNumericFormat::SFLOAT => quote!(NumericalType::SFLOAT),
+        vk_parse::FormatComponentNumericFormat::SINT => quote!(NumericalType::SINT),
+        vk_parse::FormatComponentNumericFormat::SNORM => quote!(NumericalType::SNORM),
+        vk_parse::FormatComponentNumericFormat::SRGB => quote!(NumericalType::SRGB),
+        vk_parse::FormatComponentNumericFormat::SSCALED => quote!(NumericalType::SSCALED),
+        vk_parse::FormatComponentNumericFormat::UFLOAT => quote!(NumericalType::UFLOAT),
+        vk_parse::FormatComponentNumericFormat::UINT => quote!(NumericalType::UINT),
+        vk_parse::FormatComponentNumericFormat::UNORM => quote!(NumericalType::UNORM),
+        vk_parse::FormatComponentNumericFormat::USCALED => quote!(NumericalType::USCALED),
+        _ => todo!(),
     };
     quote!(FormatComponent {
         kind: #kind,
@@ -1419,36 +1417,49 @@ pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
     } = format;
 
     let packed = packed.map_or_else(|| quote!(None), |p| quote!(Some(#p)));
-    let compressed = compressed
-        .as_deref()
-        .map_or_else(|| quote!(None), |c| quote!(Some(#c)));
-    let chroma = match chroma.as_deref() {
-        Some("420") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_420)),
-        Some("422") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_422)),
-        Some("444") => quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_444)),
+    let chroma = match chroma {
+        Some(vk_parse::FormatChroma::Type420) => {
+            quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_420))
+        }
+        Some(vk_parse::FormatChroma::Type422) => {
+            quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_422))
+        }
+        Some(vk_parse::FormatChroma::Type444) => {
+            quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_444))
+        }
         None => quote!(None),
         _ => unimplemented!(),
     };
-    let block_extent = if let Some(block_extent) = blockExtent {
-        let mut block_extents = block_extent.split(',');
-        let width = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
-        let height = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
-        let depth = block_extents.next().map_or(1u32, |s| s.parse().unwrap());
+    let block_extent = if let Some([width, height, depth]) = blockExtent {
+        let width = Literal::u8_unsuffixed(*width);
+        let height = Literal::u8_unsuffixed(*height);
+        let depth = Literal::u8_unsuffixed(*depth);
         quote!(Some(Extent3D { width: #width, height: #height, depth: #depth }))
     } else {
         quote!(None)
     };
 
-    // let compressed = match compressed.as_deref() {
-    //     Some("BC") => quote!(Some(VideoCompressionTypeFlagsKHR::BC)),
-    //     Some("ETC2") => quote!(Some(VideoCompressionTypeFlagsKHR::ETC2)),
-    //     Some("EAC") => quote!(Some(VideoCompressionTypeFlagsKHR::EAC)),
-    //     Some("ASTC LDR") => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_LDR)),
-    //     Some("PVRTC") => quote!(Some(VideoCompressionTypeFlagsKHR::PVRTC)),
-    //     Some("ASTC HDR") => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_HDR)),
+    // let compressed = match compressed {
+    //     Some(vk_parse::FormatCompressionType::BC) => quote!(Some(VideoCompressionTypeFlagsKHR::BC)),
+    //     Some(vk_parse::FormatCompressionType::ETC2) => quote!(Some(VideoCompressionTypeFlagsKHR::ETC2)),
+    //     Some(vk_parse::FormatCompressionType::EAC) => quote!(Some(VideoCompressionTypeFlagsKHR::EAC)),
+    //     Some(vk_parse::FormatCompressionType::ASTC_LDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_LDR)),
+    //     Some(vk_parse::FormatCompressionType::ASTC_HDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_HDR)),
+    //     Some(vk_parse::FormatCompressionType::PVRTC) => quote!(Some(VideoCompressionTypeFlagsKHR::PVRTC)),
     //     None => quote!(None),
-    //     _ => unimplemented!()
+    //     _ => todo!()
     // };
+
+    let compressed = match compressed {
+        Some(vk_parse::FormatCompressionType::BC) => quote!(Some("BC")),
+        Some(vk_parse::FormatCompressionType::ETC2) => quote!(Some("ETC2")),
+        Some(vk_parse::FormatCompressionType::EAC) => quote!(Some("EAC")),
+        Some(vk_parse::FormatCompressionType::ASTC_LDR) => quote!(Some("ASTC LDR")),
+        Some(vk_parse::FormatCompressionType::ASTC_HDR) => quote!(Some("ASTC HDR")),
+        Some(vk_parse::FormatCompressionType::PVRTC) => quote!(Some("PVRTC")),
+        None => quote!(None),
+        _ => todo!(),
+    };
 
     let spirv_image_format = children
         .iter()
@@ -1724,7 +1735,7 @@ pub fn derive_debug(
 pub fn derive_setters(
     name_: &str,
     members: &[&vk_parse::TypeMemberDefinition],
-    structextends: Option<&str>,
+    structextends: &[&str],
     root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
 ) -> Option<TokenStream> {
@@ -2083,7 +2094,6 @@ pub fn derive_setters(
     // If the struct extends something we need to implement the traits.
     let impl_extend_trait = structextends
         .iter()
-        .flat_map(|extends| extends.split(','))
         .map(|extends| format_ident!("Extends{}", name_to_tokens(extends)))
         .map(|extends| {
             // Extension structs always have a pNext, and therefore always have a lifetime.
@@ -2136,7 +2146,7 @@ pub fn manual_derives(name: &str) -> TokenStream {
 pub fn generate_struct(
     name_: &str,
     members: &[&vk_parse::TypeMemberDefinition],
-    structextends: Option<&str>,
+    structextends: &[&str],
     root_structs: &HashSet<Ident>,
     union_types: &HashSet<&str>,
     has_lifetimes: &HashSet<Ident>,
@@ -2290,30 +2300,31 @@ pub fn generate_struct(
 }
 
 pub fn generate_handle(handle: &vk_parse::TypeHandle) -> Option<TokenStream> {
-    if handle.name.is_empty() {
-        return None;
-    }
-    let khronos_link = khronos_link(&handle.name);
-    let tokens = match handle.handle_type {
-        vk_parse::HandleType::Dispatch => {
-            let name = handle.name.strip_prefix("Vk").unwrap_or(&handle.name);
-            let ty = format_ident!("{}", name.to_shouty_snake_case());
-            let name = format_ident!("{}", name);
-            quote! {
+    if let vk_parse::TypeHandle::Definition {
+        name,
+        handle_type,
+        objtypeenum: _,
+        parent: _,
+        ..
+    } = handle
+    {
+        let khronos_link = khronos_link(name.as_str());
+        let name = name.strip_prefix("Vk").unwrap_or(name);
+        let ty = format_ident!("{}", name.to_shouty_snake_case());
+        let name = format_ident!("{}", name);
+
+        match handle_type {
+            vk_parse::HandleType::Dispatch => Some(quote! {
                 define_handle!(#name, #ty, doc = #khronos_link);
-            }
-        }
-        vk_parse::HandleType::NoDispatch => {
-            let name = handle.name.strip_prefix("Vk").unwrap_or(&handle.name);
-            let ty = format_ident!("{}", name.to_shouty_snake_case());
-            let name = format_ident!("{}", name);
-            quote! {
+            }),
+            vk_parse::HandleType::NoDispatch => Some(quote! {
                 handle_nondispatchable!(#name, #ty, doc = #khronos_link);
-            }
+            }),
+            _ => todo!(),
         }
-        _ => todo!(),
-    };
-    Some(tokens)
+    } else {
+        None
+    }
 }
 fn generate_funcptr(fnptr: &vk_parse::TypeFunctionPointer) -> TokenStream {
     let name = format_ident!("{}", fnptr.proto.name.as_str());
@@ -2372,20 +2383,22 @@ fn generate_union(
     }
 }
 /// Root structs are all structs that are extended by other structs.
-pub fn root_structs(definitions: &[&vk_parse::Type]) -> HashSet<Ident> {
+pub fn root_structs(definitions: &[&vk_parse::TypeDefinition]) -> HashSet<Ident> {
     let mut root_structs = HashSet::new();
     // Loop over all structs and collect their extends
     for definition in definitions {
-        if let vk_parse::TypeSpec::Struct(_) = definition.spec {
-            if let Some(extends) = &definition.structextends {
-                root_structs.extend(extends.split(',').map(name_to_tokens));
-            }
+        if let vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
+            struct_extends,
+            ..
+        }) = definition
+        {
+            root_structs.extend(struct_extends.iter().map(|e| name_to_tokens(e)));
         };
     }
     root_structs
 }
 pub fn generate_definition(
-    definition: &vk_parse::Type,
+    definition: &vk_parse::TypeDefinition,
     union_types: &HashSet<&str>,
     root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
@@ -2393,39 +2406,55 @@ pub fn generate_definition(
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
     identifier_renames: &mut BTreeMap<String, Ident>,
 ) -> Option<TokenStream> {
-    match &definition.spec {
-        vk_parse::TypeSpec::Define(define) => Some(generate_define(define, identifier_renames)),
-        vk_parse::TypeSpec::Typedef {
+    match definition {
+        vk_parse::TypeDefinition::Define(define) => {
+            Some(generate_define(define, identifier_renames))
+        }
+        vk_parse::TypeDefinition::Typedef {
             name,
             basetype: Some(basetype),
         } => Some(generate_typedef(name, basetype)),
-        // If this enum has constants, then it will generated later in generate_enums.
-        vk_parse::TypeSpec::Bitmask(Some(mask)) if definition.requires.is_none() => {
-            generate_bitmask(mask, bitflags_cache, const_values)
-        }
-        vk_parse::TypeSpec::Handle(handle) => generate_handle(handle),
-        vk_parse::TypeSpec::FunctionPointer(fp) => Some(generate_funcptr(fp)),
-        vk_parse::TypeSpec::Struct(members) if definition.alias.is_none() => Some(generate_struct(
-            definition.name.as_deref().unwrap(),
+        vk_parse::TypeDefinition::Bitmask(vk_parse::TypeBitmask::Definition {
+            name,
+            is_64bit,
+            has_bitvalues: false,
+        }) => generate_bitmask(name, *is_64bit, bitflags_cache, const_values),
+        vk_parse::TypeDefinition::Handle(handle) => generate_handle(handle),
+        vk_parse::TypeDefinition::FunctionPointer(fp) => Some(generate_funcptr(fp)),
+        vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
+            name,
+            members,
+            struct_extends,
+            ..
+        }) => Some(generate_struct(
+            name,
             (members
                 .iter()
                 .filter_map(get_variant!(vk_parse::TypeMember::Definition))
+                .map(<Box<_> as Deref>::deref)
                 .collect::<Vec<_>>())
             .as_slice(),
-            definition.structextends.as_deref(),
+            struct_extends
+                .iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>()
+                .as_slice(),
             root_structs,
             union_types,
             has_lifetimes,
         )),
-        vk_parse::TypeSpec::Union(members) => Some(generate_union(
-            definition.name.as_deref().unwrap(),
-            (members
-                .iter()
-                .filter_map(get_variant!(vk_parse::TypeMember::Definition))
-                .collect::<Vec<_>>())
-            .as_slice(),
-            has_lifetimes,
-        )),
+        vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, members, .. }) => {
+            Some(generate_union(
+                name,
+                (members
+                    .iter()
+                    .filter_map(get_variant!(vk_parse::TypeMember::Definition))
+                    .map(<Box<_> as Deref>::deref)
+                    .collect::<Vec<_>>())
+                .as_slice(),
+                has_lifetimes,
+            ))
+        }
         _ => None,
     }
 }
@@ -2627,10 +2656,34 @@ pub fn generate_aliases_of_types(
     let aliases = types
         .children
         .iter()
-        .filter_map(get_variant!(vk_parse::TypesChild::Type))
+        .filter_map(get_variant!(vk_parse::TypesChild::Type { definition }))
         .filter_map(|ty| {
-            let name = ty.name.as_ref()?;
-            let alias = ty.alias.as_ref()?;
+            let (name, alias) = match &**ty {
+                vk_parse::TypeDefinition::None { .. } => return None,
+                vk_parse::TypeDefinition::Include { .. } => return None,
+                vk_parse::TypeDefinition::Define(_) => return None,
+                vk_parse::TypeDefinition::Typedef { .. } => return None,
+                vk_parse::TypeDefinition::Bitmask(vk_parse::TypeBitmask::Alias { name, alias }) => {
+                    (name, alias)
+                }
+                vk_parse::TypeDefinition::Bitmask(_) => return None,
+                vk_parse::TypeDefinition::Handle(vk_parse::TypeHandle::Alias { name, alias }) => {
+                    (name, alias)
+                }
+                vk_parse::TypeDefinition::Handle(_) => return None,
+                vk_parse::TypeDefinition::Enumeration {
+                    name,
+                    alias: Some(alias),
+                } => (name, alias),
+                vk_parse::TypeDefinition::Enumeration { alias: None, .. } => return None,
+                vk_parse::TypeDefinition::FunctionPointer(_) => return None,
+                vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Alias { name, alias }) => {
+                    (name, alias)
+                }
+                vk_parse::TypeDefinition::Struct(_) => return None,
+                vk_parse::TypeDefinition::Union(_) => return None,
+                _ => todo!(),
+            };
             let name_ident = name_to_tokens(name);
             if !ty_cache.insert(name_ident.clone()) {
                 return None;
@@ -2676,7 +2729,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .filter_map(get_variant!(vk_parse::RegistryChild::Commands))
         .flat_map(|cmds| &cmds.children)
         .filter_map(get_variant!(vk_parse::Command::Definition))
-        .map(|cmd| (cmd.proto.name.clone(), cmd))
+        .map(|cmd| (cmd.proto.name.clone(), <Box<_> as Deref>::deref(cmd)))
         .collect();
 
     let features: Vec<&vk_parse::Feature> = registry
@@ -2684,12 +2737,13 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .filter_map(get_variant!(vk_parse::RegistryChild::Feature))
         .collect();
 
-    let definitions: Vec<&vk_parse::Type> = registry
+    let definitions: Vec<&vk_parse::TypeDefinition> = registry
         .iter()
         .chain(video_registry.iter())
         .filter_map(get_variant!(vk_parse::RegistryChild::Types))
         .flat_map(|definitions| &definitions.children)
-        .filter_map(get_variant!(vk_parse::TypesChild::Type))
+        .filter_map(get_variant!(vk_parse::TypesChild::Type { definition }))
+        .map(<Box<_> as Deref>::deref)
         .collect();
 
     // video.xml diverges from vk.xml in that it doesn't put it's hardcoded constants in a bare <enums>
@@ -2769,8 +2823,10 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
 
     let union_types = definitions
         .iter()
-        .filter_map(|def| match def.spec {
-            vk_parse::TypeSpec::Union(_) => Some(def.name.as_deref().unwrap()),
+        .filter_map(|def| match def {
+            vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, .. }) => {
+                Some(name.as_str())
+            }
             _ => None,
         })
         .collect::<HashSet<&str>>();
@@ -2782,22 +2838,31 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     // as is required in C(++) too.
     let mut has_lifetimes = definitions
         .iter()
-        .filter_map(|def| match &def.spec {
-            vk_parse::TypeSpec::Struct(members) => members
+        .filter_map(|def| match def {
+            vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
+                name,
+                members,
+                ..
+            }) => members
                 .iter()
                 .filter_map(get_variant!(vk_parse::TypeMember::Definition))
                 .any(|x| x.definition.pointer_kind.is_some())
-                .then(|| name_to_tokens(def.name.as_deref().unwrap())),
+                .then(|| name_to_tokens(name)),
             _ => None,
         })
         .collect::<HashSet<Ident>>();
     for def in &definitions {
-        match &def.spec {
-            vk_parse::TypeSpec::Struct(members) | vk_parse::TypeSpec::Union(members) => members
+        match &def {
+            vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
+                name,
+                members,
+                ..
+            })
+            | vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, members, .. }) => members
                 .iter()
                 .filter_map(get_variant!(vk_parse::TypeMember::Definition))
                 .any(|field| has_lifetimes.contains(&name_to_tokens(&field.definition.type_name)))
-                .then(|| has_lifetimes.insert(name_to_tokens(def.name.as_deref().unwrap()))),
+                .then(|| has_lifetimes.insert(name_to_tokens(name))),
             _ => continue,
         };
     }

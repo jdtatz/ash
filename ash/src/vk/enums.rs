@@ -1730,17 +1730,17 @@ impl VendorId {
 }
 impl VendorId {
     #[doc = "Vivante vendor ID"]
-    pub const VIV: Self = Self(0x1_0001);
+    pub const VIV: Self = Self(65537);
     #[doc = "VeriSilicon vendor ID"]
-    pub const VSI: Self = Self(0x1_0002);
+    pub const VSI: Self = Self(65538);
     #[doc = "Kazan Software Renderer"]
-    pub const KAZAN: Self = Self(0x1_0003);
+    pub const KAZAN: Self = Self(65539);
     #[doc = "Codeplay Software Ltd. vendor ID"]
-    pub const CODEPLAY: Self = Self(0x1_0004);
+    pub const CODEPLAY: Self = Self(65540);
     #[doc = "Mesa vendor ID"]
-    pub const MESA: Self = Self(0x1_0005);
+    pub const MESA: Self = Self(65541);
     #[doc = "PoCL vendor ID"]
-    pub const POCL: Self = Self(0x1_0006);
+    pub const POCL: Self = Self(65542);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2499,7 +2499,7 @@ impl StdVideoH264ChromaFormatIdc {
     pub const TYPE_420: Self = Self(1);
     pub const TYPE_422: Self = Self(2);
     pub const TYPE_444: Self = Self(3);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2521,7 +2521,7 @@ impl StdVideoH264ProfileIdc {
     pub const MAIN: Self = Self(77);
     pub const HIGH: Self = Self(100);
     pub const HIGH_444_PREDICTIVE: Self = Self(244);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2557,7 +2557,7 @@ impl StdVideoH264Level {
     pub const TYPE_6_0: Self = Self(16);
     pub const TYPE_6_1: Self = Self(17);
     pub const TYPE_6_2: Self = Self(18);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2577,7 +2577,7 @@ impl StdVideoH264PocType {
     pub const TYPE_0: Self = Self(0);
     pub const TYPE_1: Self = Self(1);
     pub const TYPE_2: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2612,7 +2612,7 @@ impl StdVideoH264AspectRatioIdc {
     pub const TYPE_3_2: Self = Self(15);
     pub const TYPE_2_1: Self = Self(16);
     pub const EXTENDED_SAR: Self = Self(255);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2632,7 +2632,7 @@ impl StdVideoH264WeightedBipredIdc {
     pub const DEFAULT: Self = Self(0);
     pub const EXPLICIT: Self = Self(1);
     pub const IMPLICIT: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2653,7 +2653,7 @@ impl StdVideoH264ModificationOfPicNumsIdc {
     pub const SHORT_TERM_ADD: Self = Self(1);
     pub const LONG_TERM: Self = Self(2);
     pub const END: Self = Self(3);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2677,7 +2677,7 @@ impl StdVideoH264MemMgmtControlOp {
     pub const SET_MAX_LONG_TERM_INDEX: Self = Self(4);
     pub const UNMARK_ALL: Self = Self(5);
     pub const MARK_CURRENT_AS_LONG_TERM: Self = Self(6);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2697,7 +2697,7 @@ impl StdVideoH264CabacInitIdc {
     pub const TYPE_0: Self = Self(0);
     pub const TYPE_1: Self = Self(1);
     pub const TYPE_2: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2717,7 +2717,7 @@ impl StdVideoH264DisableDeblockingFilterIdc {
     pub const DISABLED: Self = Self(0);
     pub const ENABLED: Self = Self(1);
     pub const PARTIAL: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2737,7 +2737,7 @@ impl StdVideoH264SliceType {
     pub const P: Self = Self(0);
     pub const B: Self = Self(1);
     pub const I: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2758,7 +2758,7 @@ impl StdVideoH264PictureType {
     pub const B: Self = Self(1);
     pub const I: Self = Self(2);
     pub const IDR: Self = Self(5);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2782,7 +2782,7 @@ impl StdVideoH264NonVclNaluType {
     pub const END_OF_SEQUENCE: Self = Self(4);
     pub const END_OF_STREAM: Self = Self(5);
     pub const PRECODED: Self = Self(6);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2801,7 +2801,7 @@ impl StdVideoDecodeH264FieldOrderCount {
 impl StdVideoDecodeH264FieldOrderCount {
     pub const TOP: Self = Self(0);
     pub const BOTTOM: Self = Self(1);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2822,7 +2822,7 @@ impl StdVideoH265ChromaFormatIdc {
     pub const TYPE_420: Self = Self(1);
     pub const TYPE_422: Self = Self(2);
     pub const TYPE_444: Self = Self(3);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2844,7 +2844,7 @@ impl StdVideoH265ProfileIdc {
     pub const MAIN_STILL_PICTURE: Self = Self(3);
     pub const FORMAT_RANGE_EXTENSIONS: Self = Self(4);
     pub const SCC_EXTENSIONS: Self = Self(9);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2874,7 +2874,7 @@ impl StdVideoH265Level {
     pub const TYPE_6_0: Self = Self(10);
     pub const TYPE_6_1: Self = Self(11);
     pub const TYPE_6_2: Self = Self(12);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2894,7 +2894,7 @@ impl StdVideoH265SliceType {
     pub const B: Self = Self(0);
     pub const P: Self = Self(1);
     pub const I: Self = Self(2);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2915,7 +2915,7 @@ impl StdVideoH265PictureType {
     pub const B: Self = Self(1);
     pub const I: Self = Self(2);
     pub const IDR: Self = Self(3);
-    pub const INVALID: Self = Self(0x7FFF_FFFF);
+    pub const INVALID: Self = Self(2147483647);
 }
 impl fmt::Debug for ObjectType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
