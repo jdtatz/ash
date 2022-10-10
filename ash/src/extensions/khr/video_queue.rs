@@ -4,6 +4,7 @@ use crate::RawPtr;
 use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
+use std::ptr;
 
 /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_KHR_video_queue.html>
 #[derive(Clone)]
@@ -83,46 +84,89 @@ impl VideoQueue {
     pub unsafe fn get_physical_device_video_capabilities(
         &self,
         physical_device: vk::PhysicalDevice,
-        video_profile: vk::VideoProfileInfoKHR,
+        video_profile: &vk::VideoProfileInfoKHR,
         capabilities: &mut vk::VideoCapabilitiesKHR,
     ) -> VkResult<()> {
         (self.fp.get_physical_device_video_capabilities_khr)(
             physical_device,
-            &video_profile,
+            video_profile,
             capabilities,
         )
         .result()
     }
 
+    /// Retrieve the number of elements to pass to [`get_physical_device_video_format_properties()`][Self::get_physical_device_video_format_properties()]
+    pub unsafe fn get_physical_device_video_format_properties_len(
+        &self,
+        physical_device: vk::PhysicalDevice,
+        video_format_info: &vk::PhysicalDeviceVideoFormatInfoKHR,
+    ) -> VkResult<usize> {
+        let mut count = 0;
+        (self.fp.get_physical_device_video_format_properties_khr)(
+            physical_device,
+            video_format_info,
+            &mut count,
+            ptr::null_mut(),
+        )
+        .result_with_success(count as usize)
+    }
+
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceVideoFormatPropertiesKHR.html>
+    ///
+    /// Call [`get_physical_device_video_format_properties_len()`][Self::get_physical_device_video_format_properties_len()] to query the number of elements to pass to `out`.
+    /// Be sure to [`Default::default()`]-initialize these elements and optionally set their `p_next` pointer.
     pub unsafe fn get_physical_device_video_format_properties(
         &self,
         physical_device: vk::PhysicalDevice,
-        video_format_info: vk::PhysicalDeviceVideoFormatInfoKHR,
-    ) -> VkResult<Vec<vk::VideoFormatPropertiesKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            (self.fp.get_physical_device_video_format_properties_khr)(
-                physical_device,
-                &video_format_info,
-                count,
-                data,
-            )
-        })
+        video_format_info: &vk::PhysicalDeviceVideoFormatInfoKHR,
+        out: &mut [vk::VideoFormatPropertiesKHR],
+    ) -> VkResult<()> {
+        let mut count = out.len() as u32;
+        (self.fp.get_physical_device_video_format_properties_khr)(
+            physical_device,
+            video_format_info,
+            &mut count,
+            out.as_mut_ptr(),
+        )
+        .result()?;
+        assert_eq!(count as usize, out.len());
+        Ok(())
+    }
+
+    /// Retrieve the number of elements to pass to [`get_video_session_memory_requirements()`][Self::get_video_session_memory_requirements()]
+    pub unsafe fn get_video_session_memory_requirements_len(
+        &self,
+        video_session: vk::VideoSessionKHR,
+    ) -> VkResult<usize> {
+        let mut count = 0;
+        (self.fp.get_video_session_memory_requirements_khr)(
+            self.handle,
+            video_session,
+            &mut count,
+            ptr::null_mut(),
+        )
+        .result_with_success(count as usize)
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetVideoSessionMemoryRequirementsKHR.html>
+    ///
+    /// Call [`get_video_session_memory_requirements_len()`][Self::get_video_session_memory_requirements_len()] to query the number of elements to pass to `out`.
+    /// Be sure to [`Default::default()`]-initialize these elements and optionally set their `p_next` pointer.
     pub unsafe fn get_video_session_memory_requirements(
         &self,
         video_session: vk::VideoSessionKHR,
-    ) -> VkResult<Vec<vk::VideoSessionMemoryRequirementsKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            (self.fp.get_video_session_memory_requirements_khr)(
-                self.handle,
-                video_session,
-                count,
-                data,
-            )
-        })
+        out: &mut [vk::VideoSessionMemoryRequirementsKHR],
+    ) -> VkResult<()> {
+        let mut count = out.len() as u32;
+        (self.fp.get_video_session_memory_requirements_khr)(
+            self.handle,
+            video_session,
+            &mut count,
+            out.as_mut_ptr(),
+        )
+        .result()?;
+        assert_eq!(count as usize, out.len());
+        Ok(())
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkUpdateVideoSessionParametersKHR.html>
