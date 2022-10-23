@@ -678,7 +678,7 @@ impl FieldExt for vk_parse::NameWithType {
                         quote!([#ty; #n])
                     }
                     vk_parse::ArrayLength::Constant(size) => {
-                        let size = convert_c_expression(size, &BTreeMap::new());
+                        let size = format_ident!("{}", constant_name(size.as_str()));
                         quote!([#ty; #size])
                     }
                     _ => todo!(),
@@ -697,7 +697,7 @@ impl FieldExt for vk_parse::NameWithType {
                     Some(vk_parse::DynamicShapeKind::Expression { c_expr, .. })
                         if self.is_pointer_to_static_sized_array() =>
                     {
-                        let size = convert_c_expression(&c_expr, &BTreeMap::new());
+                        let size = convert_c_expression(c_expr, &BTreeMap::new());
                         quote!(#pointer [#ty; #size])
                     }
                     _ => quote!(#pointer #ty),
@@ -1283,7 +1283,7 @@ pub fn generate_enum<'a>(
     bitflags_cache: &mut HashSet<Ident>,
 ) -> EnumType {
     let name = enum_.name.as_ref().unwrap();
-    let ident = name_to_tokens(&name);
+    let ident = name_to_tokens(name);
     let constants = enum_
         .children
         .iter()
@@ -1674,7 +1674,7 @@ pub fn derive_debug(
     union_types: &HashSet<&str>,
     has_lifetime: bool,
 ) -> Option<TokenStream> {
-    let name = name_to_tokens(&name);
+    let name = name_to_tokens(name);
     let contains_pfn = members
         .iter()
         .any(|field| field.definition.name.contains("pfn"));
@@ -1741,7 +1741,6 @@ pub fn derive_setters(
 ) -> Option<TokenStream> {
     if name_ == "VkBaseInStructure"
         || name_ == "VkBaseOutStructure"
-        || name_ == "VkTransformMatrixKHR"
         || name_ == "VkAccelerationStructureInstanceKHR"
     {
         return None;
@@ -1786,7 +1785,7 @@ pub fn derive_setters(
                     ),
                 ) = &field.definition.dynamic_shape
                 {
-                    if !nofilter_count_members.contains(&(&name_, field_name)) {
+                    if !nofilter_count_members.contains(&(name_, field_name)) {
                         return Some(array_size.to_string());
                     }
                 }
@@ -1890,7 +1889,7 @@ pub fn derive_setters(
                     vk_parse::DynamicShapeKind::Single(vk_parse::DynamicLength::Parameterized(p)) | vk_parse::DynamicShapeKind::Double(vk_parse::DynamicLength::Parameterized(p), _) => Some(p),
                     _ => None
                 };
-                if let Some(ref array_size) = array_size {
+                if let Some(array_size) = array_size {
                     let mut slice_param_ty_tokens = field.definition.safe_type_tokens(quote!('a));
 
                     let mut ptr = if is_const {
@@ -2152,16 +2151,9 @@ pub fn generate_struct(
     has_lifetimes: &HashSet<Ident>,
 ) -> TokenStream {
     let name = name_to_tokens(name_);
-    if name_ == "VkTransformMatrixKHR" {
-        return quote! {
-            #[repr(C)]
-            #[derive(Copy, Clone)]
-            pub struct TransformMatrixKHR {
-                pub matrix: [f32; 12],
-            }
-        };
-    }
 
+    // FIXME: The following special cases only still exist because `acceleration_structure_reference`
+    // has the wrong type in the reference xml (uint64_t instead of union {VkDeviceAddress, AccelerationStructureKHR})
     if name_ == "VkAccelerationStructureInstanceKHR" {
         return quote! {
             #[repr(C)]
@@ -2250,7 +2242,7 @@ pub fn generate_struct(
                     .as_ref()
                     .map(|k| k.to_tokens());
                 quote!(#pointer Self)
-            } else if let Some(_) = field.definition.bitfield_size {
+            } else if field.definition.bitfield_size.is_some() {
                 return None;
             } else {
                 let lifetime = has_lifetimes

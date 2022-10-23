@@ -30765,9 +30765,26 @@ impl AabbPositionsKHR {
     }
 }
 #[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkTransformMatrixKHR.html>"]
 pub struct TransformMatrixKHR {
-    pub matrix: [f32; 12],
+    pub matrix: [[f32; 4]; 3],
+}
+impl ::std::default::Default for TransformMatrixKHR {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            matrix: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl TransformMatrixKHR {
+    #[inline]
+    pub fn matrix(mut self, matrix: [[f32; 4]; 3]) -> Self {
+        self.matrix = matrix;
+        self
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
