@@ -11,42 +11,42 @@ use std::os::raw::*;
 #[deprecated = "This define is deprecated. VK_MAKE_API_VERSION should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_VERSION.html>"]
 pub const fn make_version(major: u32, minor: u32, patch: u32) -> u32 {
-    ((major) << 22) | ((minor) << 12) | (patch)
+    ((major << 22) | (minor << 12)) | patch
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_MAJOR should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_MAJOR.html>"]
 pub const fn version_major(version: u32) -> u32 {
-    (version) >> 22
+    version >> 22
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_MINOR should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_MINOR.html>"]
 pub const fn version_minor(version: u32) -> u32 {
-    ((version) >> 12) & 0x3ffu32
+    (version >> 12) & 1023
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_PATCH should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_PATCH.html>"]
 pub const fn version_patch(version: u32) -> u32 {
-    (version) & 0xfffu32
+    version & 4095
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_API_VERSION.html>"]
 pub const fn make_api_version(variant: u32, major: u32, minor: u32, patch: u32) -> u32 {
-    ((variant) << 29) | ((major) << 22) | ((minor) << 12) | (patch)
+    (((variant << 29) | (major << 22)) | (minor << 12)) | patch
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_VARIANT.html>"]
 pub const fn api_version_variant(version: u32) -> u32 {
-    (version) >> 29
+    version >> 29
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_MAJOR.html>"]
 pub const fn api_version_major(version: u32) -> u32 {
-    ((version) >> 22) & 0x7fu32
+    (version >> 22) & 127
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_MINOR.html>"]
 pub const fn api_version_minor(version: u32) -> u32 {
-    ((version) >> 12) & 0x3ffu32
+    (version >> 12) & 1023
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_PATCH.html>"]
 pub const fn api_version_patch(version: u32) -> u32 {
-    (version) & 0xfffu32
+    version & 4095
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_1_0.html>"]
 pub const API_VERSION_1_0: u32 = make_api_version(0, 1, 0, 0);
@@ -56,9 +56,12 @@ pub const API_VERSION_1_1: u32 = make_api_version(0, 1, 1, 0);
 pub const API_VERSION_1_2: u32 = make_api_version(0, 1, 2, 0);
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_1_3.html>"]
 pub const API_VERSION_1_3: u32 = make_api_version(0, 1, 3, 0);
-pub const HEADER_VERSION: u32 = 219u32;
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_HEADER_VERSION.html>"]
+pub const HEADER_VERSION: u32 = 219;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_HEADER_VERSION_COMPLETE.html>"]
 pub const HEADER_VERSION_COMPLETE: u32 = make_api_version(0, 1, 3, HEADER_VERSION);
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/IOSurfaceRef.html>"]
+pub type IOSurfaceRef = *mut __IOSurface;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkSampleMask.html>"]
 pub type SampleMask = u32;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBool32.html>"]
@@ -39266,7 +39269,7 @@ impl AccelerationStructureMotionInstanceNV {
     }
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkRemoteAddressNV.html>"]
-pub type RemoteAddressNV = c_void;
+pub type RemoteAddressNV = *mut c_void;
 #[repr(C)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[derive(Copy, Clone)]
@@ -42219,7 +42222,7 @@ impl<'a> PhysicalDeviceNonSeamlessCubeMapFeaturesEXT<'a> {
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_VIDEO_STD_VERSION.html>"]
 pub const fn make_video_std_version(major: u32, minor: u32, patch: u32) -> u32 {
-    ((major) << 22) | ((minor) << 12) | (patch)
+    ((major << 22) | (minor << 12)) | patch
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_STD_VULKAN_VIDEO_CODEC_H264_DECODE_API_VERSION_0_9_6.html>"]
 pub const STD_VULKAN_VIDEO_CODEC_H264_DECODE_API_VERSION_0_9_6: u32 =

@@ -5,6 +5,3 @@ members = [
     "ash-window",
     "generator",
 ]
-
-[patch.crates-io]
-vk-parse = { git = "https://github.com/jdtatz/vk-parse.git", branch = "full-type-parsing" }

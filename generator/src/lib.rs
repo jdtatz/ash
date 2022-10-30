@@ -3,26 +3,18 @@
 
 use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
 use itertools::Itertools;
-use nom::sequence::pair;
-use nom::{
-    branch::alt,
-    bytes::streaming::tag,
-    character::complete::{char, digit1, hex_digit1, one_of},
-    combinator::{complete, map, opt, value},
-    error::{ParseError, VerboseError},
-    sequence::{delimited, preceded, terminated},
-    IResult, Parser,
-};
 use once_cell::sync::Lazy;
-use proc_macro2::{Delimiter, Group, Ident, Literal, TokenStream, TokenTree};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::*;
 use regex::Regex;
+use std::borrow::Cow;
+use std::fs::{self, File};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::Display,
-    ops::Deref,
     path::Path,
 };
+use vulkan_parse::*;
 
 macro_rules! get_variant {
     ($variant:path) => {
@@ -42,97 +34,112 @@ macro_rules! get_variant {
 const BACKWARDS_COMPATIBLE_ALIAS_COMMENT: &str = "Backwards-compatible alias containing a typo";
 
 pub trait ExtensionExt {}
-#[derive(Copy, Clone, Debug)]
-pub enum CType {
-    USize,
-    U32,
-    U64,
-    Float,
-    Bool32,
+
+fn bin_op_tokens(op: &BinaryOp) -> TokenStream {
+    match op {
+        BinaryOp::Addition => quote!(+),
+        BinaryOp::Subtraction => quote!(-),
+        BinaryOp::Multiplication => quote!(*),
+        BinaryOp::Division => quote!(/),
+        BinaryOp::Remainder => quote!(%),
+        BinaryOp::LeftShift => quote!(<<),
+        BinaryOp::RightShift => quote!(>>),
+        BinaryOp::BitwiseAnd => quote!(&),
+        BinaryOp::BitwiseOr => quote!(|),
+        BinaryOp::BitwiseXor => quote!(^),
+        BinaryOp::LogicalAnd => quote!(&&),
+        BinaryOp::LogicalOr => quote!(||),
+    }
 }
 
-impl CType {
-    fn to_string(self) -> &'static str {
-        match self {
-            Self::USize => "usize",
-            Self::U32 => "u32",
-            Self::U64 => "u64",
-            Self::Float => "f32",
-            Self::Bool32 => "Bool32",
+fn comp_op_tokens(op: &ComparisionOp) -> TokenStream {
+    match op {
+        ComparisionOp::LT => quote!(<),
+        ComparisionOp::LTE => quote!(<=),
+        ComparisionOp::Eq => quote!(==),
+        ComparisionOp::NEq => quote!(!=),
+        ComparisionOp::GTE => quote!(>=),
+        ComparisionOp::GT => quote!(>),
+    }
+}
+
+fn expression_tokens(
+    expr: &Expression,
+    identifier_renames: &BTreeMap<&str, Ident>,
+    is_inner: bool,
+) -> TokenStream {
+    match expr {
+        Expression::Identifier(ident) => {
+            let i = identifier_renames
+                .get(ident.as_ref())
+                .cloned()
+                .unwrap_or_else(|| name_to_tokens(constant_name(ident)));
+            quote!(#i)
         }
-    }
-}
-
-impl quote::ToTokens for CType {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        format_ident!("{}", self.to_string()).to_tokens(tokens);
-    }
-}
-
-fn parse_ctype<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, CType, E> {
-    (alt((
-        value(CType::U64, complete(tag("ULL"))),
-        value(CType::U32, complete(tag("U"))),
-    )))(i)
-}
-
-fn parse_cexpr<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, (CType, String), E> {
-    (alt((
-        map(parse_cfloat, |f| (CType::Float, format!("{:.2}", f))),
-        parse_inverse_number,
-        parse_decimal_number,
-        parse_hexadecimal_number,
-    )))(i)
-}
-
-fn parse_cfloat<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, f32, E> {
-    (terminated(nom::number::complete::float, one_of("fF")))(i)
-}
-
-fn parse_inverse_number<'a, E: ParseError<&'a str>>(
-    i: &'a str,
-) -> IResult<&'a str, (CType, String), E> {
-    (map(
-        delimited(
-            char('('),
-            pair(
-                preceded(char('~'), parse_decimal_number),
-                opt(preceded(char('-'), digit1)),
-            ),
-            char(')'),
-        ),
-        |((ctyp, num), minus_num)| {
-            let expr = if let Some(minus) = minus_num {
-                format!("!{}-{}", num, minus)
+        Expression::Constant(vulkan_parse::Constant::Char(_)) => todo!(),
+        Expression::Constant(vulkan_parse::Constant::Integer(i)) => {
+            let lit = Literal::u64_unsuffixed(*i);
+            quote!(#lit)
+        }
+        Expression::Constant(vulkan_parse::Constant::Float(f)) => {
+            let lit = Literal::f64_unsuffixed(*f);
+            quote!(#lit)
+        }
+        Expression::Literal(lit) => quote!(#lit),
+        Expression::SizeOf(_) => todo!(),
+        Expression::Unary(UnaryOp::Positive, v) => {
+            let v = expression_tokens(v, identifier_renames, true);
+            quote!(+#v)
+        }
+        Expression::Unary(UnaryOp::Negative, v) => {
+            let v = expression_tokens(v, identifier_renames, true);
+            quote!(-#v)
+        }
+        Expression::Unary(UnaryOp::BitwiseNegation | UnaryOp::LogicalNegation, v) => {
+            let v = expression_tokens(v, identifier_renames, true);
+            quote!(!#v)
+        }
+        Expression::Unary(UnaryOp::Cast(_), v) => {
+            expression_tokens(v, identifier_renames, is_inner)
+        }
+        Expression::Unary(op, _) => todo!("{:?}", op),
+        Expression::Binary(op, l, r) => {
+            let op = bin_op_tokens(op);
+            let l = expression_tokens(l, identifier_renames, true);
+            let r = expression_tokens(r, identifier_renames, true);
+            if is_inner {
+                quote!((#l #op #r))
             } else {
-                format!("!{}", num)
-            };
-            (ctyp, expr)
-        },
-    ))(i)
-}
-
-fn parse_decimal_number<'a, E: ParseError<&'a str>>(
-    i: &'a str,
-) -> IResult<&'a str, (CType, String), E> {
-    (map(
-        pair(digit1.map(str::to_string), parse_ctype),
-        |(dig, ctype)| (ctype, dig),
-    ))(i)
-}
-
-fn parse_hexadecimal_number<'a, E: ParseError<&'a str>>(
-    i: &'a str,
-) -> IResult<&'a str, (CType, String), E> {
-    (preceded(
-        alt((tag("0x"), tag("0X"))),
-        map(pair(hex_digit1, parse_ctype), |(num, typ)| {
-            (
-                typ,
-                format!("0x{}{}", num.to_ascii_lowercase(), typ.to_string()),
-            )
-        }),
-    ))(i)
+                quote!(#l #op #r)
+            }
+        }
+        Expression::Comparision(op, l, r) => {
+            let op = comp_op_tokens(op);
+            let l = expression_tokens(l, identifier_renames, true);
+            let r = expression_tokens(r, identifier_renames, true);
+            if is_inner {
+                quote!((#l #op #r))
+            } else {
+                quote!(#l #op #r)
+            }
+        }
+        Expression::Assignment(_, _, _) => todo!(),
+        Expression::TernaryIfElse(_, _, _) => todo!(),
+        Expression::FunctionCall(fn_expr, args) => {
+            let f = expression_tokens(fn_expr, identifier_renames, true);
+            let args = args
+                .iter()
+                .map(|e| expression_tokens(e, identifier_renames, false));
+            if is_inner {
+                quote!((#f(#(#args),*)))
+            } else {
+                quote!(#f(#(#args),*))
+            }
+        }
+        Expression::Comma(_, _) => todo!(),
+        Expression::Member(_, _, _) => todo!(),
+        Expression::ArrayElement(_, _) => todo!(),
+    }
 }
 
 fn khronos_link<S: Display + ?Sized>(name: &S) -> Literal {
@@ -195,11 +202,9 @@ pub trait ConstantExt {
     }
 }
 
-impl ConstantExt for vk_parse::Enum {
-    fn constant(&self, enum_name: &str) -> Constant {
-        Constant::from_vk_parse_enum(self, Some(enum_name), None)
-            .unwrap()
-            .0
+impl ConstantExt for ConstantEnum<'_> {
+    fn constant(&self, _enum_name: &str) -> Constant {
+        Constant::Value(self.value.clone())
     }
     fn variant_ident(&self, enum_name: &str) -> Ident {
         variant_ident(enum_name, &self.name)
@@ -208,34 +213,155 @@ impl ConstantExt for vk_parse::Enum {
         self.comment.as_deref()
     }
     fn is_alias(&self) -> bool {
-        matches!(self.spec, vk_parse::EnumSpec::Alias { .. })
+        false
+    }
+}
+
+impl ConstantExt for ValueEnum<'_> {
+    fn constant(&self, _enum_name: &str) -> Constant {
+        Constant::Offset(self.value)
+    }
+    fn variant_ident(&self, enum_name: &str) -> Ident {
+        variant_ident(enum_name, &self.name)
+    }
+    fn notation(&self) -> Option<&str> {
+        self.comment.as_deref()
+    }
+    fn is_alias(&self) -> bool {
+        false
+    }
+}
+
+impl ConstantExt for BitPosEnum<'_> {
+    fn constant(&self, _enum_name: &str) -> Constant {
+        Constant::BitPos(self.bitpos.into())
+    }
+    fn variant_ident(&self, enum_name: &str) -> Ident {
+        variant_ident(enum_name, &self.name)
+    }
+    fn notation(&self) -> Option<&str> {
+        self.comment.as_deref()
+    }
+    fn is_alias(&self) -> bool {
+        false
+    }
+}
+
+impl ConstantExt for BitmaskEnum<'_> {
+    fn constant(&self, enum_name: &str) -> Constant {
+        match self {
+            BitmaskEnum::Value(v) => v.constant(enum_name),
+            BitmaskEnum::BitPos(b) => b.constant(enum_name),
+        }
+    }
+    fn variant_ident(&self, enum_name: &str) -> Ident {
+        match self {
+            BitmaskEnum::Value(v) => v.variant_ident(enum_name),
+            BitmaskEnum::BitPos(b) => b.variant_ident(enum_name),
+        }
+    }
+    fn notation(&self) -> Option<&str> {
+        match self {
+            BitmaskEnum::Value(v) => v.notation(),
+            BitmaskEnum::BitPos(b) => b.notation(),
+        }
+    }
+    fn is_alias(&self) -> bool {
+        match self {
+            BitmaskEnum::Value(v) => v.is_alias(),
+            BitmaskEnum::BitPos(b) => b.is_alias(),
+        }
+    }
+}
+
+impl<T: ConstantExt> ConstantExt for DefinitionOrAlias<'_, T> {
+    fn constant(&self, enum_name: &str) -> Constant {
+        match self {
+            Self::Alias { alias, .. } => Constant::Alias(variant_ident(enum_name, alias)),
+            Self::Definition(b) => b.constant(enum_name),
+        }
+    }
+    fn variant_ident(&self, enum_name: &str) -> Ident {
+        match self {
+            Self::Alias { name, .. } => variant_ident(enum_name, name),
+            Self::Definition(b) => b.variant_ident(enum_name),
+        }
+    }
+    fn notation(&self) -> Option<&str> {
+        match self {
+            Self::Alias { comment, .. } => comment.as_deref(),
+            Self::Definition(b) => b.notation(),
+        }
+    }
+    fn is_alias(&self) -> bool {
+        match self {
+            Self::Alias { .. } => true,
+            Self::Definition(b) => b.is_alias(),
+        }
+    }
+}
+
+impl ConstantExt for RequireEnum<'_> {
+    fn constant(&self, _enum_name: &str) -> Constant {
+        match &self.value {
+            Some(RequireValueEnum::Value(value)) => Constant::Value(value.clone()),
+            Some(RequireValueEnum::Alias(alias)) => {
+                let key = variant_ident(self.extends.as_deref().unwrap(), alias);
+                // if key == "DISPATCH_BASE" {
+                //     continue;
+                // }
+                Constant::Alias(key)
+            }
+            Some(RequireValueEnum::Offset {
+                extnumber,
+                offset,
+                direction,
+            }) => {
+                let ext_base = 1_000_000_000;
+                let ext_block_size = 1000;
+                let extnumber = extnumber.map_or_else(|| todo!(), |i| i as i64);
+                let value = ext_base + (extnumber - 1) * ext_block_size + (*offset as i64);
+                let value = if *direction != Some(OffsetDirection::Negative) {
+                    value
+                } else {
+                    -value
+                };
+                Constant::Offset(value)
+            }
+            Some(RequireValueEnum::Bitpos(bitpos)) => Constant::BitPos(*bitpos as _),
+            None => todo!(),
+        }
+    }
+    fn variant_ident(&self, enum_name: &str) -> Ident {
+        variant_ident(enum_name, self.name.as_deref().unwrap())
+    }
+    fn notation(&self) -> Option<&str> {
+        self.comment.as_deref()
+    }
+    fn is_alias(&self) -> bool {
+        matches!(self.value, Some(RequireValueEnum::Alias(_)))
     }
 }
 
 #[derive(Clone, Debug)]
-pub enum Constant {
-    Value(vk_parse::EnumTypeValue),
+pub enum Constant<'a> {
+    Value(Expression<'a>),
     Size(usize),
     BitPos(u32),
+    Offset(i64),
     Text(String),
     Alias(Ident),
 }
 
-impl quote::ToTokens for Constant {
+impl<'a> quote::ToTokens for Constant<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Constant::Value(v) => match v {
-                vk_parse::EnumTypeValue::I32(v) => {
-                    let number = interleave_number('_', 3, v.to_string().as_str());
-                    number.parse::<Literal>().unwrap().to_tokens(tokens);
-                }
-                vk_parse::EnumTypeValue::U32(v) => Literal::u32_unsuffixed(*v).to_tokens(tokens),
-                vk_parse::EnumTypeValue::U64(v) => Literal::u64_unsuffixed(*v).to_tokens(tokens),
-                vk_parse::EnumTypeValue::F32(v) => Literal::f32_unsuffixed(*v).to_tokens(tokens),
-                vk_parse::EnumTypeValue::Text(v) => Literal::string(v).to_tokens(tokens),
-                vk_parse::EnumTypeValue::Refrence(v) => name_to_tokens(v).to_tokens(tokens),
-                _ => todo!(),
-            },
+            Constant::Value(v) => expression_tokens(v, &BTreeMap::new(), false).to_tokens(tokens),
+            Constant::Offset(size) => {
+                // Literal::i64_unsuffixed(*size).to_tokens(tokens)
+                let number = interleave_number('_', 3, size.to_string().as_str());
+                number.parse::<Literal>().unwrap().to_tokens(tokens);
+            }
             Constant::Size(size) => Literal::usize_unsuffixed(*size).to_tokens(tokens),
             Constant::Text(ref text) => text.to_tokens(tokens),
             Constant::BitPos(pos) => {
@@ -277,113 +403,56 @@ fn interleave_number(symbol: char, count: usize, n: &str) -> String {
         });
     number.chars().rev().collect()
 }
-impl Constant {
-    pub fn value(&self) -> Option<ConstVal> {
-        match self {
-            // Constant::Value(vk_parse::EnumTypeValue::I32(v)) => Some(ConstVal::U64(*v as u64)),
-            Constant::Value(vk_parse::EnumTypeValue::I32(_)) => todo!(),
-            Constant::Value(vk_parse::EnumTypeValue::U32(v)) => Some(ConstVal::U32(*v)),
-            Constant::Value(vk_parse::EnumTypeValue::U64(v)) => Some(ConstVal::U64(*v)),
-            Constant::Value(vk_parse::EnumTypeValue::F32(v)) => Some(ConstVal::Float(*v)),
-            Constant::Size(size) => Some(ConstVal::U64(*size as _)),
-            Constant::BitPos(pos) => Some(ConstVal::U64(1u64 << pos)),
-            _ => None,
-        }
-    }
+// impl Constant {
+//     // pub fn value(&self) -> Option<ConstVal> {
+//     //     match self {
+//     //         // Constant::Value(EnumTypeValue::I32(v)) => Some(ConstVal::U64(*v as u64)),
+//     //         Constant::Value(EnumTypeValue::I32(_)) => todo!(),
+//     //         Constant::Value(EnumTypeValue::U32(v)) => Some(ConstVal::U32(*v)),
+//     //         Constant::Value(EnumTypeValue::U64(v)) => Some(ConstVal::U64(*v)),
+//     //         Constant::Value(EnumTypeValue::F32(v)) => Some(ConstVal::Float(*v)),
+//     //         Constant::Size(size) => Some(ConstVal::U64(*size as _)),
+//     //         Constant::BitPos(pos) => Some(ConstVal::U64(1u64 << pos)),
+//     //         _ => None,
+//     //     }
+//     // }
 
-    pub fn ty(&self) -> Option<CType> {
-        match self {
-            Constant::Value(vk_parse::EnumTypeValue::I32(_)) => Some(CType::USize),
-            Constant::Value(vk_parse::EnumTypeValue::U32(_)) => Some(CType::U32),
-            Constant::Value(vk_parse::EnumTypeValue::U64(_)) => Some(CType::U64),
-            Constant::Value(vk_parse::EnumTypeValue::F32(_)) => Some(CType::Float),
-            Constant::Size(_) => Some(CType::USize),
-            _ => None,
-        }
-    }
+//     // pub fn ty(&self) -> Option<CType> {
+//     //     match self {
+//     //         Constant::Value(EnumTypeValue::I32(_)) => Some(CType::USize),
+//     //         Constant::Value(EnumTypeValue::U32(_)) => Some(CType::U32),
+//     //         Constant::Value(EnumTypeValue::U64(_)) => Some(CType::U64),
+//     //         Constant::Value(EnumTypeValue::F32(_)) => Some(CType::Float),
+//     //         Constant::Size(_) => Some(CType::USize),
+//     //         _ => None,
+//     //     }
+//     // }
 
-    pub fn from_constant(constant: &vk_parse::Enum) -> Option<Self> {
-        let is_size_like = constant.name.contains("SIZE") || constant.name.contains("MAX");
+//     // pub fn from_constant(constant: &Enum) -> Option<Self> {
+//     //     let is_size_like = constant.name.contains("SIZE") || constant.name.contains("MAX");
 
-        match &constant.spec {
-            vk_parse::EnumSpec::Bitpos { bitpos, .. } => Some(Constant::BitPos(*bitpos as _)),
-            vk_parse::EnumSpec::Value {
-                value: vk_parse::EnumTypeValue::U32(u),
-                ..
-            } if is_size_like => Some(Constant::Size(*u as _)),
-            vk_parse::EnumSpec::Value {
-                value: vk_parse::EnumTypeValue::U64(u),
-                ..
-            } if is_size_like => Some(Constant::Size(*u as _)),
-            vk_parse::EnumSpec::Value { value, .. } => Some(Constant::Value(value.clone())),
-            _ => None,
-        }
-    }
-
-    /// Returns (Constant, optional base type, is_alias)
-    pub fn from_vk_parse_enum(
-        enum_: &vk_parse::Enum,
-        enum_name: Option<&str>,
-        extension_number: Option<i64>,
-    ) -> Option<(Self, Option<String>, bool)> {
-        use vk_parse::EnumSpec;
-
-        match &enum_.spec {
-            EnumSpec::Bitpos { bitpos, extends } => {
-                Some((Self::BitPos(*bitpos as u32), extends.clone(), false))
-            }
-            EnumSpec::Offset {
-                offset,
-                extends,
-                extnumber,
-                dir: positive,
-            } => {
-                let ext_base = 1_000_000_000;
-                let ext_block_size = 1000;
-                let extnumber = extnumber
-                    .or(extension_number)
-                    .expect("Need an extension number");
-                let value = ext_base + (extnumber - 1) * ext_block_size + offset;
-                let value = if *positive { value } else { -value };
-                Some((
-                    Self::Value(vk_parse::EnumTypeValue::I32(value as _)),
-                    Some(extends.clone()),
-                    false,
-                ))
-            }
-            EnumSpec::Value { value, extends } => {
-                let name = enum_name.unwrap_or(enum_.name.as_str());
-                let is_size_like = name.contains("SIZE") || name.contains("MAX");
-                match value {
-                    vk_parse::EnumTypeValue::U32(u) if is_size_like => {
-                        Some((Self::Size(*u as _), extends.clone(), false))
-                    }
-                    vk_parse::EnumTypeValue::U64(u) if is_size_like => {
-                        Some((Self::Size(*u as _), extends.clone(), false))
-                    }
-                    value => Some((Self::Value(value.clone()), extends.clone(), false)),
-                }
-            }
-            EnumSpec::Alias { alias, extends } => {
-                let base_type = extends.as_deref().or(enum_name)?;
-                let key = variant_ident(base_type, alias);
-                if key == "DISPATCH_BASE" {
-                    None
-                } else {
-                    Some((Self::Alias(key), Some(base_type.to_owned()), true))
-                }
-            }
-            _ => None,
-        }
-    }
-}
+//     //     match &constant.spec {
+//     //         EnumSpec::Bitpos { bitpos, .. } => Some(Constant::BitPos(*bitpos as _)),
+//     //         EnumSpec::Value {
+//     //             value: EnumTypeValue::U32(u),
+//     //             ..
+//     //         } if is_size_like => Some(Constant::Size(*u as _)),
+//     //         EnumSpec::Value {
+//     //             value: EnumTypeValue::U64(u),
+//     //             ..
+//     //         } if is_size_like => Some(Constant::Size(*u as _)),
+//     //         EnumSpec::Value { value, .. } => Some(Constant::Value(value.clone())),
+//     //         _ => None,
+//     //     }
+//     // }
+// }
 
 pub trait FeatureExt {
     fn version_string(&self) -> String;
-    fn is_version(&self, major: usize, minor: usize) -> bool;
+    fn is_version(&self, major: u32, minor: u32) -> bool;
 }
-impl FeatureExt for vk_parse::Feature {
-    fn is_version(&self, major: usize, minor: usize) -> bool {
+impl FeatureExt for Feature<'_> {
+    fn is_version(&self, major: u32, minor: u32) -> bool {
         major == self.number.major && minor == self.number.minor
     }
     fn version_string(&self) -> String {
@@ -407,7 +476,7 @@ pub trait CommandExt {
     fn command_ident(&self) -> Ident;
 }
 
-impl CommandExt for vk_parse::CommandDefinition {
+impl CommandExt for Command<'_> {
     fn command_ident(&self) -> Ident {
         format_ident!(
             "{}",
@@ -421,12 +490,12 @@ impl CommandExt for vk_parse::CommandDefinition {
             .get(0)
             .map(|field| {
                 matches!(
-                    field.definition.type_name.as_str(),
+                    field.base.type_name.as_identifier(),
                     "VkDevice" | "VkCommandBuffer" | "VkQueue"
                 )
             })
             .unwrap_or(false);
-        match self.proto.name.as_str() {
+        match &*self.proto.name {
             "vkGetInstanceProcAddr" => FunctionType::Static,
             "vkCreateInstance"
             | "vkEnumerateInstanceLayerProperties"
@@ -476,56 +545,6 @@ pub trait ToTokens {
     fn to_safe_tokens(&self, lifetime: TokenStream) -> TokenStream;
 }
 
-impl ToTokens for vk_parse::PointerKind {
-    fn to_tokens(&self) -> TokenStream {
-        match self {
-            vk_parse::PointerKind::Single { is_const: true } => quote!(*const),
-            vk_parse::PointerKind::Single { is_const: false } => quote!(*mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: false,
-                is_const: true,
-            } => quote!(*const *mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: false,
-                is_const: false,
-            } => quote!(*mut *mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: true,
-                is_const: true,
-            } => quote!(*const *const),
-            vk_parse::PointerKind::Double {
-                inner_is_const: true,
-                is_const: false,
-            } => quote!(*mut *const),
-            _ => unimplemented!(),
-        }
-    }
-
-    fn to_safe_tokens(&self, lifetime: TokenStream) -> TokenStream {
-        match self {
-            vk_parse::PointerKind::Single { is_const: true } => quote!(&#lifetime),
-            vk_parse::PointerKind::Single { is_const: false } => quote!(&#lifetime mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: false,
-                is_const: true,
-            } => quote!(&#lifetime *mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: false,
-                is_const: false,
-            } => quote!(&#lifetime mut *mut),
-            vk_parse::PointerKind::Double {
-                inner_is_const: true,
-                is_const: true,
-            } => quote!(&#lifetime *const),
-            vk_parse::PointerKind::Double {
-                inner_is_const: true,
-                is_const: false,
-            } => quote!(&#lifetime mut *const),
-            _ => unimplemented!(),
-        }
-    }
-}
-
 fn name_to_tokens(type_name: &str) -> Ident {
     let new_name = match type_name {
         "uint8_t" => "u8",
@@ -549,78 +568,9 @@ fn name_to_tokens(type_name: &str) -> Ident {
     format_ident!("{}", new_name.as_str())
 }
 
-/// Parses and rewrites a C literal into Rust
-///
-/// If no special pattern is recognized the original literal is returned.
-/// Any new conversions need to be added to the [`parse_cexpr()`] [`nom`] parser.
-///
-/// Examples:
-/// - `0x3FFU` -> `0x3ffu32`
-fn convert_c_literal(lit: Literal) -> Literal {
-    if let Ok((_, (_, rexpr))) = parse_cexpr::<VerboseError<&str>>(&lit.to_string()) {
-        // lit::SynInt uses the same `.parse` method to create hexadecimal
-        // literals because there is no `Literal` constructor for it.
-        let mut stream = rexpr.parse::<TokenStream>().unwrap().into_iter();
-        // If expression rewriting succeeds this should parse into a single literal
-        match (stream.next(), stream.next()) {
-            (Some(TokenTree::Literal(l)), None) => l,
-            x => panic!("Stream must contain a single literal, not {:?}", x),
-        }
-    } else {
-        lit
-    }
-}
-
-/// Parse and yield a C expression that is valid to write in Rust
-/// Identifiers are replaced with their Rust vk equivalent.
-///
-/// Examples:
-/// - `VK_MAKE_VERSION(1, 2, VK_HEADER_VERSION)` -> `make_version(1, 2, HEADER_VERSION)`
-/// - `2*VK_UUID_SIZE` -> `2 * UUID_SIZE`
-fn convert_c_expression(c_expr: &str, identifier_renames: &BTreeMap<String, Ident>) -> TokenStream {
-    fn rewrite_token_stream(
-        stream: TokenStream,
-        identifier_renames: &BTreeMap<String, Ident>,
-    ) -> TokenStream {
-        stream
-            .into_iter()
-            .map(|tt| match tt {
-                TokenTree::Group(group) => TokenTree::Group(Group::new(
-                    group.delimiter(),
-                    rewrite_token_stream(group.stream(), identifier_renames),
-                )),
-                TokenTree::Ident(term) => {
-                    let name = term.to_string();
-                    identifier_renames
-                        .get(&name)
-                        .cloned()
-                        .unwrap_or_else(|| format_ident!("{}", constant_name(&name)))
-                        .into()
-                }
-                TokenTree::Literal(lit) => TokenTree::Literal(convert_c_literal(lit)),
-                tt => tt,
-            })
-            .collect::<TokenStream>()
-    }
-    let c_expr = c_expr
-        .parse()
-        .unwrap_or_else(|_| panic!("Failed to parse `{}` as Rust", c_expr));
-    rewrite_token_stream(c_expr, identifier_renames)
-}
-
-fn discard_outmost_delimiter(stream: TokenStream) -> TokenStream {
-    let stream = stream.into_iter().collect_vec();
-    // Discard the delimiter if this stream consists of a single top-most group
-    if let [TokenTree::Group(group)] = stream.as_slice() {
-        TokenTree::Group(Group::new(Delimiter::None, group.stream())).into()
-    } else {
-        stream.into_iter().collect::<TokenStream>()
-    }
-}
-
-impl FieldExt for vk_parse::NameWithType {
+impl FieldExt for FieldLike<'_> {
     fn param_ident(&self) -> Ident {
-        let name = self.name.as_str();
+        let name = self.name.as_ref();
         let name_corrected = match name {
             "type" => "ty",
             _ => name,
@@ -630,14 +580,14 @@ impl FieldExt for vk_parse::NameWithType {
 
     fn inner_type_tokens(&self) -> TokenStream {
         assert!(!self.is_void());
-        let ty = name_to_tokens(&self.type_name);
+        let ty = name_to_tokens(self.type_name.as_identifier());
 
         match self.pointer_kind {
-            Some(vk_parse::PointerKind::Double {
+            Some(PointerKind::Double {
                 inner_is_const: true,
                 ..
             }) => quote!(*const #ty),
-            Some(vk_parse::PointerKind::Double {
+            Some(PointerKind::Double {
                 inner_is_const: false,
                 ..
             }) => quote!(*mut #ty),
@@ -654,60 +604,81 @@ impl FieldExt for vk_parse::NameWithType {
             // The outer type fn type_tokens() returns is [], which fits our "safe" prescription
             self.type_tokens(false)
         } else {
-            let ty = name_to_tokens(&self.type_name);
-            let pointer = self
-                .pointer_kind
-                .as_ref()
-                .map(|r| r.to_safe_tokens(lifetime));
-            quote!(#pointer #ty)
+            let ty = name_to_tokens(self.type_name.as_identifier());
+            let outer_pointer = self.pointer_kind.as_ref().and_then(|pk| match pk {
+                PointerKind::Single => None,
+                PointerKind::Double { .. } if self.is_const => Some(quote!(&#lifetime)),
+                PointerKind::Double { .. } => Some(quote!(&#lifetime mut)),
+            });
+            let inner_pointer = self.pointer_kind.as_ref().map(|pk| match pk {
+                PointerKind::Single if self.is_const => quote!(&#lifetime),
+                PointerKind::Single => quote!(&#lifetime mut),
+                PointerKind::Double {
+                    inner_is_const: true,
+                } => quote!(*const),
+                PointerKind::Double {
+                    inner_is_const: false,
+                } => quote!(*mut),
+            });
+            quote!(#outer_pointer #inner_pointer #ty)
         }
     }
 
     fn type_tokens(&self, is_ffi_param: bool) -> TokenStream {
         assert!(!self.is_void());
-        let ty = name_to_tokens(&self.type_name);
+        let ty = name_to_tokens(self.type_name.as_identifier());
+        let outer_pointer = self.pointer_kind.as_ref().and_then(|pk| match pk {
+            PointerKind::Single => None,
+            PointerKind::Double { .. } if self.is_const => Some(quote!(*const)),
+            PointerKind::Double { .. } => Some(quote!(*mut)),
+        });
+        let inner_pointer = self.pointer_kind.as_ref().map(|pk| match pk {
+            PointerKind::Single if self.is_const => quote!(*const),
+            PointerKind::Single => quote!(*mut),
+            PointerKind::Double {
+                inner_is_const: true,
+            } => quote!(*const),
+            PointerKind::Double {
+                inner_is_const: false,
+            } => quote!(*mut),
+        });
 
         match &self.array_shape {
             Some(shape) => {
                 // Make sure we also rename the constant, that is
                 // used inside the static array
                 let shape = shape.iter().rev().fold(quote!(#ty), |ty, size| match size {
-                    vk_parse::ArrayLength::Static(n) => {
+                    ArrayLength::Static(n) => {
                         let n = n.get();
-                        let n = Literal::usize_unsuffixed(n);
+                        let n = Literal::usize_unsuffixed(n as usize);
                         quote!([#ty; #n])
                     }
-                    vk_parse::ArrayLength::Constant(size) => {
-                        let size = format_ident!("{}", constant_name(size.as_str()));
+                    ArrayLength::Constant(size) => {
+                        let size = format_ident!("{}", constant_name(size));
                         quote!([#ty; #size])
                     }
-                    _ => todo!(),
                 });
                 // arrays in c are always passed as a pointer
                 if is_ffi_param {
                     quote!(*const #shape)
                 } else {
-                    let pointer = self.pointer_kind.as_ref().map(|r| r.to_tokens());
-                    quote!(#pointer #shape)
+                    quote!(#outer_pointer #inner_pointer #shape)
                 }
             }
-            _ => {
-                let pointer = self.pointer_kind.as_ref().map(|r| r.to_tokens());
-                match &self.dynamic_shape {
-                    Some(vk_parse::DynamicShapeKind::Expression { c_expr, .. })
-                        if self.is_pointer_to_static_sized_array() =>
-                    {
-                        let size = convert_c_expression(c_expr, &BTreeMap::new());
-                        quote!(#pointer [#ty; #size])
-                    }
-                    _ => quote!(#pointer #ty),
+            _ => match &self.dynamic_shape {
+                Some(DynamicShapeKind::Expression { c_expr, .. })
+                    if self.is_pointer_to_static_sized_array() =>
+                {
+                    let size = expression_tokens(c_expr, &BTreeMap::new(), false);
+                    quote!(#outer_pointer #inner_pointer [#ty; #size])
                 }
-            }
+                _ => quote!(#outer_pointer #inner_pointer #ty),
+            },
         }
     }
 
     fn is_void(&self) -> bool {
-        self.type_name == "void" && self.pointer_kind.is_none()
+        self.type_name == TypeSpecifier::Void && self.pointer_kind.is_none()
     }
 
     fn is_pointer_to_static_sized_array(&self) -> bool {
@@ -715,22 +686,22 @@ impl FieldExt for vk_parse::NameWithType {
     }
 }
 
-pub type CommandMap<'a> = HashMap<String, &'a vk_parse::CommandDefinition>;
+pub type CommandMap<'a, 's> = HashMap<&'s str, &'a Command<'a>>;
 
 fn generate_function_pointers<'a>(
     ident: Ident,
-    commands: &[&'a vk_parse::CommandDefinition],
-    aliases: &HashMap<String, String>,
-    fn_cache: &mut HashSet<&'a str>,
+    commands: &[&Command<'a>],
+    aliases: &HashMap<&str, &str>,
+    fn_cache: &mut HashSet<Cow<'a, str>>,
 ) -> TokenStream {
     // Commands can have duplicates inside them because they are declared per features. But we only
     // really want to generate one function pointer.
     let commands = commands
         .iter()
-        .unique_by(|cmd| cmd.proto.name.as_str())
+        .unique_by(|cmd| &*cmd.proto.name)
         .collect::<Vec<_>>();
 
-    struct Command {
+    struct CommandDefn {
         type_needs_defining: bool,
         type_name: Ident,
         function_name_c: String,
@@ -742,10 +713,10 @@ fn generate_function_pointers<'a>(
 
     let commands = commands
         .iter()
-        .map(|cmd| {
+        .map(move |cmd| {
             let type_name = format_ident!("PFN_{}", cmd.proto.name);
 
-            let function_name_c = if let Some(alias_name) = aliases.get(&cmd.proto.name) {
+            let function_name_c = if let Some(alias_name) = aliases.get(&*cmd.proto.name) {
                 alias_name.to_string()
             } else {
                 cmd.proto.name.to_string()
@@ -763,8 +734,8 @@ fn generate_function_pointers<'a>(
                 .params
                 .iter()
                 .map(|field| {
-                    let name = field.definition.param_ident();
-                    let ty = field.definition.type_tokens(true);
+                    let name = field.base.param_ident();
+                    let ty = field.base.type_tokens(true);
                     (name, ty)
                 })
                 .collect();
@@ -780,10 +751,10 @@ fn generate_function_pointers<'a>(
             });
             let parameters_unused = quote!(#(#params_iter,)*);
 
-            Command {
+            CommandDefn {
                 // PFN function pointers are global and can not have duplicates.
                 // This can happen because there are aliases to commands
-                type_needs_defining: fn_cache.insert(cmd.proto.name.as_str()),
+                type_needs_defining: fn_cache.insert(cmd.proto.name.clone()),
                 type_name,
                 function_name_c,
                 function_name_rust,
@@ -799,7 +770,7 @@ fn generate_function_pointers<'a>(
         })
         .collect::<Vec<_>>();
 
-    struct CommandToType<'a>(&'a Command);
+    struct CommandToType<'a>(&'a CommandDefn);
     impl<'a> quote::ToTokens for CommandToType<'a> {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let type_name = &self.0.type_name;
@@ -813,7 +784,7 @@ fn generate_function_pointers<'a>(
         }
     }
 
-    struct CommandToMember<'a>(&'a Command);
+    struct CommandToMember<'a>(&'a CommandDefn);
     impl<'a> quote::ToTokens for CommandToMember<'a> {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let type_name = &self.0.type_name;
@@ -829,7 +800,7 @@ fn generate_function_pointers<'a>(
         }
     }
 
-    struct CommandToLoader<'a>(&'a Command);
+    struct CommandToLoader<'a>(&'a CommandDefn);
     impl<'a> quote::ToTokens for CommandToLoader<'a> {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let function_name_rust = &self.0.function_name_rust;
@@ -888,7 +859,7 @@ fn generate_function_pointers<'a>(
 }
 pub struct ExtensionConstant<'a> {
     pub name: &'a str,
-    pub constant: Constant,
+    pub constant: Constant<'a>,
     pub notation: Option<&'a str>,
 }
 impl<'a> ConstantExt for ExtensionConstant<'a> {
@@ -903,54 +874,73 @@ impl<'a> ConstantExt for ExtensionConstant<'a> {
     }
 }
 
-pub fn generate_extension_constants<'a>(
+pub fn generate_extension_constants<'s, 'a: 's>(
     extension_name: &str,
     extension_number: i64,
-    extension_items: &'a [vk_parse::ExtensionChild],
-    const_cache: &mut HashSet<&'a str>,
+    extension_items: &'s [Require<'a>],
+    const_cache: &mut HashSet<&'s str>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
 ) -> TokenStream {
-    let items = extension_items
-        .iter()
-        .filter_map(get_variant!(vk_parse::ExtensionChild::Require { items }))
-        .flatten();
+    let items = extension_items.iter().flat_map(|r| r.values.values());
 
-    let mut extended_enums = BTreeMap::<String, Vec<ExtensionConstant>>::new();
+    let mut extended_enums = BTreeMap::<&str, Vec<ExtensionConstant>>::new();
 
     for item in items {
-        if let vk_parse::InterfaceItem::Enum(enum_) = item {
-            if !const_cache.insert(enum_.name.as_str()) {
+        if let RequireValue::Enum(RequireEnum {
+            name: Some(name),
+            extends: Some(extends),
+            value,
+            comment,
+            ..
+        }) = item
+        {
+            if !const_cache.insert(name.as_ref()) {
                 continue;
             }
 
-            if enum_.comment.as_deref() == Some(BACKWARDS_COMPATIBLE_ALIAS_COMMENT) {
+            if comment.as_deref() == Some(BACKWARDS_COMPATIBLE_ALIAS_COMMENT) {
                 continue;
             }
-
-            let (constant, extends, is_alias) = if let Some(r) =
-                Constant::from_vk_parse_enum(enum_, None, Some(extension_number))
-            {
-                r
-            } else {
-                continue;
-            };
-            let extends = if let Some(extends) = extends {
-                extends
-            } else {
-                continue;
+            let (constant, is_alias) = match value {
+                Some(RequireValueEnum::Alias(alias)) => {
+                    let key = variant_ident(extends, alias);
+                    if key == "DISPATCH_BASE" {
+                        continue;
+                    }
+                    (Constant::Alias(key), true)
+                }
+                Some(RequireValueEnum::Bitpos(bitpos)) => (Constant::BitPos(*bitpos as _), false),
+                Some(RequireValueEnum::Offset {
+                    extnumber,
+                    offset,
+                    direction,
+                }) => {
+                    let ext_base = 1_000_000_000;
+                    let ext_block_size = 1000;
+                    let extnumber = extnumber.map_or(extension_number, |i| i as _);
+                    let value = ext_base + (extnumber - 1) * ext_block_size + (*offset as i64);
+                    let value = if *direction != Some(OffsetDirection::Negative) {
+                        value
+                    } else {
+                        -value
+                    };
+                    (Constant::Offset(value), false)
+                }
+                Some(RequireValueEnum::Value(expr)) => (Constant::Value(expr.clone()), false),
+                None => continue,
             };
             let ext_constant = ExtensionConstant {
-                name: &enum_.name,
+                name,
                 constant,
-                notation: enum_.comment.as_deref(),
+                notation: comment.as_deref(),
             };
-            let ident = name_to_tokens(&extends);
+            let ident = name_to_tokens(extends);
             const_values
                 .get_mut(&ident)
                 .unwrap()
                 .values
                 .push(ConstantMatchInfo {
-                    ident: ext_constant.variant_ident(&extends),
+                    ident: ext_constant.variant_ident(extends),
                     is_alias,
                 });
 
@@ -964,7 +954,7 @@ pub fn generate_extension_constants<'a>(
     let enum_tokens = extended_enums.iter().map(|(extends, constants)| {
         let ident = name_to_tokens(extends);
         let doc_string = format!("Generated from '{}'", extension_name);
-        let impl_block = bitflags_impl_block(ident, extends, &constants.iter().collect_vec());
+        let impl_block = bitflags_impl_block(ident, extends, constants.as_slice());
         quote! {
             #[doc = #doc_string]
             #impl_block
@@ -974,26 +964,25 @@ pub fn generate_extension_constants<'a>(
 }
 pub fn generate_extension_commands<'a>(
     extension_name: &str,
-    items: &[vk_parse::ExtensionChild],
-    cmd_map: &CommandMap<'a>,
-    cmd_aliases: &HashMap<String, String>,
-    fn_cache: &mut HashSet<&'a str>,
+    items: &[Require<'a>],
+    cmd_map: &CommandMap<'a, '_>,
+    cmd_aliases: &HashMap<&str, &str>,
+    fn_cache: &mut HashSet<Cow<'a, str>>,
 ) -> TokenStream {
     let mut commands = Vec::new();
     let mut aliases = HashMap::new();
     let names = items
         .iter()
-        .filter_map(get_variant!(vk_parse::ExtensionChild::Require { items }))
-        .flatten()
-        .filter_map(get_variant!(vk_parse::InterfaceItem::Command { name }));
+        .flat_map(|r| r.values.values())
+        .filter_map(get_variant!(RequireValue::Command { name }));
     for name in names {
-        if let Some(cmd) = cmd_map.get(name).copied() {
+        if let Some(cmd) = cmd_map.get(name.as_ref()).copied() {
             commands.push(cmd);
         } else if let Some(cmd) = cmd_aliases
-            .get(name)
+            .get(name.as_ref())
             .and_then(|alias_name| cmd_map.get(alias_name).copied())
         {
-            aliases.insert(cmd.proto.name.clone(), name.to_string());
+            aliases.insert(cmd.proto.name.as_ref(), name.as_ref());
             commands.push(cmd);
         }
     }
@@ -1007,26 +996,22 @@ pub fn generate_extension_commands<'a>(
 
     let spec_version = items
         .iter()
-        .filter_map(get_variant!(vk_parse::ExtensionChild::Require { items }))
-        .flatten()
-        .filter_map(get_variant!(vk_parse::InterfaceItem::Enum))
-        .find(|e| e.name.contains("SPEC_VERSION"))
+        .flat_map(|r| r.values.values())
+        .filter_map(get_variant!(RequireValue::Enum))
+        .find(|e| {
+            e.name
+                .as_deref()
+                .map_or(false, |n| n.contains("SPEC_VERSION"))
+        })
         .and_then(|e| {
-            if let vk_parse::EnumSpec::Value { value, .. } = &e.spec {
-                match value {
-                    vk_parse::EnumTypeValue::I32(v) => {
-                        // let v = Literal::i32_unsuffixed(*v);
-                        let v = *v as u32;
-                        Some(quote!(pub const SPEC_VERSION: u32 = #v;))
-                    }
-                    vk_parse::EnumTypeValue::U32(v) => {
-                        // let v = Literal::u32_unsuffixed(*v);
-                        Some(quote!(pub const SPEC_VERSION: u32 = #v;))
-                    }
-                    _ => None,
-                }
+            if let Some(RequireValueEnum::Value(Expression::Constant(
+                vulkan_parse::Constant::Integer(i),
+            ))) = &e.value
+            {
+                let v = *i as u32;
+                Some(quote!(pub const SPEC_VERSION: u32 = #v;))
             } else {
-                None
+                unreachable!()
             }
         });
 
@@ -1045,13 +1030,13 @@ pub fn generate_extension_commands<'a>(
         #fp
     }
 }
-pub fn generate_extension<'a>(
-    extension: &'a vk_parse::Extension,
-    cmd_map: &CommandMap<'a>,
-    const_cache: &mut HashSet<&'a str>,
+pub fn generate_extension<'s, 'a: 's>(
+    extension: &'s Extension<'a>,
+    cmd_map: &CommandMap<'a, 's>,
+    const_cache: &mut HashSet<&'s str>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
-    cmd_aliases: &HashMap<String, String>,
-    fn_cache: &mut HashSet<&'a str>,
+    cmd_aliases: &HashMap<&str, &str>,
+    fn_cache: &mut HashSet<Cow<'a, str>>,
 ) -> Option<TokenStream> {
     // Okay this is a little bit odd. We need to generate all extensions, even disabled ones,
     // because otherwise some StructureTypes won't get generated. But we don't generate extensions
@@ -1061,14 +1046,14 @@ pub fn generate_extension<'a>(
     }
     let extension_tokens = generate_extension_constants(
         &extension.name,
-        extension.number.unwrap_or(0),
-        &extension.children,
+        extension.number.into(),
+        &extension.requires,
         const_cache,
         const_values,
     );
     let fp = generate_extension_commands(
         &extension.name,
-        &extension.children,
+        &extension.requires,
         cmd_map,
         cmd_aliases,
         fn_cache,
@@ -1079,58 +1064,37 @@ pub fn generate_extension<'a>(
     };
     Some(q)
 }
-pub fn generate_define(
-    define: &vk_parse::TypeDefine,
-    identifier_renames: &mut BTreeMap<String, Ident>,
+pub fn generate_define<'s>(
+    define: &'s DefineType,
+    identifier_renames: &mut BTreeMap<&'s str, Ident>,
 ) -> TokenStream {
     let name = constant_name(&define.name);
     let ident = format_ident!("{}", name);
 
-    if name == "NULL_HANDLE" {
+    let link = khronos_link(&define.name);
+
+    let deprecated = define
+        .deprecation_comment
+        .as_ref()
+        .map(|c| c.trim())
+        .map(|comment| quote!(#[deprecated = #comment]));
+
+    if name == "NULL_HANDLE" || define.is_disabled {
         quote!()
+    } else if let Some(value) = define.value.as_expr() {
+        let v = expression_tokens(value.as_ref(), identifier_renames, false);
+        quote!(
+            #deprecated
+            #[doc = #link]
+            pub const #ident: u32 = #v;
+        )
     } else {
-        match &define.value {
-            vk_parse::TypeDefineValue::Value(value) => {
-                str::parse::<u32>(value).map_or(quote!(), |v| quote!(pub const #ident: u32 = #v;))
-            }
-            vk_parse::TypeDefineValue::Expression(c_expr) if define.name.contains("VERSION") => {
-                let link = khronos_link(&define.name);
-                let c_expr = c_expr.trim_start_matches('\\');
-                let c_expr = c_expr.replace("(uint32_t)", "");
-                let c_expr = convert_c_expression(&c_expr, identifier_renames);
-                let c_expr = discard_outmost_delimiter(c_expr);
-
-                let deprecated = define
-                    .comment
-                    .as_ref()
-                    .and_then(|c| c.strip_prefix("DEPRECATED: "))
-                    .map(|comment| quote!(#[deprecated = #comment]));
-
-                let code = quote!(pub const #ident: u32 = #c_expr;);
-
-                identifier_renames.insert(define.name.clone(), ident);
-
-                quote! {
-                    #deprecated
-                    #[doc = #link]
-                    #code
-                }
-            }
-            vk_parse::TypeDefineValue::Function {
-                params,
-                expression: c_expr,
-            } if define.name.contains("VERSION") => {
-                let link = khronos_link(&define.name);
-                let c_expr = c_expr.trim_start_matches('\\');
-                let c_expr = c_expr.replace("(uint32_t)", "");
-                let c_expr = convert_c_expression(&c_expr, identifier_renames);
-                let c_expr = discard_outmost_delimiter(c_expr);
-
-                let deprecated = define
-                    .comment
-                    .as_ref()
-                    .and_then(|c| c.strip_prefix("DEPRECATED: "))
-                    .map(|comment| quote!(#[deprecated = #comment]));
+        match dbg!(&define.value) {
+            DefineTypeValue::FunctionDefine { params, expression }
+                if define.name.contains("VERSION") =>
+            {
+                let c_expr: Expression = (&**expression).try_into().unwrap();
+                let c_expr = expression_tokens(&c_expr, identifier_renames, false);
 
                 let params = params
                     .iter()
@@ -1139,7 +1103,7 @@ pub fn generate_define(
                 let ident = format_ident!("{}", name.to_lowercase());
                 let code = quote!(pub const fn #ident(#(#params),*) -> u32 { #c_expr });
 
-                identifier_renames.insert(define.name.clone(), ident);
+                identifier_renames.insert(define.name.as_ref(), ident);
 
                 quote! {
                     #deprecated
@@ -1152,18 +1116,33 @@ pub fn generate_define(
     }
 }
 
-pub fn generate_typedef(name: &str, basetype: &str) -> TokenStream {
-    if basetype.is_empty() {
-        // Ignore forward declarations
-        quote! {}
-    } else {
-        let typedef_name = name_to_tokens(name);
-        let typedef_ty = name_to_tokens(basetype);
-        let khronos_link = khronos_link(name);
-        quote! {
-            #[doc = #khronos_link]
-            pub type #typedef_name = #typedef_ty;
-        }
+pub fn generate_typedef(typedef: &FieldLike) -> TokenStream {
+    let FieldLike {
+        name, type_name, ..
+    } = typedef;
+    let typedef_name = name_to_tokens(name);
+
+    let outer_pointer = typedef.pointer_kind.as_ref().and_then(|pk| match pk {
+        PointerKind::Single => None,
+        PointerKind::Double { .. } if typedef.is_const => Some(quote!(*const)),
+        PointerKind::Double { .. } => Some(quote!(*mut)),
+    });
+    let inner_pointer = typedef.pointer_kind.as_ref().map(|pk| match pk {
+        PointerKind::Single if typedef.is_const => quote!(*const),
+        PointerKind::Single => quote!(*mut),
+        PointerKind::Double {
+            inner_is_const: true,
+        } => quote!(*const),
+        PointerKind::Double {
+            inner_is_const: false,
+        } => quote!(*mut),
+    });
+
+    let typedef_ty = name_to_tokens(type_name.as_identifier());
+    let khronos_link = khronos_link(name);
+    quote! {
+        #[doc = #khronos_link]
+        pub type #typedef_name = #outer_pointer #inner_pointer #typedef_ty;
     }
 }
 pub fn generate_bitmask(
@@ -1245,13 +1224,13 @@ pub fn variant_ident(enum_name: &str, variant_name: &str) -> Ident {
     }
 }
 
-pub fn bitflags_impl_block(
+pub fn bitflags_impl_block<'c, C: 'c + ConstantExt, I: IntoIterator<Item = &'c C>>(
     ident: Ident,
     enum_name: &str,
-    constants: &[&impl ConstantExt],
+    constants: I,
 ) -> TokenStream {
     let variants = constants
-        .iter()
+        .into_iter()
         .filter(|constant| constant.notation() != Some(BACKWARDS_COMPATIBLE_ALIAS_COMMENT))
         .map(|constant| {
             let variant_ident = constant.variant_ident(enum_name);
@@ -1276,124 +1255,142 @@ pub fn bitflags_impl_block(
     }
 }
 
-pub fn generate_enum<'a>(
-    enum_: &'a vk_parse::Enums,
-    const_cache: &mut HashSet<&'a str>,
+pub fn generate_enum<'s, 'a: 's>(
+    enum_: &'s Enums<'a>,
+    const_cache: &mut HashSet<&'s str>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
     bitflags_cache: &mut HashSet<Ident>,
 ) -> EnumType {
-    let name = enum_.name.as_ref().unwrap();
+    let name = enum_.name.as_ref();
     let ident = name_to_tokens(name);
-    let constants = enum_
-        .children
-        .iter()
-        .filter_map(get_variant!(vk_parse::EnumsChild::Enum))
-        .filter(|constant| constant.notation() != Some(BACKWARDS_COMPATIBLE_ALIAS_COMMENT))
-        .collect_vec();
 
-    let mut values = Vec::with_capacity(constants.len());
-    for constant in &constants {
-        const_cache.insert(constant.name.as_str());
-        values.push(ConstantMatchInfo {
-            ident: constant.variant_ident(name),
-            is_alias: constant.is_alias(),
-        });
-    }
-    const_values.insert(
-        ident.clone(),
-        ConstantTypeInfo {
-            values,
-            bitwidth: enum_.bitwidth,
-        },
-    );
-
+    let mut values = Vec::new();
     let khronos_link = khronos_link(name);
 
-    if name.contains("Bit") {
-        let type_ = if enum_.bitwidth == Some(64u32) {
-            quote!(Flags64)
-        } else {
-            quote!(Flags)
-        };
-
-        if !bitflags_cache.insert(ident.clone()) {
-            EnumType::Bitflags(quote! {})
-        } else {
-            let impl_bitflags = bitflags_impl_block(ident.clone(), name, &constants);
-            let q = quote! {
-                #[repr(transparent)]
-                #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-                #[doc = #khronos_link]
-                pub struct #ident(pub(crate) #type_);
-                vk_bitflags_wrapped!(#ident, #type_);
-                #impl_bitflags
+    let enum_type = match &enum_.values {
+        EnumsValues::Constants(_) => unreachable!(),
+        EnumsValues::Enum(children, _) => {
+            let (struct_attribute, special_quote) = match name {
+                //"StructureType" => generate_structure_type(&_name, _enum, create_info_constants),
+                "VkResult" => (quote!(#[must_use]), generate_result(ident.clone(), enum_)),
+                _ => (quote!(), quote!()),
             };
-            EnumType::Bitflags(q)
-        }
-    } else {
-        let (struct_attribute, special_quote) = match name.as_str() {
-            //"StructureType" => generate_structure_type(&_name, _enum, create_info_constants),
-            "VkResult" => (quote!(#[must_use]), generate_result(ident.clone(), enum_)),
-            _ => (quote!(), quote!()),
-        };
 
-        let impl_block = bitflags_impl_block(ident.clone(), name, &constants);
-        let enum_quote = quote! {
-            #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-            #[repr(transparent)]
-            #[doc = #khronos_link]
-            #struct_attribute
-            pub struct #ident(pub(crate) i32);
-            impl #ident {
-                #[inline]
-                pub const fn from_raw(x: i32) -> Self { Self(x) }
-                #[inline]
-                pub const fn as_raw(self) -> i32 { self.0 }
+            for v in children.values() {
+                let (constant_name, ident, is_alias) = match v {
+                    DefinitionOrAlias::Alias {
+                        name: constant_name,
+                        alias,
+                        ..
+                    } => (constant_name, variant_ident(name, alias.as_ref()), true),
+                    DefinitionOrAlias::Definition(defn) => {
+                        (&defn.name, defn.variant_ident(name), false)
+                    }
+                };
+                const_cache.insert(constant_name.as_ref());
+                values.push(ConstantMatchInfo { ident, is_alias });
             }
-            #impl_block
-        };
-        let q = quote! {
-            #enum_quote
-            #special_quote
 
-        };
-        EnumType::Enum(q)
-    }
+            let impl_block = bitflags_impl_block(ident.clone(), name, children.values());
+            let enum_quote = quote! {
+                #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+                #[repr(transparent)]
+                #[doc = #khronos_link]
+                #struct_attribute
+                pub struct #ident(pub(crate) i32);
+                impl #ident {
+                    #[inline]
+                    pub const fn from_raw(x: i32) -> Self { Self(x) }
+                    #[inline]
+                    pub const fn as_raw(self) -> i32 { self.0 }
+                }
+                #impl_block
+            };
+            let q = quote! {
+                #enum_quote
+                #special_quote
+
+            };
+            EnumType::Enum(q)
+        }
+        EnumsValues::Bitmask(children) => {
+            let type_ = if enum_.bit_width.map(|b| b.get() as _) == Some(64u32) {
+                quote!(Flags64)
+            } else {
+                quote!(Flags)
+            };
+
+            for v in children.values() {
+                let (constant_name, ident, is_alias) = match v {
+                    DefinitionOrAlias::Alias {
+                        name: constant_name,
+                        alias,
+                        ..
+                    } => (constant_name, variant_ident(name, alias.as_ref()), true),
+                    DefinitionOrAlias::Definition(defn) => {
+                        (defn.name(), defn.variant_ident(name), false)
+                    }
+                };
+                const_cache.insert(constant_name.as_ref());
+                values.push(ConstantMatchInfo { ident, is_alias });
+            }
+
+            if !bitflags_cache.insert(ident.clone()) {
+                EnumType::Bitflags(quote! {})
+            } else {
+                let impl_bitflags = bitflags_impl_block(ident.clone(), name, children.values());
+                let q = quote! {
+                    #[repr(transparent)]
+                    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+                    #[doc = #khronos_link]
+                    pub struct #ident(pub(crate) #type_);
+                    vk_bitflags_wrapped!(#ident, #type_);
+                    #impl_bitflags
+                };
+                EnumType::Bitflags(q)
+            }
+        }
+    };
+    const_values.insert(
+        ident,
+        ConstantTypeInfo {
+            values,
+            bitwidth: enum_.bit_width.map(|b| b.get() as _),
+        },
+    );
+    enum_type
 }
 
 fn generate_format_component(
-    name: &vk_parse::FormatComponentName,
-    bits: &vk_parse::FormatComponentBits,
-    numeric_format: &vk_parse::FormatComponentNumericFormat,
+    name: &ComponentName,
+    bits: &ComponentBits,
+    numeric_format: &ComponentNumericFormat,
 ) -> TokenStream {
     let kind = match name {
-        vk_parse::FormatComponentName::A => quote!(FormatComponentKind::A),
-        vk_parse::FormatComponentName::R => quote!(FormatComponentKind::R),
-        vk_parse::FormatComponentName::G => quote!(FormatComponentKind::G),
-        vk_parse::FormatComponentName::B => quote!(FormatComponentKind::B),
-        vk_parse::FormatComponentName::S => quote!(FormatComponentKind::S),
-        vk_parse::FormatComponentName::D => quote!(FormatComponentKind::D),
-        _ => todo!(),
+        ComponentName::A => quote!(FormatComponentKind::A),
+        ComponentName::R => quote!(FormatComponentKind::R),
+        ComponentName::G => quote!(FormatComponentKind::G),
+        ComponentName::B => quote!(FormatComponentKind::B),
+        ComponentName::S => quote!(FormatComponentKind::S),
+        ComponentName::D => quote!(FormatComponentKind::D),
     };
     let bits = match bits {
-        vk_parse::FormatComponentBits::Compressed => quote!(FormatComponentBits::Compressed),
-        vk_parse::FormatComponentBits::Bits(n) => {
+        ComponentBits::Compressed => quote!(FormatComponentBits::Compressed),
+        ComponentBits::Bits(n) => {
             let n = n.get();
             quote!(FormatComponentBits::Bits(#n))
         }
-        _ => todo!(),
     };
     let numerical_type = match numeric_format {
-        vk_parse::FormatComponentNumericFormat::SFLOAT => quote!(NumericalType::SFLOAT),
-        vk_parse::FormatComponentNumericFormat::SINT => quote!(NumericalType::SINT),
-        vk_parse::FormatComponentNumericFormat::SNORM => quote!(NumericalType::SNORM),
-        vk_parse::FormatComponentNumericFormat::SRGB => quote!(NumericalType::SRGB),
-        vk_parse::FormatComponentNumericFormat::SSCALED => quote!(NumericalType::SSCALED),
-        vk_parse::FormatComponentNumericFormat::UFLOAT => quote!(NumericalType::UFLOAT),
-        vk_parse::FormatComponentNumericFormat::UINT => quote!(NumericalType::UINT),
-        vk_parse::FormatComponentNumericFormat::UNORM => quote!(NumericalType::UNORM),
-        vk_parse::FormatComponentNumericFormat::USCALED => quote!(NumericalType::USCALED),
-        _ => todo!(),
+        ComponentNumericFormat::SFLOAT => quote!(NumericalType::SFLOAT),
+        ComponentNumericFormat::SINT => quote!(NumericalType::SINT),
+        ComponentNumericFormat::SNORM => quote!(NumericalType::SNORM),
+        ComponentNumericFormat::SRGB => quote!(NumericalType::SRGB),
+        ComponentNumericFormat::SSCALED => quote!(NumericalType::SSCALED),
+        ComponentNumericFormat::UFLOAT => quote!(NumericalType::UFLOAT),
+        ComponentNumericFormat::UINT => quote!(NumericalType::UINT),
+        ComponentNumericFormat::UNORM => quote!(NumericalType::UNORM),
+        ComponentNumericFormat::USCALED => quote!(NumericalType::USCALED),
     };
     quote!(FormatComponent {
         kind: #kind,
@@ -1402,96 +1399,97 @@ fn generate_format_component(
     })
 }
 
-pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
-    let vk_parse::Format {
+pub fn generate_format(format: &Format) -> (Ident, TokenStream) {
+    let Format {
         name,
         class,
-        blockSize,
-        texelsPerBlock,
-        blockExtent,
         packed,
         compressed,
         chroma,
         children,
-        ..
+        block_size,
+        texels_per_block,
+        block_extent,
     } = format;
 
-    let packed = packed.map_or_else(|| quote!(None), |p| quote!(Some(#p)));
+    let packed = packed.map_or_else(
+        || quote!(None),
+        |p| {
+            let p = Literal::u8_unsuffixed(p.get());
+            quote!(Some(#p))
+        },
+    );
     let chroma = match chroma {
-        Some(vk_parse::FormatChroma::Type420) => {
+        Some(FormatChroma::Type420) => {
             quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_420))
         }
-        Some(vk_parse::FormatChroma::Type422) => {
+        Some(FormatChroma::Type422) => {
             quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_422))
         }
-        Some(vk_parse::FormatChroma::Type444) => {
+        Some(FormatChroma::Type444) => {
             quote!(Some(VideoChromaSubsamplingFlagsKHR::TYPE_444))
         }
         None => quote!(None),
-        _ => unimplemented!(),
     };
-    let block_extent = if let Some([width, height, depth]) = blockExtent {
-        let width = Literal::u8_unsuffixed(*width);
-        let height = Literal::u8_unsuffixed(*height);
-        let depth = Literal::u8_unsuffixed(*depth);
+    let block_extent = if let Some(BlockExtent(width, height, depth)) = block_extent {
+        let width = Literal::u8_unsuffixed(width.get());
+        let height = Literal::u8_unsuffixed(height.get());
+        let depth = Literal::u8_unsuffixed(depth.get());
         quote!(Some(Extent3D { width: #width, height: #height, depth: #depth }))
     } else {
         quote!(None)
     };
 
     // let compressed = match compressed {
-    //     Some(vk_parse::FormatCompressionType::BC) => quote!(Some(VideoCompressionTypeFlagsKHR::BC)),
-    //     Some(vk_parse::FormatCompressionType::ETC2) => quote!(Some(VideoCompressionTypeFlagsKHR::ETC2)),
-    //     Some(vk_parse::FormatCompressionType::EAC) => quote!(Some(VideoCompressionTypeFlagsKHR::EAC)),
-    //     Some(vk_parse::FormatCompressionType::ASTC_LDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_LDR)),
-    //     Some(vk_parse::FormatCompressionType::ASTC_HDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_HDR)),
-    //     Some(vk_parse::FormatCompressionType::PVRTC) => quote!(Some(VideoCompressionTypeFlagsKHR::PVRTC)),
+    //     Some(FormatCompressionType::BC) => quote!(Some(VideoCompressionTypeFlagsKHR::BC)),
+    //     Some(FormatCompressionType::ETC2) => quote!(Some(VideoCompressionTypeFlagsKHR::ETC2)),
+    //     Some(FormatCompressionType::EAC) => quote!(Some(VideoCompressionTypeFlagsKHR::EAC)),
+    //     Some(FormatCompressionType::ASTC_LDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_LDR)),
+    //     Some(FormatCompressionType::ASTC_HDR) => quote!(Some(VideoCompressionTypeFlagsKHR::ASTC_HDR)),
+    //     Some(FormatCompressionType::PVRTC) => quote!(Some(VideoCompressionTypeFlagsKHR::PVRTC)),
     //     None => quote!(None),
     //     _ => todo!()
     // };
 
     let compressed = match compressed {
-        Some(vk_parse::FormatCompressionType::BC) => quote!(Some("BC")),
-        Some(vk_parse::FormatCompressionType::ETC2) => quote!(Some("ETC2")),
-        Some(vk_parse::FormatCompressionType::EAC) => quote!(Some("EAC")),
-        Some(vk_parse::FormatCompressionType::ASTC_LDR) => quote!(Some("ASTC LDR")),
-        Some(vk_parse::FormatCompressionType::ASTC_HDR) => quote!(Some("ASTC HDR")),
-        Some(vk_parse::FormatCompressionType::PVRTC) => quote!(Some("PVRTC")),
+        Some(FormatCompressionType::Bc) => quote!(Some("BC")),
+        Some(FormatCompressionType::Etc2) => quote!(Some("ETC2")),
+        Some(FormatCompressionType::Eac) => quote!(Some("EAC")),
+        Some(FormatCompressionType::AstcLdr) => quote!(Some("ASTC LDR")),
+        Some(FormatCompressionType::AstcHdr) => quote!(Some("ASTC HDR")),
+        Some(FormatCompressionType::Pvrtc) => quote!(Some("PVRTC")),
         None => quote!(None),
-        _ => todo!(),
     };
 
     let spirv_image_format = children
         .iter()
-        .filter_map(get_variant!(vk_parse::FormatChild::SpirvImageFormat {
-            name
-        }))
+        .filter_map(get_variant!(FormatChild::SpirvImageFormat { name }))
         .next()
         .map_or_else(|| quote!(None), |f| quote!(Some(#f)));
 
     let flat_components = children
         .iter()
         .filter_map(|c| match c {
-            vk_parse::FormatChild::Component {
+            FormatChild::Component {
                 name,
                 bits,
-                numericFormat,
-                planeIndex: None,
+                numeric_format,
+                plane_index: None,
                 ..
-            } => Some(generate_format_component(name, bits, numericFormat)),
+            } => Some(generate_format_component(name, bits, numeric_format)),
             _ => None,
         })
         .collect::<Vec<_>>();
     let planar_components = children
         .iter()
         .filter_map(|c| match c {
-            vk_parse::FormatChild::Component {
+            FormatChild::Component {
                 name,
                 bits,
-                numericFormat,
-                planeIndex: Some(p),
+                numeric_format,
+                plane_index: Some(p),
                 ..
-            } => Some((*p, generate_format_component(name, bits, numericFormat))),
+            } => Some((*p, generate_format_component(name, bits, numeric_format))),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -1499,10 +1497,10 @@ pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
     let components = if flat_components.is_empty() {
         let planes = children
             .iter()
-            .filter_map(get_variant!(vk_parse::FormatChild::Plane {
+            .filter_map(get_variant!(FormatChild::Plane {
                 index,
-                widthDivisor,
-                heightDivisor,
+                width_divisor,
+                height_divisor,
                 compatible
             }))
             .map(|(&index, width_divisor, height_divisor, compatible)| {
@@ -1511,6 +1509,8 @@ pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
                         .iter()
                         .filter_map(|(i, c)| if *i == index { Some(c) } else { None });
 
+                let width_divisor = Literal::u8_unsuffixed(width_divisor.get());
+                let height_divisor = Literal::u8_unsuffixed(height_divisor.get());
                 let compatible = variant_ident("VkFormat", compatible);
                 quote! {
                     FormatPlane {
@@ -1526,14 +1526,16 @@ pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
     } else {
         quote! { FormatComponents::Flat(&[ #(#flat_components),* ]) }
     };
+    let block_size = Literal::u8_unsuffixed(block_size.get());
+    let texels_per_block = Literal::u8_unsuffixed(texels_per_block.get());
 
     (
         variant_ident("VkFormat", name),
         quote! {
             FormatDesc {
                 class: #class,
-                block_size: #blockSize,
-                texels_per_block: #texelsPerBlock,
+                block_size: #block_size,
+                texels_per_block: #texels_per_block,
                 block_extent: #block_extent,
                 packed: #packed,
                 compressed: #compressed,
@@ -1545,23 +1547,27 @@ pub fn generate_format(format: &vk_parse::Format) -> (Ident, TokenStream) {
     )
 }
 
-pub fn generate_result(ident: Ident, enum_: &vk_parse::Enums) -> TokenStream {
-    let notation = enum_.children.iter().filter_map(|elem| {
-        let (variant_name, notation) = match *elem {
-            vk_parse::EnumsChild::Enum(ref constant) => (
-                constant.name.as_str(),
-                constant.comment.as_deref().unwrap_or(""),
-            ),
-            _ => {
-                return None;
-            }
-        };
-
-        let variant_ident = variant_ident(enum_.name.as_ref().unwrap(), variant_name);
-        Some(quote! {
-            Self::#variant_ident => Some(#notation)
-        })
-    });
+pub fn generate_result(ident: Ident, enum_: &Enums) -> TokenStream {
+    let notation = if let EnumsValues::Enum(children, _unused) = &enum_.values {
+        children
+            .values()
+            .filter_map(get_variant!(DefinitionOrAlias::Definition))
+            .map(
+                |ValueEnum {
+                     name: variant_name,
+                     comment,
+                     ..
+                 }| {
+                    let variant_ident = variant_ident(enum_.name.as_ref(), variant_name);
+                    let notation = comment.as_deref().unwrap_or_default();
+                    quote! {
+                        Self::#variant_ident => Some(#notation)
+                    }
+                },
+            )
+    } else {
+        unreachable!()
+    };
 
     quote! {
         impl ::std::error::Error for #ident {}
@@ -1583,17 +1589,13 @@ pub fn generate_result(ident: Ident, enum_: &vk_parse::Enums) -> TokenStream {
     }
 }
 
-fn is_static_array(field: &vk_parse::TypeMemberDefinition) -> bool {
-    field.definition.array_shape.is_some()
+fn is_static_array(field: &Member) -> bool {
+    field.base.array_shape.is_some()
 }
-pub fn derive_default(
-    name: &str,
-    members: &[&vk_parse::TypeMemberDefinition],
-    has_lifetime: bool,
-) -> Option<TokenStream> {
+pub fn derive_default(name: &str, members: &[&Member], has_lifetime: bool) -> Option<TokenStream> {
     let name = name_to_tokens(name);
     let is_structure_type =
-        |field: &vk_parse::TypeMemberDefinition| field.definition.type_name == "VkStructureType";
+        |field: &Member| field.base.type_name.as_identifier() == "VkStructureType";
 
     // These are also pointers, and therefor also don't implement Default. The spec
     // also doesn't mark them as pointers
@@ -1612,14 +1614,14 @@ pub fn derive_default(
     ];
     let contains_ptr = members
         .iter()
-        .any(|field| field.definition.pointer_kind.is_some());
+        .any(|field| field.base.pointer_kind.is_some());
     let contains_structure_type = members.iter().copied().any(is_structure_type);
     let contains_static_array = members.iter().copied().any(is_static_array);
     if !(contains_ptr || contains_structure_type || contains_static_array) {
         return None;
     };
     let default_fields = members.iter().map(|field| {
-        let param_ident = field.definition.param_ident();
+        let param_ident = field.base.param_ident();
         if is_structure_type(field) {
             if field.values.is_some() {
                 quote! {
@@ -1630,22 +1632,19 @@ pub fn derive_default(
                     #param_ident: unsafe { ::std::mem::zeroed() }
                 }
             }
-        } else if let Some(kind) = &field.definition.pointer_kind {
-            if matches!(
-                kind,
-                vk_parse::PointerKind::Single { is_const: true }
-                    | vk_parse::PointerKind::Double { is_const: true, .. }
-            ) {
+        } else if field.base.pointer_kind.is_some() {
+            if field.base.is_const {
                 quote!(#param_ident: ::std::ptr::null())
             } else {
                 quote!(#param_ident: ::std::ptr::null_mut())
             }
-        } else if is_static_array(field) || handles.contains(&field.definition.type_name.as_str()) {
+        } else if is_static_array(field) || handles.contains(&field.base.type_name.as_identifier())
+        {
             quote! {
                 #param_ident: unsafe { ::std::mem::zeroed() }
             }
         } else {
-            let ty = field.definition.type_tokens(false);
+            let ty = field.base.type_tokens(false);
             quote! {
                 #param_ident: #ty::default()
             }
@@ -1670,30 +1669,28 @@ pub fn derive_default(
 }
 pub fn derive_debug(
     name: &str,
-    members: &[&vk_parse::TypeMemberDefinition],
+    members: &[&Member],
     union_types: &HashSet<&str>,
     has_lifetime: bool,
 ) -> Option<TokenStream> {
     let name = name_to_tokens(name);
-    let contains_pfn = members
-        .iter()
-        .any(|field| field.definition.name.contains("pfn"));
+    let contains_pfn = members.iter().any(|field| field.base.name.contains("pfn"));
     let contains_static_array = members
         .iter()
-        .any(|x| is_static_array(x) && x.definition.type_name == "char");
+        .any(|x| is_static_array(x) && x.base.type_name == TypeSpecifier::Char);
     let contains_union = members
         .iter()
-        .any(|field| union_types.contains(field.definition.type_name.as_str()));
+        .any(|field| union_types.contains(field.base.type_name.as_identifier()));
     let is_bitfield = members
         .iter()
-        .any(|field| field.definition.bitfield_size.is_some());
+        .any(|field| field.base.bitfield_size.is_some());
     if !(contains_union || contains_static_array || contains_pfn || is_bitfield) {
         return None;
     }
     let debug_fields = members.iter().map(|field| {
-        let param_ident = field.definition.param_ident();
+        let param_ident = field.base.param_ident();
         let param_str = param_ident.to_string();
-        let debug_value = if is_static_array(field) && field.definition.type_name == "char" {
+        let debug_value = if is_static_array(field) && field.base.type_name == TypeSpecifier::Char {
             quote! {
                 &unsafe {
                     ::std::ffi::CStr::from_ptr(self.#param_ident.as_ptr())
@@ -1703,7 +1700,7 @@ pub fn derive_debug(
             quote! {
                 &(self.#param_ident.map(|x| x as *const ()))
             }
-        } else if union_types.contains(field.definition.type_name.as_str()) {
+        } else if union_types.contains(field.base.type_name.as_identifier()) {
             quote!(&"union")
         } else if is_bitfield {
             let getter = format_ident!("get_{}", param_str);
@@ -1734,8 +1731,8 @@ pub fn derive_debug(
 
 pub fn derive_setters(
     name_: &str,
-    members: &[&vk_parse::TypeMemberDefinition],
-    structextends: &[&str],
+    members: &[&Member],
+    structextends: &[Cow<'_, str>],
     root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
 ) -> Option<TokenStream> {
@@ -1750,18 +1747,18 @@ pub fn derive_setters(
 
     let next_field = members
         .iter()
-        .find(|field| field.definition.param_ident() == "p_next");
+        .find(|field| field.base.param_ident() == "p_next");
 
     let structure_type_field = members
         .iter()
-        .find(|field| field.definition.param_ident() == "s_type");
+        .find(|field| field.base.param_ident() == "s_type");
 
     // Must either have both, or none:
     assert_eq!(next_field.is_some(), structure_type_field.is_some());
 
     let is_bitfield = members
         .iter()
-        .any(|field| field.definition.bitfield_size.is_some());
+        .any(|field| field.base.bitfield_size.is_some());
 
     let nofilter_count_members = [
         ("VkPipelineViewportStateCreateInfo", "pViewports"),
@@ -1771,19 +1768,14 @@ pub fn derive_setters(
     let filter_members: Vec<String> = members
         .iter()
         .filter_map(|field| {
-            let field_name = field.definition.name.as_str();
+            let field_name = field.base.name.as_ref();
 
             // Associated _count members
-            if field.definition.dynamic_shape.is_some() {
+            if field.base.dynamic_shape.is_some() {
                 if let Some(
-                    vk_parse::DynamicShapeKind::Single(vk_parse::DynamicLength::Parameterized(
-                        array_size,
-                    ))
-                    | vk_parse::DynamicShapeKind::Double(
-                        vk_parse::DynamicLength::Parameterized(array_size),
-                        _,
-                    ),
-                ) = &field.definition.dynamic_shape
+                    DynamicShapeKind::Single(DynamicLength::Parameterized(array_size))
+                    | DynamicShapeKind::Double(DynamicLength::Parameterized(array_size), _),
+                ) = &field.base.dynamic_shape
                 {
                     if !nofilter_count_members.contains(&(name_, field_name)) {
                         return Some(array_size.to_string());
@@ -1804,8 +1796,8 @@ pub fn derive_setters(
         if is_bitfield {
             return None;
         }
-        let param_ident = field.definition.param_ident();
-        let param_ty_tokens = field.definition.safe_type_tokens(quote!('a));
+        let param_ident = field.base.param_ident();
+        let param_ty_tokens = field.base.safe_type_tokens(quote!('a));
 
         let param_ident_string = param_ident.to_string();
         if param_ident_string == "s_type" || param_ident_string == "p_next" {
@@ -1819,7 +1811,7 @@ pub fn derive_setters(
         let param_ident_short = format_ident!("{}", &param_ident_short);
 
         {
-            let name = field.definition.name.as_str();
+            let name = field.base.name.as_ref();
             // Filter
             if filter_members.iter().any(|n| *n == *name) {
                 return None;
@@ -1869,9 +1861,9 @@ pub fn derive_setters(
         }
 
         // TODO: Improve in future when https://github.com/rust-lang/rust/issues/53667 is merged id:6
-        if let Some(kind) = &field.definition.pointer_kind {
-            if field.definition.type_name == "char" && matches!(kind, vk_parse::PointerKind::Single {..}) {
-                assert!(matches!(field.definition.dynamic_shape, Some(vk_parse::DynamicShapeKind::Single(vk_parse::DynamicLength::NullTerminated))));
+        if let Some(kind) = &field.base.pointer_kind {
+            if field.base.type_name == TypeSpecifier::Char && matches!(kind, PointerKind::Single {..}) {
+                assert!(matches!(field.base.dynamic_shape, Some(DynamicShapeKind::Single(DynamicLength::NullTerminated))));
                 return Some(quote!{
                     #[inline]
                     pub fn #param_ident_short(mut self, #param_ident_short: &'a ::std::ffi::CStr) -> Self {
@@ -1881,16 +1873,12 @@ pub fn derive_setters(
                 });
             }
 
-            let is_const = matches!(kind, vk_parse::PointerKind::Single { is_const: true } | vk_parse::PointerKind::Double { is_const: true, .. });
+            let is_const = field.base.is_const;
 
-            if let Some(dyn_shape) = &field.definition.dynamic_shape {
-                let array_size = match dyn_shape {
-                    vk_parse::DynamicShapeKind::Expression { c_expr, .. } => Some(c_expr),
-                    vk_parse::DynamicShapeKind::Single(vk_parse::DynamicLength::Parameterized(p)) | vk_parse::DynamicShapeKind::Double(vk_parse::DynamicLength::Parameterized(p), _) => Some(p),
-                    _ => None
-                };
-                if let Some(array_size) = array_size {
-                    let mut slice_param_ty_tokens = field.definition.safe_type_tokens(quote!('a));
+            if let Some(dyn_shape) = &field.base.dynamic_shape {
+                let is_array_ish = matches!(dyn_shape, DynamicShapeKind::Expression { .. } | DynamicShapeKind::Single(DynamicLength::Parameterized(_)) | DynamicShapeKind::Double(DynamicLength::Parameterized(_), _));
+                if is_array_ish {
+                    let mut slice_param_ty_tokens = field.base.safe_type_tokens(quote!('a));
 
                     let mut ptr = if is_const {
                         quote!(.as_ptr())
@@ -1899,34 +1887,36 @@ pub fn derive_setters(
                     };
 
                     // Interpret void array as byte array
-                    if field.definition.type_name == "void" && matches!(field.definition.pointer_kind, Some(vk_parse::PointerKind::Single {..})) {
+                    if field.base.type_name == TypeSpecifier::Void && matches!(field.base.pointer_kind, Some(PointerKind::Single {..})) {
                         let mutable = if is_const { quote!(const) } else { quote!(mut) };
 
                         slice_param_ty_tokens = quote!([u8]);
                         ptr = quote!(#ptr as *#mutable c_void);
                     };
 
-                    let set_size_stmt = if let vk_parse::DynamicShapeKind::Expression { c_expr, .. } = &dyn_shape {
+                    let set_size_stmt = if let DynamicShapeKind::Expression { c_expr, .. } = &dyn_shape {
                         // this is a pointer to a piece of memory with statically known size.
-                        let c_size = convert_c_expression(c_expr, &BTreeMap::new());
-                        let inner_type = field.definition.inner_type_tokens();
+                        let c_size = expression_tokens(c_expr, &BTreeMap::new(), false);
+                        let inner_type = field.base.inner_type_tokens();
 
                         slice_param_ty_tokens = quote!([#inner_type; #c_size]);
                         ptr = quote!();
 
                         quote!()
-                    } else {
-                        let array_size_ident = format_ident!("{}", array_size.to_snake_case().as_str());
+                    } else if let DynamicShapeKind::Single(DynamicLength::Parameterized(p)) | DynamicShapeKind::Double(DynamicLength::Parameterized(p), _) = &dyn_shape {
+                        let array_size_ident = format_ident!("{}", p.to_snake_case().as_str());
 
-                        let size_field = members.iter().find(|m| m.definition.name.as_str() == (array_size.as_str())).unwrap();
+                        let size_field = members.iter().find(|m| m.base.name.as_ref() == (p.as_ref())).unwrap();
 
-                        let cast = if size_field.definition.type_name == "size_t" {
-                            quote!()
+                        let cast = if size_field.base.type_name.as_identifier() == "size_t" {
+                            None
                         }else{
-                            quote!(as _)
+                            Some(quote!(as _))
                         };
 
                         quote!(self.#array_size_ident = #param_ident_short.len()#cast;)
+                    } else {
+                        unreachable!()
                     };
 
                     let mutable = if is_const { quote!() } else { quote!(mut) };
@@ -1935,7 +1925,7 @@ pub fn derive_setters(
                         #[inline]
                         pub fn #param_ident_short(mut self, #param_ident_short: &'a #mutable #slice_param_ty_tokens) -> Self {
                             #set_size_stmt
-                            self.#param_ident = #param_ident_short#ptr;
+                            self.#param_ident = #param_ident_short #ptr;
                             self
                         }
                     });
@@ -1943,7 +1933,7 @@ pub fn derive_setters(
             }
         }
 
-        if field.definition.type_name == "VkBool32" {
+        if field.base.type_name.as_identifier() == "VkBool32" {
             return Some(quote!{
                 #[inline]
                 pub fn #param_ident_short(mut self, #param_ident_short: bool) -> Self {
@@ -1953,15 +1943,15 @@ pub fn derive_setters(
             });
         }
 
-        let param_ty_tokens = if is_opaque_type(&field.definition.type_name) {
+        let param_ty_tokens = if is_opaque_type(field.base.type_name.as_identifier()) {
             //  Use raw pointers for void/opaque types
-            field.definition.type_tokens(false)
+            field.base.type_tokens(false)
         } else {
             param_ty_tokens
         };
 
         let lifetime = has_lifetimes
-            .contains(&name_to_tokens(&field.definition.type_name))
+            .contains(&name_to_tokens(field.base.type_name.as_identifier()))
             .then(|| quote!(<'a>));
 
         Some(quote!{
@@ -1975,11 +1965,11 @@ pub fn derive_setters(
 
     let bitfield_fns = if is_bitfield {
         Some(members.iter().scan(0u8, |offset, field| {
-            let param_ident = field.definition.param_ident();
+            let param_ident = field.base.param_ident();
             let param_ident_string = param_ident.to_string();
             let getter_ident = format_ident!("get_{}", param_ident_string);
 
-            let size = field.definition.bitfield_size.unwrap();
+            let size = field.base.bitfield_size.unwrap();
 
             let bit_len = size.get();
             let val_ty = if bit_len <= 1 {
@@ -1999,7 +1989,7 @@ pub fn derive_setters(
             };
 
             let shift = *offset;
-            let param_ty = name_to_tokens(&field.definition.type_name);
+            let param_ty = name_to_tokens(field.base.type_name.as_identifier());
             let into_val_ty = if bit_len == 1 {
                 quote!(!=0)
             } else {
@@ -2040,15 +2030,9 @@ pub fn derive_setters(
 
     // We only implement a next methods for root structs with a `pnext` field.
     let next_function = if let Some(next_field) = root_struct_next_field {
-        assert_eq!(next_field.definition.type_name, "void");
+        assert_eq!(next_field.base.type_name, TypeSpecifier::Void);
 
-        let is_const = matches!(
-            next_field.definition.pointer_kind,
-            Some(
-                vk_parse::PointerKind::Single { is_const: true }
-                    | vk_parse::PointerKind::Double { is_const: true, .. }
-            )
-        );
+        let is_const = next_field.base.is_const;
 
         let mutability = if is_const { quote!(const) } else { quote!(mut) };
         quote! {
@@ -2144,8 +2128,8 @@ pub fn manual_derives(name: &str) -> TokenStream {
 }
 pub fn generate_struct(
     name_: &str,
-    members: &[&vk_parse::TypeMemberDefinition],
-    structextends: &[&str],
+    members: &[&Member],
+    structextends: &[Cow<'_, str>],
     root_structs: &HashSet<Ident>,
     union_types: &HashSet<&str>,
     has_lifetimes: &HashSet<Ident>,
@@ -2212,21 +2196,21 @@ pub fn generate_struct(
 
     let is_bitfield = members
         .iter()
-        .any(|field| field.definition.bitfield_size.is_some());
+        .any(|field| field.base.bitfield_size.is_some());
     let bitfield_ty = if is_bitfield {
         assert!(
             members
                 .iter()
-                .all(|field| { field.definition.bitfield_size.is_some() }),
+                .all(|field| { field.base.bitfield_size.is_some() }),
             "If any member is a bitfield, than all most be one"
         );
         assert!(
             members
                 .windows(2)
-                .all(|fs| fs[0].definition.type_name == fs[1].definition.type_name),
+                .all(|fs| fs[0].base.type_name == fs[1].base.type_name),
             "All bitfields must have the same primitive they fit in"
         );
-        Some(name_to_tokens(&members[0].definition.type_name))
+        Some(name_to_tokens(members[0].base.type_name.as_identifier()))
     } else {
         None
     };
@@ -2234,21 +2218,31 @@ pub fn generate_struct(
     let params = members
         .iter()
         .filter_map(|field| {
-            let param_ident = field.definition.param_ident();
-            let param_ty_tokens = if field.definition.type_name == name_ {
-                let pointer = field
-                    .definition
-                    .pointer_kind
-                    .as_ref()
-                    .map(|k| k.to_tokens());
-                quote!(#pointer Self)
-            } else if field.definition.bitfield_size.is_some() {
+            let param_ident = field.base.param_ident();
+            let param_ty_tokens = if field.base.type_name.as_identifier() == name_ {
+                let outer_pointer = field.base.pointer_kind.as_ref().and_then(|pk| match pk {
+                    PointerKind::Single => None,
+                    PointerKind::Double { .. } if field.base.is_const => Some(quote!(*const)),
+                    PointerKind::Double { .. } => Some(quote!(*mut)),
+                });
+                let inner_pointer = field.base.pointer_kind.as_ref().map(|pk| match pk {
+                    PointerKind::Single if field.base.is_const => quote!(*const),
+                    PointerKind::Single => quote!(*mut),
+                    PointerKind::Double {
+                        inner_is_const: true,
+                    } => quote!(*const),
+                    PointerKind::Double {
+                        inner_is_const: false,
+                    } => quote!(*mut),
+                });
+                quote!(#outer_pointer #inner_pointer Self)
+            } else if field.base.bitfield_size.is_some() {
                 return None;
             } else {
                 let lifetime = has_lifetimes
-                    .contains(&name_to_tokens(&field.definition.type_name))
+                    .contains(&name_to_tokens(field.base.type_name.as_identifier()))
                     .then(|| quote!(<'a>));
-                let ty = field.definition.type_tokens(false);
+                let ty = field.base.type_tokens(false);
                 quote!(#ty #lifetime)
             };
             Some(quote! {pub #param_ident: #param_ty_tokens})
@@ -2291,49 +2285,44 @@ pub fn generate_struct(
     }
 }
 
-pub fn generate_handle(handle: &vk_parse::TypeHandle) -> Option<TokenStream> {
-    if let vk_parse::TypeHandle::Definition {
+pub fn generate_handle(handle: &HandleType) -> Option<TokenStream> {
+    let HandleType {
         name,
-        handle_type,
-        objtypeenum: _,
+        handle_kind,
+        obj_type_enum: _,
         parent: _,
         ..
-    } = handle
-    {
-        let khronos_link = khronos_link(name.as_str());
-        let name = name.strip_prefix("Vk").unwrap_or(name);
-        let ty = format_ident!("{}", name.to_shouty_snake_case());
-        let name = format_ident!("{}", name);
+    } = handle;
+    let khronos_link = khronos_link(name.as_ref());
+    let name = name.strip_prefix("Vk").unwrap_or(name);
+    let ty = format_ident!("{}", name.to_shouty_snake_case());
+    let name = format_ident!("{}", name);
 
-        match handle_type {
-            vk_parse::HandleType::Dispatch => Some(quote! {
-                define_handle!(#name, #ty, doc = #khronos_link);
-            }),
-            vk_parse::HandleType::NoDispatch => Some(quote! {
-                handle_nondispatchable!(#name, #ty, doc = #khronos_link);
-            }),
-            _ => todo!(),
-        }
-    } else {
-        None
+    match handle_kind {
+        HandleKind::Dispatch => Some(quote! {
+            define_handle!(#name, #ty, doc = #khronos_link);
+        }),
+        HandleKind::NoDispatch => Some(quote! {
+            handle_nondispatchable!(#name, #ty, doc = #khronos_link);
+        }),
     }
 }
-fn generate_funcptr(fnptr: &vk_parse::TypeFunctionPointer) -> TokenStream {
-    let name = format_ident!("{}", fnptr.proto.name.as_str());
-    let ret_ty_tokens = if fnptr.proto.is_void() {
+fn generate_funcptr(fnptr: &FnPtrType) -> TokenStream {
+    let name = format_ident!("{}", fnptr.name_and_return.name.as_ref());
+    let ret_ty_tokens = if fnptr.name_and_return.is_void() {
         quote!()
     } else {
-        let ret_ty_tokens = fnptr.proto.type_tokens(true);
+        let ret_ty_tokens = fnptr.name_and_return.type_tokens(true);
         quote!(-> #ret_ty_tokens)
     };
-    let params = fnptr.params.iter().map(|field| {
+    let params = fnptr.params.iter().flatten().map(|field| {
         let ident = field.param_ident();
         let type_tokens = field.type_tokens(true);
         quote! {
             #ident: #type_tokens
         }
     });
-    let khronos_link = khronos_link(&fnptr.proto.name);
+    let khronos_link = khronos_link(&fnptr.name_and_return.name);
     quote! {
         #[allow(non_camel_case_types)]
         #[doc = #khronos_link]
@@ -2341,17 +2330,13 @@ fn generate_funcptr(fnptr: &vk_parse::TypeFunctionPointer) -> TokenStream {
     }
 }
 
-fn generate_union(
-    name_: &str,
-    members: &[&vk_parse::TypeMemberDefinition],
-    has_lifetimes: &HashSet<Ident>,
-) -> TokenStream {
+fn generate_union(name_: &str, members: &[&Member], has_lifetimes: &HashSet<Ident>) -> TokenStream {
     let name = name_to_tokens(name_);
     let fields = members.iter().map(|field| {
-        let name = field.definition.param_ident();
-        let ty = field.definition.type_tokens(false);
+        let name = field.base.param_ident();
+        let ty = field.base.type_tokens(false);
         let lifetime = has_lifetimes
-            .contains(&name_to_tokens(&field.definition.type_name))
+            .contains(&name_to_tokens(field.base.type_name.as_identifier()))
             .then(|| quote!(<'a>));
         quote! {
             pub #name: #ty #lifetime
@@ -2375,93 +2360,70 @@ fn generate_union(
     }
 }
 /// Root structs are all structs that are extended by other structs.
-pub fn root_structs(definitions: &[&vk_parse::TypeDefinition]) -> HashSet<Ident> {
+pub fn root_structs(definitions: &[&Type]) -> HashSet<Ident> {
     let mut root_structs = HashSet::new();
     // Loop over all structs and collect their extends
     for definition in definitions {
-        if let vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
-            struct_extends,
-            ..
-        }) = definition
+        if let Type::Struct(DefinitionOrAlias::Definition(StructType { struct_extends, .. })) =
+            definition
         {
-            root_structs.extend(struct_extends.iter().map(|e| name_to_tokens(e)));
+            root_structs.extend(struct_extends.iter().flatten().map(|e| name_to_tokens(e)));
         };
     }
     root_structs
 }
-pub fn generate_definition(
-    definition: &vk_parse::TypeDefinition,
+pub fn generate_definition<'s>(
+    definition: &'s Type,
     union_types: &HashSet<&str>,
     root_structs: &HashSet<Ident>,
     has_lifetimes: &HashSet<Ident>,
     bitflags_cache: &mut HashSet<Ident>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
-    identifier_renames: &mut BTreeMap<String, Ident>,
+    identifier_renames: &mut BTreeMap<&'s str, Ident>,
 ) -> Option<TokenStream> {
     match definition {
-        vk_parse::TypeDefinition::Define(define) => {
-            Some(generate_define(define, identifier_renames))
-        }
-        vk_parse::TypeDefinition::Typedef {
+        Type::Define(define) => Some(generate_define(define, identifier_renames)),
+        // Ignore forward declarations
+        Type::BaseType(BaseTypeType::TypeDef(typedef)) => Some(generate_typedef(typedef)),
+        Type::Bitmask(DefinitionOrAlias::Definition(BitmaskType {
             name,
-            basetype: Some(basetype),
-        } => Some(generate_typedef(name, basetype)),
-        vk_parse::TypeDefinition::Bitmask(vk_parse::TypeBitmask::Definition {
-            name,
-            is_64bit,
+            is_64bits,
             has_bitvalues: false,
-        }) => generate_bitmask(name, *is_64bit, bitflags_cache, const_values),
-        vk_parse::TypeDefinition::Handle(handle) => generate_handle(handle),
-        vk_parse::TypeDefinition::FunctionPointer(fp) => Some(generate_funcptr(fp)),
-        vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
+        })) => generate_bitmask(name, *is_64bits, bitflags_cache, const_values),
+        Type::Handle(DefinitionOrAlias::Definition(handle)) => generate_handle(handle),
+        Type::FnPtr(fp) => Some(generate_funcptr(fp)),
+        Type::Struct(DefinitionOrAlias::Definition(StructType {
             name,
             members,
             struct_extends,
             ..
-        }) => Some(generate_struct(
+        })) => Some(generate_struct(
             name,
-            (members
-                .iter()
-                .filter_map(get_variant!(vk_parse::TypeMember::Definition))
-                .map(<Box<_> as Deref>::deref)
-                .collect::<Vec<_>>())
-            .as_slice(),
-            struct_extends
-                .iter()
-                .map(String::as_str)
-                .collect::<Vec<_>>()
-                .as_slice(),
+            (members.values().collect::<Vec<_>>()).as_slice(),
+            struct_extends.as_deref().unwrap_or_default(),
             root_structs,
             union_types,
             has_lifetimes,
         )),
-        vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, members, .. }) => {
-            Some(generate_union(
-                name,
-                (members
-                    .iter()
-                    .filter_map(get_variant!(vk_parse::TypeMember::Definition))
-                    .map(<Box<_> as Deref>::deref)
-                    .collect::<Vec<_>>())
-                .as_slice(),
-                has_lifetimes,
-            ))
-        }
+        Type::Union(UnionType { name, members, .. }) => Some(generate_union(
+            name,
+            (members.values().collect::<Vec<_>>()).as_slice(),
+            has_lifetimes,
+        )),
         _ => None,
     }
 }
 pub fn generate_feature<'a>(
-    feature: &vk_parse::Feature,
-    commands: &CommandMap<'a>,
-    fn_cache: &mut HashSet<&'a str>,
+    feature: &Feature<'a>,
+    commands: &CommandMap<'a, '_>,
+    fn_cache: &mut HashSet<Cow<'a, str>>,
 ) -> TokenStream {
     let (static_commands, entry_commands, device_commands, instance_commands) = feature
-        .children
+        .requires
         .iter()
-        .filter_map(get_variant!(vk_parse::FeatureChild::Require { items }))
-        .flatten()
-        .filter_map(get_variant!(vk_parse::InterfaceItem::Command { name }))
-        .filter_map(|cmd_ref| commands.get(cmd_ref))
+        .flat_map(|r| r.values.values())
+        .filter_map(get_variant!(RequireValue::Command { name }))
+        .filter_map(|cmd_ref| commands.get(cmd_ref.as_ref()))
         .fold(
             (Vec::new(), Vec::new(), Vec::new(), Vec::new()),
             |mut accs, &cmd_ref| {
@@ -2516,36 +2478,63 @@ pub fn constant_name(name: &str) -> &str {
     name.strip_prefix("VK_").unwrap_or(name)
 }
 
-pub fn generate_constant<'a>(
-    constant: &'a vk_parse::Enum,
-    cache: &mut HashSet<&'a str>,
+pub fn generate_constant<'s>(
+    constant: &'s ConstantEnum,
+    cache: &mut HashSet<&'s str>,
 ) -> Option<TokenStream> {
-    cache.insert(constant.name.as_str());
-    let c = Constant::from_constant(constant)?;
+    cache.insert(constant.name.as_ref());
     let name = constant_name(&constant.name);
     let ident = format_ident!("{}", name);
     let notation = constant.doc_attribute();
 
     let ty = if name == "TRUE" || name == "FALSE" {
-        CType::Bool32
+        format_ident!("Bool32")
+    } else if (constant.name.contains("SIZE") || constant.name.contains("MAX"))
+        && constant.type_name == "uint32_t"
+    {
+        format_ident!("usize")
     } else {
-        c.ty()?
+        name_to_tokens(constant.type_name.as_ref())
     };
+    let c = constant.constant("");
     Some(quote! {
         #notation
         pub const #ident: #ty = #c;
     })
 }
 
-pub fn generate_feature_extension<'a>(
-    feature: &'a vk_parse::Feature,
-    const_cache: &mut HashSet<&'a str>,
+pub fn generate_video_constant<'s>(
+    constant: &'s RequireEnum,
+    cache: &mut HashSet<&'s str>,
+) -> Option<TokenStream> {
+    let name = constant.name.as_deref().unwrap();
+    cache.insert(name);
+    let name = constant_name(name);
+    let ident = format_ident!("{}", name);
+    let notation = constant.doc_attribute();
+
+    let ty = if name == "TRUE" || name == "FALSE" {
+        format_ident!("Bool32")
+    } else {
+        // name_to_tokens(constant.type_name.as_ref())
+        format_ident!("usize")
+    };
+    let c = constant.constant("");
+    Some(quote! {
+        #notation
+        pub const #ident: #ty = #c;
+    })
+}
+
+pub fn generate_feature_extension<'s, 'a: 's>(
+    feature: &'a Feature,
+    const_cache: &mut HashSet<&'s str>,
     const_values: &mut BTreeMap<Ident, ConstantTypeInfo>,
 ) -> TokenStream {
     generate_extension_constants(
         &feature.name,
         0,
-        &feature.children,
+        &feature.requires,
         const_cache,
         const_values,
     )
@@ -2640,131 +2629,115 @@ pub fn generate_const_debugs(const_values: &BTreeMap<Ident, ConstantTypeInfo>) -
     }
 }
 
-pub fn generate_aliases_of_types(
-    types: &vk_parse::Types,
+pub fn generate_aliases_of_types<'i, 'a: 'i>(
+    types: impl IntoIterator<Item = &'i Type<'a>>,
     has_lifetimes: &HashSet<Ident>,
     ty_cache: &mut HashSet<Ident>,
 ) -> TokenStream {
-    let aliases = types
-        .children
-        .iter()
-        .filter_map(get_variant!(vk_parse::TypesChild::Type { definition }))
-        .filter_map(|ty| {
-            let (name, alias) = match &**ty {
-                vk_parse::TypeDefinition::None { .. } => return None,
-                vk_parse::TypeDefinition::Include { .. } => return None,
-                vk_parse::TypeDefinition::Define(_) => return None,
-                vk_parse::TypeDefinition::Typedef { .. } => return None,
-                vk_parse::TypeDefinition::Bitmask(vk_parse::TypeBitmask::Alias { name, alias }) => {
-                    (name, alias)
-                }
-                vk_parse::TypeDefinition::Bitmask(_) => return None,
-                vk_parse::TypeDefinition::Handle(vk_parse::TypeHandle::Alias { name, alias }) => {
-                    (name, alias)
-                }
-                vk_parse::TypeDefinition::Handle(_) => return None,
-                vk_parse::TypeDefinition::Enumeration {
-                    name,
-                    alias: Some(alias),
-                } => (name, alias),
-                vk_parse::TypeDefinition::Enumeration { alias: None, .. } => return None,
-                vk_parse::TypeDefinition::FunctionPointer(_) => return None,
-                vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Alias { name, alias }) => {
-                    (name, alias)
-                }
-                vk_parse::TypeDefinition::Struct(_) => return None,
-                vk_parse::TypeDefinition::Union(_) => return None,
-                _ => todo!(),
-            };
-            let name_ident = name_to_tokens(name);
-            if !ty_cache.insert(name_ident.clone()) {
-                return None;
-            };
-            let alias_ident = name_to_tokens(alias);
-            let tokens = if has_lifetimes.contains(&alias_ident) {
-                quote!(pub type #name_ident<'a> = #alias_ident<'a>;)
-            } else {
-                quote!(pub type #name_ident = #alias_ident;)
-            };
-            Some(tokens)
-        });
+    let aliases = types.into_iter().filter_map(|ty| {
+        let (name, alias) = match ty {
+            Type::Bitmask(DefinitionOrAlias::Alias { name, alias, .. }) => (name, alias),
+            Type::Handle(DefinitionOrAlias::Alias { name, alias, .. }) => (name, alias),
+            Type::Enum(DefinitionOrAlias::Alias { name, alias, .. }) => (name, alias),
+            Type::Struct(DefinitionOrAlias::Alias { name, alias, .. }) => (name, alias),
+            _ => return None,
+        };
+        let name_ident = name_to_tokens(name);
+        if !ty_cache.insert(name_ident.clone()) {
+            return None;
+        };
+        let alias_ident = name_to_tokens(alias);
+        let tokens = if has_lifetimes.contains(&alias_ident) {
+            quote!(pub type #name_ident<'a> = #alias_ident<'a>;)
+        } else {
+            quote!(pub type #name_ident = #alias_ident;)
+        };
+        Some(tokens)
+    });
     quote! {
         #(#aliases)*
     }
 }
 pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
-    let vk_xml = vk_headers_dir.join("registry/vk.xml");
-    let video_xml = vk_headers_dir.join("registry/video.xml");
-    use std::fs::File;
-    use std::io::Write;
-    let (spec, _errors) = vk_parse::parse_file(&vk_xml).expect("Invalid xml file");
-    let (video_spec, _errors) = vk_parse::parse_file(&video_xml).expect("Invalid xml file");
-    let vk_parse::Registry(registry) = spec;
-    let vk_parse::Registry(video_registry) = video_spec;
+    let vk_xml =
+        fs::read_to_string(vk_headers_dir.join("registry/vk.xml")).expect("Invalid xml file");
+    let video_xml =
+        fs::read_to_string(vk_headers_dir.join("registry/video.xml")).expect("Invalid xml file");
+    let vk_xml_doc = vulkan_parse::Document::parse(&vk_xml).expect("Invalid xml");
+    let video_xml_doc = vulkan_parse::Document::parse(&video_xml).expect("Invalid xml");
+    let spec = parse_registry(&vk_xml_doc).expect("Failed to parse vk.xml");
+    let video_spec = parse_registry(&video_xml_doc).expect("Failed to parse video.xml");
 
-    let extensions: Vec<&vk_parse::Extension> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Extensions))
-        .flat_map(|ext| &ext.children)
+    let Registry(registry) = spec;
+    let Registry(video_registry) = video_spec;
+
+    let extensions: Vec<&Extension> = registry
+        .values()
+        .filter_map(get_variant!(Items::Extensions { extensions }))
+        .flatten()
+        .filter_map(get_variant!(WrappedExtension::Extension))
         .collect();
 
-    let cmd_aliases: HashMap<String, String> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Commands))
-        .flat_map(|cmds| &cmds.children)
-        .filter_map(get_variant!(vk_parse::Command::Alias { name, alias }))
-        .map(|(name, alias)| (name.to_string(), alias.to_string()))
+    let cmd_aliases: HashMap<&str, &str> = registry
+        .values()
+        .filter_map(get_variant!(Items::Commands { commands }))
+        .flat_map(CommentendChildren::values)
+        .filter_map(get_variant!(DefinitionOrAlias::Alias { name, alias }))
+        .map(|(name, alias)| (name.as_ref(), alias.as_ref()))
         .collect();
 
-    let commands: HashMap<String, &vk_parse::CommandDefinition> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Commands))
-        .flat_map(|cmds| &cmds.children)
-        .filter_map(get_variant!(vk_parse::Command::Definition))
-        .map(|cmd| (cmd.proto.name.clone(), <Box<_> as Deref>::deref(cmd)))
+    let commands: HashMap<&str, &Command> = registry
+        .values()
+        .filter_map(get_variant!(Items::Commands { commands }))
+        .flat_map(CommentendChildren::values)
+        .filter_map(get_variant!(DefinitionOrAlias::Definition))
+        .map(|cmd| (cmd.proto.name.as_ref(), (cmd)))
         .collect();
 
-    let features: Vec<&vk_parse::Feature> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Feature))
+    let features: Vec<&Feature> = registry
+        .values()
+        .filter_map(get_variant!(Items::Features))
         .collect();
 
-    let definitions: Vec<&vk_parse::TypeDefinition> = registry
-        .iter()
-        .chain(video_registry.iter())
-        .filter_map(get_variant!(vk_parse::RegistryChild::Types))
-        .flat_map(|definitions| &definitions.children)
-        .filter_map(get_variant!(vk_parse::TypesChild::Type { definition }))
-        .map(<Box<_> as Deref>::deref)
+    // FIXME sperate out aliases
+    let definitions: Vec<&Type> = registry
+        .values()
+        .chain(video_registry.values())
+        .filter_map(get_variant!(Items::Types { types }))
+        .flat_map(CommentendChildren::values)
         .collect();
 
     // video.xml diverges from vk.xml in that it doesn't put it's hardcoded constants in a bare <enums>
     // but instead places them inside the <require> of confusing pseudo-extensions
     //
     // This is a hacky workaround, but would need to be fixed upstream in vulkan-docs itself
-    let video_constants = video_registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Extensions))
-        .flat_map(|ext| &ext.children)
-        .flat_map(|e| &e.children)
-        .filter_map(get_variant!(vk_parse::ExtensionChild::Require { items }))
+    let video_constants: Vec<&RequireEnum> = video_registry
+        .values()
+        .filter_map(get_variant!(Items::Extensions { extensions }))
         .flatten()
-        .filter_map(get_variant!(vk_parse::InterfaceItem::Enum))
-        .filter(|e| !e.name.starts_with("VK"));
-
-    let constants: Vec<&vk_parse::Enum> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Enums))
-        .filter(|enums| enums.kind.is_none())
-        .flat_map(|constants| &constants.children)
-        .filter_map(get_variant!(vk_parse::EnumsChild::Enum))
-        .chain(video_constants)
+        .filter_map(get_variant!(WrappedExtension::PseudoExtension))
+        .flat_map(|PseudoExtension { requires, .. }| requires)
+        .flat_map(|Require { values, .. }| values.values())
+        .filter_map(get_variant!(RequireValue::Enum))
+        .filter(|e| {
+            e.name.as_deref().map_or(true, |n| !n.starts_with("VK"))
+                && matches!(e.value, Some(RequireValueEnum::Value(_)))
+        })
         .collect();
 
-    let formats: Vec<&vk_parse::Format> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Formats))
-        .flat_map(|fs| &fs.children)
+    let constants: Vec<_> = registry
+        .values()
+        .filter_map(get_variant!(Items::Enums))
+        .map(|e| &e.values)
+        .filter_map(get_variant!(EnumsValues::Constants))
+        .flat_map(CommentendChildren::values)
+        .filter_map(get_variant!(DefinitionOrAlias::Definition))
+        .collect();
+
+    let formats: Vec<&Format> = registry
+        .values()
+        .filter_map(get_variant!(Items::Formats))
+        .flatten()
         .collect();
 
     let format_matches = formats.iter().map(|f| {
@@ -2779,10 +2752,10 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     let mut const_values: BTreeMap<Ident, ConstantTypeInfo> = BTreeMap::new();
 
     let (enum_code, bitflags_code) = registry
-        .iter()
-        .chain(video_registry.iter())
-        .filter_map(get_variant!(vk_parse::RegistryChild::Enums))
-        .filter(|enums| enums.kind.is_some())
+        .values()
+        .chain(video_registry.values())
+        .filter_map(get_variant!(Items::Enums))
+        .filter(|enums| !matches!(enums.values, EnumsValues::Constants(_)))
         .map(|e| generate_enum(e, &mut const_cache, &mut const_values, &mut bitflags_cache))
         .fold((Vec::new(), Vec::new()), |mut acc, elem| {
             match elem {
@@ -2796,7 +2769,11 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         .iter()
         .filter_map(|constant| generate_constant(constant, &mut const_cache))
         .collect();
-
+    constants_code.extend(
+        video_constants
+            .iter()
+            .filter_map(|constant| generate_video_constant(constant, &mut const_cache)),
+    );
     constants_code.push(quote! { pub const SHADER_UNUSED_NV : u32 = SHADER_UNUSED_KHR;});
 
     let extension_code = extensions
@@ -2816,9 +2793,7 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     let union_types = definitions
         .iter()
         .filter_map(|def| match def {
-            vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, .. }) => {
-                Some(name.as_str())
-            }
+            Type::Union(UnionType { name, .. }) => Some(name.as_ref()),
             _ => None,
         })
         .collect::<HashSet<&str>>();
@@ -2831,35 +2806,29 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
     let mut has_lifetimes = definitions
         .iter()
         .filter_map(|def| match def {
-            vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
-                name,
-                members,
-                ..
-            }) => members
-                .iter()
-                .filter_map(get_variant!(vk_parse::TypeMember::Definition))
-                .any(|x| x.definition.pointer_kind.is_some())
-                .then(|| name_to_tokens(name)),
+            Type::Struct(DefinitionOrAlias::Definition(StructType { name, members, .. })) => {
+                members
+                    .values()
+                    .any(|x| x.base.pointer_kind.is_some())
+                    .then(|| name_to_tokens(name))
+            }
             _ => None,
         })
         .collect::<HashSet<Ident>>();
     for def in &definitions {
         match &def {
-            vk_parse::TypeDefinition::Struct(vk_parse::TypeStruct::Definition {
-                name,
-                members,
-                ..
-            })
-            | vk_parse::TypeDefinition::Union(vk_parse::TypeUnion { name, members, .. }) => members
-                .iter()
-                .filter_map(get_variant!(vk_parse::TypeMember::Definition))
-                .any(|field| has_lifetimes.contains(&name_to_tokens(&field.definition.type_name)))
+            Type::Struct(DefinitionOrAlias::Definition(StructType { name, members, .. }))
+            | Type::Union(UnionType { name, members, .. }) => members
+                .values()
+                .any(|field| {
+                    has_lifetimes.contains(&name_to_tokens(field.base.type_name.as_identifier()))
+                })
                 .then(|| has_lifetimes.insert(name_to_tokens(name))),
             _ => continue,
         };
     }
 
-    let root_structs = root_structs(&definitions);
+    let root_structs = root_structs(definitions.as_slice());
     let definition_code: Vec<_> = definitions
         .into_iter()
         .filter_map(|def| {
@@ -2877,9 +2846,9 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
 
     let mut ty_cache = HashSet::new();
     let aliases: Vec<_> = registry
-        .iter()
-        .filter_map(get_variant!(vk_parse::RegistryChild::Types))
-        .map(|ty| generate_aliases_of_types(ty, &has_lifetimes, &mut ty_cache))
+        .values()
+        .filter_map(get_variant!(Items::Types { types }))
+        .map(|tys| generate_aliases_of_types(tys.values(), &has_lifetimes, &mut ty_cache))
         .collect();
 
     let feature_code: Vec<_> = features
@@ -3083,6 +3052,8 @@ pub fn write_source_code<P: AsRef<Path>>(vk_headers_dir: &Path, src_dir: P) {
         use crate::vk::enums::*;
         #(#aliases)*
     };
+
+    use std::io::Write;
 
     write!(&mut vk_features_file, "{}", feature_code).expect("Unable to write vk/features.rs");
     write!(&mut vk_definitions_file, "{}", definition_code)

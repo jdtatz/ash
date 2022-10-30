@@ -83,10 +83,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
     match format {
         Format::R4G4_UNORM_PACK8 => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(8u8),
+            packed: Some(8),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -105,10 +105,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R4G4B4A4_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -137,10 +137,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B4G4R4A4_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -169,10 +169,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R5G6B5_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -196,10 +196,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B5G6R5_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -223,10 +223,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R5G5B5A1_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -255,10 +255,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B5G5R5A1_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -287,10 +287,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A1R5G5B5_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -319,8 +319,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_UNORM => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -334,8 +334,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_SNORM => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -349,8 +349,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_USCALED => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -364,8 +364,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_SSCALED => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -379,8 +379,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_UINT => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -394,8 +394,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_SINT => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -409,8 +409,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8_SRGB => Some(FormatDesc {
             class: "8-bit",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -424,8 +424,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_UNORM => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -446,8 +446,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_SNORM => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -468,8 +468,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_USCALED => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -490,8 +490,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_SSCALED => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -512,8 +512,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_UINT => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -534,8 +534,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_SINT => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -556,8 +556,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8_SRGB => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -578,8 +578,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_UNORM => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -605,8 +605,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_SNORM => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -632,8 +632,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_USCALED => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -659,8 +659,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_SSCALED => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -686,8 +686,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_UINT => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -713,8 +713,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_SINT => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -740,8 +740,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8_SRGB => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -767,8 +767,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_UNORM => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -794,8 +794,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_SNORM => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -821,8 +821,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_USCALED => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -848,8 +848,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_SSCALED => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -875,8 +875,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_UINT => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -902,8 +902,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_SINT => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -929,8 +929,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8_SRGB => Some(FormatDesc {
             class: "24-bit",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -956,8 +956,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_UNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -988,8 +988,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_SNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1020,8 +1020,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_USCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1052,8 +1052,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_SSCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1084,8 +1084,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_UINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1116,8 +1116,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_SINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1148,8 +1148,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R8G8B8A8_SRGB => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1180,8 +1180,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_UNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1212,8 +1212,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_SNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1244,8 +1244,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_USCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1276,8 +1276,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_SSCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1308,8 +1308,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_UINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1340,8 +1340,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_SINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1372,8 +1372,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8A8_SRGB => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -1404,10 +1404,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_UNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1436,10 +1436,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_SNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1468,10 +1468,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_USCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1500,10 +1500,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_SSCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1532,10 +1532,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_UINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1564,10 +1564,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_SINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1596,10 +1596,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A8B8G8R8_SRGB_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1628,10 +1628,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_UNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1660,10 +1660,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_SNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1692,10 +1692,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_USCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1724,10 +1724,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_SSCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1756,10 +1756,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_UINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1788,10 +1788,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2R10G10B10_SINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1820,10 +1820,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_UNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: Some("Rgb10A2"),
@@ -1852,10 +1852,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_SNORM_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1884,10 +1884,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_USCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1916,10 +1916,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_SSCALED_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -1948,10 +1948,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_UINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: Some("Rgb10a2ui"),
@@ -1980,10 +1980,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A2B10G10R10_SINT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -2012,8 +2012,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_UNORM => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2027,8 +2027,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_SNORM => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2042,8 +2042,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_USCALED => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2057,8 +2057,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_SSCALED => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2072,8 +2072,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_UINT => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2087,8 +2087,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_SINT => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2102,8 +2102,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16_SFLOAT => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2117,8 +2117,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_UNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2139,8 +2139,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_SNORM => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2161,8 +2161,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_USCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2183,8 +2183,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_SSCALED => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2205,8 +2205,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_UINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2227,8 +2227,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_SINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2249,8 +2249,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16_SFLOAT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2271,8 +2271,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_UNORM => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2298,8 +2298,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_SNORM => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2325,8 +2325,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_USCALED => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2352,8 +2352,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_SSCALED => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2379,8 +2379,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_UINT => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2406,8 +2406,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_SINT => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2433,8 +2433,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16_SFLOAT => Some(FormatDesc {
             class: "48-bit",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2460,8 +2460,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_UNORM => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2492,8 +2492,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_SNORM => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2524,8 +2524,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_USCALED => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2556,8 +2556,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_SSCALED => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2588,8 +2588,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_UINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2620,8 +2620,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_SINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2652,8 +2652,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R16G16B16A16_SFLOAT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2684,8 +2684,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32_UINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2699,8 +2699,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32_SINT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2714,8 +2714,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32_SFLOAT => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2729,8 +2729,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32_UINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2751,8 +2751,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32_SINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2773,8 +2773,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32_SFLOAT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2795,8 +2795,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32_UINT => Some(FormatDesc {
             class: "96-bit",
-            block_size: 12u8,
-            texels_per_block: 1u8,
+            block_size: 12,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2822,8 +2822,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32_SINT => Some(FormatDesc {
             class: "96-bit",
-            block_size: 12u8,
-            texels_per_block: 1u8,
+            block_size: 12,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2849,8 +2849,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32_SFLOAT => Some(FormatDesc {
             class: "96-bit",
-            block_size: 12u8,
-            texels_per_block: 1u8,
+            block_size: 12,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2876,8 +2876,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32A32_UINT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2908,8 +2908,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32A32_SINT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2940,8 +2940,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R32G32B32A32_SFLOAT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2972,8 +2972,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64_UINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -2987,8 +2987,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64_SINT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3002,8 +3002,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64_SFLOAT => Some(FormatDesc {
             class: "64-bit",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3017,8 +3017,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64_UINT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3039,8 +3039,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64_SINT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3061,8 +3061,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64_SFLOAT => Some(FormatDesc {
             class: "128-bit",
-            block_size: 16u8,
-            texels_per_block: 1u8,
+            block_size: 16,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3083,8 +3083,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64_UINT => Some(FormatDesc {
             class: "192-bit",
-            block_size: 24u8,
-            texels_per_block: 1u8,
+            block_size: 24,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3110,8 +3110,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64_SINT => Some(FormatDesc {
             class: "192-bit",
-            block_size: 24u8,
-            texels_per_block: 1u8,
+            block_size: 24,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3137,8 +3137,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64_SFLOAT => Some(FormatDesc {
             class: "192-bit",
-            block_size: 24u8,
-            texels_per_block: 1u8,
+            block_size: 24,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3164,8 +3164,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64A64_UINT => Some(FormatDesc {
             class: "256-bit",
-            block_size: 32u8,
-            texels_per_block: 1u8,
+            block_size: 32,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3196,8 +3196,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64A64_SINT => Some(FormatDesc {
             class: "256-bit",
-            block_size: 32u8,
-            texels_per_block: 1u8,
+            block_size: 32,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3228,8 +3228,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R64G64B64A64_SFLOAT => Some(FormatDesc {
             class: "256-bit",
-            block_size: 32u8,
-            texels_per_block: 1u8,
+            block_size: 32,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3260,10 +3260,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B10G11R11_UFLOAT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: Some("R11fG11fB10f"),
@@ -3287,10 +3287,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::E5B9G9R9_UFLOAT_PACK32 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -3314,8 +3314,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::D16_UNORM => Some(FormatDesc {
             class: "D16",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3329,10 +3329,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::X8_D24_UNORM_PACK32 => Some(FormatDesc {
             class: "D24",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(32u8),
+            packed: Some(32),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -3344,8 +3344,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::D32_SFLOAT => Some(FormatDesc {
             class: "D32",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3359,8 +3359,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::S8_UINT => Some(FormatDesc {
             class: "S8",
-            block_size: 1u8,
-            texels_per_block: 1u8,
+            block_size: 1,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3374,8 +3374,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::D16_UNORM_S8_UINT => Some(FormatDesc {
             class: "D16S8",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3396,8 +3396,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::D24_UNORM_S8_UINT => Some(FormatDesc {
             class: "D24S8",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3418,8 +3418,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::D32_SFLOAT_S8_UINT => Some(FormatDesc {
             class: "D32S8",
-            block_size: 5u8,
-            texels_per_block: 1u8,
+            block_size: 5,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -3440,8 +3440,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC1_RGB_UNORM_BLOCK => Some(FormatDesc {
             class: "BC1_RGB",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3471,8 +3471,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC1_RGB_SRGB_BLOCK => Some(FormatDesc {
             class: "BC1_RGB",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3502,8 +3502,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC1_RGBA_UNORM_BLOCK => Some(FormatDesc {
             class: "BC1_RGBA",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3538,8 +3538,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC1_RGBA_SRGB_BLOCK => Some(FormatDesc {
             class: "BC1_RGBA",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3574,8 +3574,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC2_UNORM_BLOCK => Some(FormatDesc {
             class: "BC2",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3610,8 +3610,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC2_SRGB_BLOCK => Some(FormatDesc {
             class: "BC2",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3646,8 +3646,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC3_UNORM_BLOCK => Some(FormatDesc {
             class: "BC3",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3682,8 +3682,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC3_SRGB_BLOCK => Some(FormatDesc {
             class: "BC3",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3718,8 +3718,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC4_UNORM_BLOCK => Some(FormatDesc {
             class: "BC4",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3737,8 +3737,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC4_SNORM_BLOCK => Some(FormatDesc {
             class: "BC4",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3756,8 +3756,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC5_UNORM_BLOCK => Some(FormatDesc {
             class: "BC5",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3782,8 +3782,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC5_SNORM_BLOCK => Some(FormatDesc {
             class: "BC5",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3808,8 +3808,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC6H_UFLOAT_BLOCK => Some(FormatDesc {
             class: "BC6H",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3839,8 +3839,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC6H_SFLOAT_BLOCK => Some(FormatDesc {
             class: "BC6H",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3870,8 +3870,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC7_UNORM_BLOCK => Some(FormatDesc {
             class: "BC7",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3906,8 +3906,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::BC7_SRGB_BLOCK => Some(FormatDesc {
             class: "BC7",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3942,8 +3942,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8_UNORM_BLOCK => Some(FormatDesc {
             class: "ETC2_RGB",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -3973,8 +3973,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8_SRGB_BLOCK => Some(FormatDesc {
             class: "ETC2_RGB",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4004,8 +4004,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8A1_UNORM_BLOCK => Some(FormatDesc {
             class: "ETC2_RGBA",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4040,8 +4040,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8A1_SRGB_BLOCK => Some(FormatDesc {
             class: "ETC2_RGBA",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4076,8 +4076,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8A8_UNORM_BLOCK => Some(FormatDesc {
             class: "ETC2_EAC_RGBA",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4112,8 +4112,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ETC2_R8G8B8A8_SRGB_BLOCK => Some(FormatDesc {
             class: "ETC2_EAC_RGBA",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4148,8 +4148,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::EAC_R11_UNORM_BLOCK => Some(FormatDesc {
             class: "EAC_R",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4167,8 +4167,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::EAC_R11_SNORM_BLOCK => Some(FormatDesc {
             class: "EAC_R",
-            block_size: 8u8,
-            texels_per_block: 16u8,
+            block_size: 8,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4186,8 +4186,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::EAC_R11G11_UNORM_BLOCK => Some(FormatDesc {
             class: "EAC_RG",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4212,8 +4212,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::EAC_R11G11_SNORM_BLOCK => Some(FormatDesc {
             class: "EAC_RG",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4238,8 +4238,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_4X4_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_4x4",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4274,8 +4274,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_4X4_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_4x4",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -4310,8 +4310,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X4_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_5x4",
-            block_size: 16u8,
-            texels_per_block: 20u8,
+            block_size: 16,
+            texels_per_block: 20,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 4,
@@ -4346,8 +4346,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X4_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_5x4",
-            block_size: 16u8,
-            texels_per_block: 20u8,
+            block_size: 16,
+            texels_per_block: 20,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 4,
@@ -4382,8 +4382,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X5_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_5x5",
-            block_size: 16u8,
-            texels_per_block: 25u8,
+            block_size: 16,
+            texels_per_block: 25,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 5,
@@ -4418,8 +4418,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X5_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_5x5",
-            block_size: 16u8,
-            texels_per_block: 25u8,
+            block_size: 16,
+            texels_per_block: 25,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 5,
@@ -4454,8 +4454,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X5_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_6x5",
-            block_size: 16u8,
-            texels_per_block: 30u8,
+            block_size: 16,
+            texels_per_block: 30,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 5,
@@ -4490,8 +4490,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X5_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_6x5",
-            block_size: 16u8,
-            texels_per_block: 30u8,
+            block_size: 16,
+            texels_per_block: 30,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 5,
@@ -4526,8 +4526,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X6_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_6x6",
-            block_size: 16u8,
-            texels_per_block: 36u8,
+            block_size: 16,
+            texels_per_block: 36,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 6,
@@ -4562,8 +4562,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X6_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_6x6",
-            block_size: 16u8,
-            texels_per_block: 36u8,
+            block_size: 16,
+            texels_per_block: 36,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 6,
@@ -4598,8 +4598,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X5_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_8x5",
-            block_size: 16u8,
-            texels_per_block: 40u8,
+            block_size: 16,
+            texels_per_block: 40,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 5,
@@ -4634,8 +4634,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X5_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_8x5",
-            block_size: 16u8,
-            texels_per_block: 40u8,
+            block_size: 16,
+            texels_per_block: 40,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 5,
@@ -4670,8 +4670,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X6_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_8x6",
-            block_size: 16u8,
-            texels_per_block: 48u8,
+            block_size: 16,
+            texels_per_block: 48,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 6,
@@ -4706,8 +4706,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X6_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_8x6",
-            block_size: 16u8,
-            texels_per_block: 48u8,
+            block_size: 16,
+            texels_per_block: 48,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 6,
@@ -4742,8 +4742,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X8_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_8x8",
-            block_size: 16u8,
-            texels_per_block: 64u8,
+            block_size: 16,
+            texels_per_block: 64,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 8,
@@ -4778,8 +4778,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X8_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_8x8",
-            block_size: 16u8,
-            texels_per_block: 64u8,
+            block_size: 16,
+            texels_per_block: 64,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 8,
@@ -4814,8 +4814,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X5_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_10x5",
-            block_size: 16u8,
-            texels_per_block: 50u8,
+            block_size: 16,
+            texels_per_block: 50,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 5,
@@ -4850,8 +4850,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X5_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_10x5",
-            block_size: 16u8,
-            texels_per_block: 50u8,
+            block_size: 16,
+            texels_per_block: 50,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 5,
@@ -4886,8 +4886,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X6_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_10x6",
-            block_size: 16u8,
-            texels_per_block: 60u8,
+            block_size: 16,
+            texels_per_block: 60,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 6,
@@ -4922,8 +4922,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X6_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_10x6",
-            block_size: 16u8,
-            texels_per_block: 60u8,
+            block_size: 16,
+            texels_per_block: 60,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 6,
@@ -4958,8 +4958,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X8_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_10x8",
-            block_size: 16u8,
-            texels_per_block: 80u8,
+            block_size: 16,
+            texels_per_block: 80,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 8,
@@ -4994,8 +4994,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X8_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_10x8",
-            block_size: 16u8,
-            texels_per_block: 80u8,
+            block_size: 16,
+            texels_per_block: 80,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 8,
@@ -5030,8 +5030,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X10_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_10x10",
-            block_size: 16u8,
-            texels_per_block: 100u8,
+            block_size: 16,
+            texels_per_block: 100,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 10,
@@ -5066,8 +5066,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X10_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_10x10",
-            block_size: 16u8,
-            texels_per_block: 100u8,
+            block_size: 16,
+            texels_per_block: 100,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 10,
@@ -5102,8 +5102,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X10_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_12x10",
-            block_size: 16u8,
-            texels_per_block: 120u8,
+            block_size: 16,
+            texels_per_block: 120,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 10,
@@ -5138,8 +5138,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X10_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_12x10",
-            block_size: 16u8,
-            texels_per_block: 120u8,
+            block_size: 16,
+            texels_per_block: 120,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 10,
@@ -5174,8 +5174,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X12_UNORM_BLOCK => Some(FormatDesc {
             class: "ASTC_12x12",
-            block_size: 16u8,
-            texels_per_block: 144u8,
+            block_size: 16,
+            texels_per_block: 144,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 12,
@@ -5210,8 +5210,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X12_SRGB_BLOCK => Some(FormatDesc {
             class: "ASTC_12x12",
-            block_size: 16u8,
-            texels_per_block: 144u8,
+            block_size: 16,
+            texels_per_block: 144,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 12,
@@ -5246,8 +5246,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8B8G8R8_422_UNORM => Some(FormatDesc {
             class: "32-bit G8B8G8R8",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
@@ -5282,8 +5282,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B8G8R8G8_422_UNORM => Some(FormatDesc {
             class: "32-bit B8G8R8G8",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
@@ -5318,8 +5318,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8_R8_3PLANE_420_UNORM => Some(FormatDesc {
             class: "8-bit 3-plane 420",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -5327,8 +5327,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5337,8 +5337,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5347,8 +5347,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5360,8 +5360,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8R8_2PLANE_420_UNORM => Some(FormatDesc {
             class: "8-bit 2-plane 420",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -5369,8 +5369,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5379,8 +5379,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R8G8_UNORM,
                     components: &[
                         FormatComponent {
@@ -5399,8 +5399,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8_R8_3PLANE_422_UNORM => Some(FormatDesc {
             class: "8-bit 3-plane 422",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -5408,8 +5408,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5418,8 +5418,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5428,8 +5428,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5441,8 +5441,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8R8_2PLANE_422_UNORM => Some(FormatDesc {
             class: "8-bit 2-plane 422",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -5450,8 +5450,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5460,8 +5460,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R8G8_UNORM,
                     components: &[
                         FormatComponent {
@@ -5480,8 +5480,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8_R8_3PLANE_444_UNORM => Some(FormatDesc {
             class: "8-bit 3-plane 444",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -5489,8 +5489,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5499,8 +5499,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5509,8 +5509,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5522,10 +5522,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R10X6_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -5537,10 +5537,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R10X6G10X6_UNORM_2PACK16 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -5559,10 +5559,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R10X6G10X6B10X6A10X6_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit R10G10B10A10",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
@@ -5591,14 +5591,14 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6B10X6G10X6R10X6_422_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit G10B10G10R10",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
                 depth: 1,
             }),
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
@@ -5627,14 +5627,14 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B10X6G10X6R10X6G10X6_422_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit B10G10R10G10",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
                 depth: 1,
             }),
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
@@ -5663,17 +5663,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 3-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_420),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5682,8 +5682,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5692,8 +5692,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5705,17 +5705,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 2-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_420),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5724,8 +5724,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R10X6G10X6_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -5744,17 +5744,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 3-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5763,8 +5763,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5773,8 +5773,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5786,17 +5786,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 2-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5805,8 +5805,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R10X6G10X6_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -5825,17 +5825,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 3-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -5844,8 +5844,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -5854,8 +5854,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -5867,10 +5867,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R12X4_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -5882,10 +5882,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R12X4G12X4_UNORM_2PACK16 => Some(FormatDesc {
             class: "32-bit",
-            block_size: 4u8,
-            texels_per_block: 1u8,
+            block_size: 4,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -5904,10 +5904,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::R12X4G12X4B12X4A12X4_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit R12G12B12A12",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
@@ -5936,14 +5936,14 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4B12X4G12X4R12X4_422_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit G12B12G12R12",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
                 depth: 1,
             }),
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
@@ -5972,14 +5972,14 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B12X4G12X4R12X4G12X4_422_UNORM_4PACK16 => Some(FormatDesc {
             class: "64-bit B12G12R12G12",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
                 depth: 1,
             }),
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
@@ -6008,17 +6008,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 3-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_420),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6027,8 +6027,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6037,8 +6037,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6050,17 +6050,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 2-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_420),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6069,8 +6069,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R12X4G12X4_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -6089,17 +6089,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 3-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6108,8 +6108,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6118,8 +6118,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6131,17 +6131,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 2-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_422),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6150,8 +6150,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R12X4G12X4_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -6170,17 +6170,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 3-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6189,8 +6189,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6199,8 +6199,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6212,8 +6212,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16B16G16R16_422_UNORM => Some(FormatDesc {
             class: "64-bit G16B16G16R16",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
@@ -6248,8 +6248,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::B16G16R16G16_422_UNORM => Some(FormatDesc {
             class: "64-bit B16G16R16G16",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 2,
                 height: 1,
@@ -6284,8 +6284,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16_R16_3PLANE_420_UNORM => Some(FormatDesc {
             class: "16-bit 3-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -6293,8 +6293,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6303,8 +6303,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6313,8 +6313,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6326,8 +6326,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16R16_2PLANE_420_UNORM => Some(FormatDesc {
             class: "16-bit 2-plane 420",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -6335,8 +6335,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6345,8 +6345,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 2u8,
+                    width_divisor: 2,
+                    height_divisor: 2,
                     compatible: Format::R16G16_UNORM,
                     components: &[
                         FormatComponent {
@@ -6365,8 +6365,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16_R16_3PLANE_422_UNORM => Some(FormatDesc {
             class: "16-bit 3-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -6374,8 +6374,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6384,8 +6384,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6394,8 +6394,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6407,8 +6407,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16R16_2PLANE_422_UNORM => Some(FormatDesc {
             class: "16-bit 2-plane 422",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -6416,8 +6416,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6426,8 +6426,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 2u8,
-                    height_divisor: 1u8,
+                    width_divisor: 2,
+                    height_divisor: 1,
                     compatible: Format::R16G16_UNORM,
                     components: &[
                         FormatComponent {
@@ -6446,8 +6446,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16_R16_3PLANE_444_UNORM => Some(FormatDesc {
             class: "16-bit 3-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -6455,8 +6455,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -6465,8 +6465,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::B,
@@ -6475,8 +6475,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::R,
@@ -6488,8 +6488,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC1_2BPP_UNORM_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC1_2BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 4,
@@ -6524,8 +6524,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC1_4BPP_UNORM_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC1_4BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -6560,8 +6560,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC2_2BPP_UNORM_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC2_2BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 4,
@@ -6596,8 +6596,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC2_4BPP_UNORM_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC2_4BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -6632,8 +6632,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC1_2BPP_SRGB_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC1_2BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 4,
@@ -6668,8 +6668,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC1_4BPP_SRGB_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC1_4BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -6704,8 +6704,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC2_2BPP_SRGB_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC2_2BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 4,
@@ -6740,8 +6740,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::PVRTC2_4BPP_SRGB_BLOCK_IMG => Some(FormatDesc {
             class: "PVRTC2_4BPP",
-            block_size: 8u8,
-            texels_per_block: 1u8,
+            block_size: 8,
+            texels_per_block: 1,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -6776,8 +6776,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_4X4_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_4x4",
-            block_size: 16u8,
-            texels_per_block: 16u8,
+            block_size: 16,
+            texels_per_block: 16,
             block_extent: Some(Extent3D {
                 width: 4,
                 height: 4,
@@ -6812,8 +6812,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X4_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_5x4",
-            block_size: 16u8,
-            texels_per_block: 20u8,
+            block_size: 16,
+            texels_per_block: 20,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 4,
@@ -6848,8 +6848,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_5X5_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_5x5",
-            block_size: 16u8,
-            texels_per_block: 25u8,
+            block_size: 16,
+            texels_per_block: 25,
             block_extent: Some(Extent3D {
                 width: 5,
                 height: 5,
@@ -6884,8 +6884,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X5_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_6x5",
-            block_size: 16u8,
-            texels_per_block: 30u8,
+            block_size: 16,
+            texels_per_block: 30,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 5,
@@ -6920,8 +6920,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_6X6_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_6x6",
-            block_size: 16u8,
-            texels_per_block: 36u8,
+            block_size: 16,
+            texels_per_block: 36,
             block_extent: Some(Extent3D {
                 width: 6,
                 height: 6,
@@ -6956,8 +6956,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X5_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_8x5",
-            block_size: 16u8,
-            texels_per_block: 40u8,
+            block_size: 16,
+            texels_per_block: 40,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 5,
@@ -6992,8 +6992,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X6_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_8x6",
-            block_size: 16u8,
-            texels_per_block: 48u8,
+            block_size: 16,
+            texels_per_block: 48,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 6,
@@ -7028,8 +7028,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_8X8_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_8x8",
-            block_size: 16u8,
-            texels_per_block: 64u8,
+            block_size: 16,
+            texels_per_block: 64,
             block_extent: Some(Extent3D {
                 width: 8,
                 height: 8,
@@ -7064,8 +7064,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X5_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_10x5",
-            block_size: 16u8,
-            texels_per_block: 50u8,
+            block_size: 16,
+            texels_per_block: 50,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 5,
@@ -7100,8 +7100,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X6_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_10x6",
-            block_size: 16u8,
-            texels_per_block: 60u8,
+            block_size: 16,
+            texels_per_block: 60,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 6,
@@ -7136,8 +7136,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X8_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_10x8",
-            block_size: 16u8,
-            texels_per_block: 80u8,
+            block_size: 16,
+            texels_per_block: 80,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 8,
@@ -7172,8 +7172,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_10X10_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_10x10",
-            block_size: 16u8,
-            texels_per_block: 100u8,
+            block_size: 16,
+            texels_per_block: 100,
             block_extent: Some(Extent3D {
                 width: 10,
                 height: 10,
@@ -7208,8 +7208,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X10_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_12x10",
-            block_size: 16u8,
-            texels_per_block: 120u8,
+            block_size: 16,
+            texels_per_block: 120,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 10,
@@ -7244,8 +7244,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::ASTC_12X12_SFLOAT_BLOCK => Some(FormatDesc {
             class: "ASTC_12x12",
-            block_size: 16u8,
-            texels_per_block: 144u8,
+            block_size: 16,
+            texels_per_block: 144,
             block_extent: Some(Extent3D {
                 width: 12,
                 height: 12,
@@ -7280,8 +7280,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G8_B8R8_2PLANE_444_UNORM => Some(FormatDesc {
             class: "8-bit 2-plane 444",
-            block_size: 3u8,
-            texels_per_block: 1u8,
+            block_size: 3,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -7289,8 +7289,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -7299,8 +7299,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R8G8_UNORM,
                     components: &[
                         FormatComponent {
@@ -7319,17 +7319,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16 => Some(FormatDesc {
             class: "10-bit 2-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -7338,8 +7338,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R10X6G10X6_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -7358,17 +7358,17 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16 => Some(FormatDesc {
             class: "12-bit 2-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: Some(VideoChromaSubsamplingFlagsKHR::TYPE_444),
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4_UNORM_PACK16,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -7377,8 +7377,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R12X4G12X4_UNORM_2PACK16,
                     components: &[
                         FormatComponent {
@@ -7397,8 +7397,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::G16_B16R16_2PLANE_444_UNORM => Some(FormatDesc {
             class: "16-bit 2-plane 444",
-            block_size: 6u8,
-            texels_per_block: 1u8,
+            block_size: 6,
+            texels_per_block: 1,
             block_extent: None,
             packed: None,
             compressed: None,
@@ -7406,8 +7406,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
             spirv_image_format: None,
             components: FormatComponents::Planar(&[
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16_UNORM,
                     components: &[FormatComponent {
                         kind: FormatComponentKind::G,
@@ -7416,8 +7416,8 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
                     }],
                 },
                 FormatPlane {
-                    width_divisor: 1u8,
-                    height_divisor: 1u8,
+                    width_divisor: 1,
+                    height_divisor: 1,
                     compatible: Format::R16G16_UNORM,
                     components: &[
                         FormatComponent {
@@ -7436,10 +7436,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A4R4G4B4_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,
@@ -7468,10 +7468,10 @@ pub const fn format_desc(format: Format) -> Option<FormatDesc> {
         }),
         Format::A4B4G4R4_UNORM_PACK16 => Some(FormatDesc {
             class: "16-bit",
-            block_size: 2u8,
-            texels_per_block: 1u8,
+            block_size: 2,
+            texels_per_block: 1,
             block_extent: None,
-            packed: Some(16u8),
+            packed: Some(16),
             compressed: None,
             chroma: None,
             spirv_image_format: None,

@@ -161,7 +161,7 @@ impl ShaderStageFlags {
     pub const FRAGMENT: Self = Self(0b1_0000);
     pub const COMPUTE: Self = Self(0b10_0000);
     pub const ALL_GRAPHICS: Self = Self(31);
-    pub const ALL: Self = Self(2147483647);
+    pub const ALL: Self = Self(2_147_483_647);
 }
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
