@@ -29,7 +29,7 @@ impl CullModeFlags {
     pub const NONE: Self = Self(0);
     pub const FRONT: Self = Self(0b1);
     pub const BACK: Self = Self(0b10);
-    pub const FRONT_AND_BACK: Self = Self(0x0000_0003);
+    pub const FRONT_AND_BACK: Self = Self(3);
 }
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -160,8 +160,8 @@ impl ShaderStageFlags {
     pub const GEOMETRY: Self = Self(0b1000);
     pub const FRAGMENT: Self = Self(0b1_0000);
     pub const COMPUTE: Self = Self(0b10_0000);
-    pub const ALL_GRAPHICS: Self = Self(0x0000_001F);
-    pub const ALL: Self = Self(0x7FFF_FFFF);
+    pub const ALL_GRAPHICS: Self = Self(31);
+    pub const ALL: Self = Self(2_147_483_647);
 }
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -497,7 +497,7 @@ impl StencilFaceFlags {
     #[doc = "Back face"]
     pub const BACK: Self = Self(0b10);
     #[doc = "Front and back faces"]
-    pub const FRONT_AND_BACK: Self = Self(0x0000_0003);
+    pub const FRONT_AND_BACK: Self = Self(3);
 }
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

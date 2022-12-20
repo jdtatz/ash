@@ -2,7 +2,6 @@ use crate::vk::aliases::*;
 use crate::vk::bitflags::*;
 use crate::vk::constants::*;
 use crate::vk::enums::*;
-use crate::vk::native::*;
 use crate::vk::platform_types::*;
 use crate::vk::prelude::*;
 use crate::vk::{ptr_chain_iter, Handle};
@@ -12,42 +11,42 @@ use std::os::raw::*;
 #[deprecated = "This define is deprecated. VK_MAKE_API_VERSION should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_VERSION.html>"]
 pub const fn make_version(major: u32, minor: u32, patch: u32) -> u32 {
-    ((major) << 22) | ((minor) << 12) | (patch)
+    ((major << 22) | (minor << 12)) | patch
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_MAJOR should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_MAJOR.html>"]
 pub const fn version_major(version: u32) -> u32 {
-    (version) >> 22
+    version >> 22
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_MINOR should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_MINOR.html>"]
 pub const fn version_minor(version: u32) -> u32 {
-    ((version) >> 12) & 0x3ffu32
+    (version >> 12) & 1023
 }
 #[deprecated = "This define is deprecated. VK_API_VERSION_PATCH should be used instead."]
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_VERSION_PATCH.html>"]
 pub const fn version_patch(version: u32) -> u32 {
-    (version) & 0xfffu32
+    version & 4095
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_API_VERSION.html>"]
 pub const fn make_api_version(variant: u32, major: u32, minor: u32, patch: u32) -> u32 {
-    ((variant) << 29) | ((major) << 22) | ((minor) << 12) | (patch)
+    (((variant << 29) | (major << 22)) | (minor << 12)) | patch
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_VARIANT.html>"]
 pub const fn api_version_variant(version: u32) -> u32 {
-    (version) >> 29
+    version >> 29
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_MAJOR.html>"]
 pub const fn api_version_major(version: u32) -> u32 {
-    ((version) >> 22) & 0x7fu32
+    (version >> 22) & 127
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_MINOR.html>"]
 pub const fn api_version_minor(version: u32) -> u32 {
-    ((version) >> 12) & 0x3ffu32
+    (version >> 12) & 1023
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_PATCH.html>"]
 pub const fn api_version_patch(version: u32) -> u32 {
-    (version) & 0xfffu32
+    version & 4095
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_1_0.html>"]
 pub const API_VERSION_1_0: u32 = make_api_version(0, 1, 0, 0);
@@ -57,9 +56,12 @@ pub const API_VERSION_1_1: u32 = make_api_version(0, 1, 1, 0);
 pub const API_VERSION_1_2: u32 = make_api_version(0, 1, 2, 0);
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_API_VERSION_1_3.html>"]
 pub const API_VERSION_1_3: u32 = make_api_version(0, 1, 3, 0);
-pub const HEADER_VERSION: u32 = 238u32;
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_HEADER_VERSION.html>"]
+pub const HEADER_VERSION: u32 = 238;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_HEADER_VERSION_COMPLETE.html>"]
 pub const HEADER_VERSION_COMPLETE: u32 = make_api_version(0, 1, 3, HEADER_VERSION);
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/IOSurfaceRef.html>"]
+pub type IOSurfaceRef = *mut __IOSurface;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkSampleMask.html>"]
 pub type SampleMask = u32;
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkBool32.html>"]
@@ -31493,9 +31495,26 @@ impl AabbPositionsKHR {
     }
 }
 #[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkTransformMatrixKHR.html>"]
 pub struct TransformMatrixKHR {
-    pub matrix: [f32; 12],
+    pub matrix: [[f32; 4]; 3],
+}
+impl ::std::default::Default for TransformMatrixKHR {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            matrix: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl TransformMatrixKHR {
+    #[inline]
+    pub fn matrix(mut self, matrix: [[f32; 4]; 3]) -> Self {
+        self.matrix = matrix;
+        self
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -36572,9 +36591,9 @@ pub struct VideoDecodeH264SessionParametersAddInfoKHR<'a> {
     pub s_type: StructureType,
     pub p_next: *const c_void,
     pub std_sps_count: u32,
-    pub p_std_sp_ss: *const StdVideoH264SequenceParameterSet,
+    pub p_std_sp_ss: *const StdVideoH264SequenceParameterSet<'a>,
     pub std_pps_count: u32,
-    pub p_std_pp_ss: *const StdVideoH264PictureParameterSet,
+    pub p_std_pp_ss: *const StdVideoH264PictureParameterSet<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoDecodeH264SessionParametersAddInfoKHR<'_> {
@@ -36816,11 +36835,11 @@ pub struct VideoDecodeH265SessionParametersAddInfoKHR<'a> {
     pub s_type: StructureType,
     pub p_next: *const c_void,
     pub std_vps_count: u32,
-    pub p_std_vp_ss: *const StdVideoH265VideoParameterSet,
+    pub p_std_vp_ss: *const StdVideoH265VideoParameterSet<'a>,
     pub std_sps_count: u32,
-    pub p_std_sp_ss: *const StdVideoH265SequenceParameterSet,
+    pub p_std_sp_ss: *const StdVideoH265SequenceParameterSet<'a>,
     pub std_pps_count: u32,
-    pub p_std_pp_ss: *const StdVideoH265PictureParameterSet,
+    pub p_std_pp_ss: *const StdVideoH265PictureParameterSet<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoDecodeH265SessionParametersAddInfoKHR<'_> {
@@ -37840,9 +37859,9 @@ pub struct VideoEncodeH264SessionParametersAddInfoEXT<'a> {
     pub s_type: StructureType,
     pub p_next: *const c_void,
     pub std_sps_count: u32,
-    pub p_std_sp_ss: *const StdVideoH264SequenceParameterSet,
+    pub p_std_sp_ss: *const StdVideoH264SequenceParameterSet<'a>,
     pub std_pps_count: u32,
-    pub p_std_pp_ss: *const StdVideoH264PictureParameterSet,
+    pub p_std_pp_ss: *const StdVideoH264PictureParameterSet<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH264SessionParametersAddInfoEXT<'_> {
@@ -38044,7 +38063,7 @@ pub struct VideoEncodeH264ReferenceListsInfoEXT<'a> {
     pub p_reference_list0_entries: *const VideoEncodeH264DpbSlotInfoEXT<'a>,
     pub reference_list1_entry_count: u8,
     pub p_reference_list1_entries: *const VideoEncodeH264DpbSlotInfoEXT<'a>,
-    pub p_mem_mgmt_ctrl_operations: *const StdVideoEncodeH264RefMemMgmtCtrlOperations,
+    pub p_mem_mgmt_ctrl_operations: *const StdVideoEncodeH264RefMemMgmtCtrlOperations<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH264ReferenceListsInfoEXT<'_> {
@@ -38087,7 +38106,7 @@ impl<'a> VideoEncodeH264ReferenceListsInfoEXT<'a> {
     #[inline]
     pub fn mem_mgmt_ctrl_operations(
         mut self,
-        mem_mgmt_ctrl_operations: &'a StdVideoEncodeH264RefMemMgmtCtrlOperations,
+        mem_mgmt_ctrl_operations: &'a StdVideoEncodeH264RefMemMgmtCtrlOperations<'a>,
     ) -> Self {
         self.p_mem_mgmt_ctrl_operations = mem_mgmt_ctrl_operations;
         self
@@ -38185,7 +38204,7 @@ pub struct VideoEncodeH264NaluSliceInfoEXT<'a> {
     pub p_next: *const c_void,
     pub mb_count: u32,
     pub p_reference_final_lists: *const VideoEncodeH264ReferenceListsInfoEXT<'a>,
-    pub p_slice_header_std: *const StdVideoEncodeH264SliceHeader,
+    pub p_slice_header_std: *const StdVideoEncodeH264SliceHeader<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH264NaluSliceInfoEXT<'_> {
@@ -38219,7 +38238,10 @@ impl<'a> VideoEncodeH264NaluSliceInfoEXT<'a> {
         self
     }
     #[inline]
-    pub fn slice_header_std(mut self, slice_header_std: &'a StdVideoEncodeH264SliceHeader) -> Self {
+    pub fn slice_header_std(
+        mut self,
+        slice_header_std: &'a StdVideoEncodeH264SliceHeader<'a>,
+    ) -> Self {
         self.p_slice_header_std = slice_header_std;
         self
     }
@@ -38645,11 +38667,11 @@ pub struct VideoEncodeH265SessionParametersAddInfoEXT<'a> {
     pub s_type: StructureType,
     pub p_next: *const c_void,
     pub std_vps_count: u32,
-    pub p_std_vp_ss: *const StdVideoH265VideoParameterSet,
+    pub p_std_vp_ss: *const StdVideoH265VideoParameterSet<'a>,
     pub std_sps_count: u32,
-    pub p_std_sp_ss: *const StdVideoH265SequenceParameterSet,
+    pub p_std_sp_ss: *const StdVideoH265SequenceParameterSet<'a>,
     pub std_pps_count: u32,
-    pub p_std_pp_ss: *const StdVideoH265PictureParameterSet,
+    pub p_std_pp_ss: *const StdVideoH265PictureParameterSet<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH265SessionParametersAddInfoEXT<'_> {
@@ -38887,7 +38909,7 @@ pub struct VideoEncodeH265NaluSliceSegmentInfoEXT<'a> {
     pub p_next: *const c_void,
     pub ctb_count: u32,
     pub p_reference_final_lists: *const VideoEncodeH265ReferenceListsInfoEXT<'a>,
-    pub p_slice_segment_header_std: *const StdVideoEncodeH265SliceSegmentHeader,
+    pub p_slice_segment_header_std: *const StdVideoEncodeH265SliceSegmentHeader<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH265NaluSliceSegmentInfoEXT<'_> {
@@ -38924,7 +38946,7 @@ impl<'a> VideoEncodeH265NaluSliceSegmentInfoEXT<'a> {
     #[inline]
     pub fn slice_segment_header_std(
         mut self,
-        slice_segment_header_std: &'a StdVideoEncodeH265SliceSegmentHeader,
+        slice_segment_header_std: &'a StdVideoEncodeH265SliceSegmentHeader<'a>,
     ) -> Self {
         self.p_slice_segment_header_std = slice_segment_header_std;
         self
@@ -39223,7 +39245,7 @@ pub struct VideoEncodeH265ReferenceListsInfoEXT<'a> {
     pub p_reference_list0_entries: *const VideoEncodeH265DpbSlotInfoEXT<'a>,
     pub reference_list1_entry_count: u8,
     pub p_reference_list1_entries: *const VideoEncodeH265DpbSlotInfoEXT<'a>,
-    pub p_reference_modifications: *const StdVideoEncodeH265ReferenceModifications,
+    pub p_reference_modifications: *const StdVideoEncodeH265ReferenceModifications<'a>,
     pub _marker: PhantomData<&'a ()>,
 }
 impl ::std::default::Default for VideoEncodeH265ReferenceListsInfoEXT<'_> {
@@ -39266,7 +39288,7 @@ impl<'a> VideoEncodeH265ReferenceListsInfoEXT<'a> {
     #[inline]
     pub fn reference_modifications(
         mut self,
-        reference_modifications: &'a StdVideoEncodeH265ReferenceModifications,
+        reference_modifications: &'a StdVideoEncodeH265ReferenceModifications<'a>,
     ) -> Self {
         self.p_reference_modifications = reference_modifications;
         self
@@ -41369,7 +41391,7 @@ impl AccelerationStructureMotionInstanceNV {
     }
 }
 #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkRemoteAddressNV.html>"]
-pub type RemoteAddressNV = c_void;
+pub type RemoteAddressNV = *mut c_void;
 #[repr(C)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[derive(Copy, Clone)]
@@ -46992,6 +47014,7603 @@ impl<'a> PhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM<'a> {
     #[inline]
     pub fn multiview_per_view_viewports(mut self, multiview_per_view_viewports: bool) -> Self {
         self.multiview_per_view_viewports = multiview_per_view_viewports.into();
+        self
+    }
+}
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_MAKE_VIDEO_STD_VERSION.html>"]
+pub const fn make_video_std_version(major: u32, minor: u32, patch: u32) -> u32 {
+    ((major << 22) | (minor << 12)) | patch
+}
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_STD_VULKAN_VIDEO_CODEC_H264_DECODE_API_VERSION_1_0_0.html>"]
+pub const STD_VULKAN_VIDEO_CODEC_H264_DECODE_API_VERSION_1_0_0: u32 =
+    make_video_std_version(1, 0, 0);
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_API_VERSION_0_9_8.html>"]
+pub const STD_VULKAN_VIDEO_CODEC_H264_ENCODE_API_VERSION_0_9_8: u32 =
+    make_video_std_version(0, 9, 8);
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_STD_VULKAN_VIDEO_CODEC_H265_DECODE_API_VERSION_1_0_0.html>"]
+pub const STD_VULKAN_VIDEO_CODEC_H265_DECODE_API_VERSION_1_0_0: u32 =
+    make_video_std_version(1, 0, 0);
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_STD_VULKAN_VIDEO_CODEC_H265_ENCODE_API_VERSION_0_9_9.html>"]
+pub const STD_VULKAN_VIDEO_CODEC_H265_ENCODE_API_VERSION_0_9_9: u32 =
+    make_video_std_version(0, 9, 9);
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264SpsVuiFlags.html>"]
+pub struct StdVideoH264SpsVuiFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH264SpsVuiFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH264SpsVuiFlags")
+            .field(
+                "aspect_ratio_info_present_flag",
+                &self.get_aspect_ratio_info_present_flag(),
+            )
+            .field(
+                "overscan_info_present_flag",
+                &self.get_overscan_info_present_flag(),
+            )
+            .field(
+                "overscan_appropriate_flag",
+                &self.get_overscan_appropriate_flag(),
+            )
+            .field(
+                "video_signal_type_present_flag",
+                &self.get_video_signal_type_present_flag(),
+            )
+            .field("video_full_range_flag", &self.get_video_full_range_flag())
+            .field(
+                "color_description_present_flag",
+                &self.get_color_description_present_flag(),
+            )
+            .field(
+                "chroma_loc_info_present_flag",
+                &self.get_chroma_loc_info_present_flag(),
+            )
+            .field(
+                "timing_info_present_flag",
+                &self.get_timing_info_present_flag(),
+            )
+            .field("fixed_frame_rate_flag", &self.get_fixed_frame_rate_flag())
+            .field(
+                "bitstream_restriction_flag",
+                &self.get_bitstream_restriction_flag(),
+            )
+            .field(
+                "nal_hrd_parameters_present_flag",
+                &self.get_nal_hrd_parameters_present_flag(),
+            )
+            .field(
+                "vcl_hrd_parameters_present_flag",
+                &self.get_vcl_hrd_parameters_present_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH264SpsVuiFlags {
+    #[inline]
+    pub fn aspect_ratio_info_present_flag(mut self, aspect_ratio_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((aspect_ratio_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_aspect_ratio_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn overscan_info_present_flag(mut self, overscan_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((overscan_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_overscan_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn overscan_appropriate_flag(mut self, overscan_appropriate_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((overscan_appropriate_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_overscan_appropriate_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn video_signal_type_present_flag(mut self, video_signal_type_present_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((video_signal_type_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_video_signal_type_present_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn video_full_range_flag(mut self, video_full_range_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((video_full_range_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_video_full_range_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn color_description_present_flag(mut self, color_description_present_flag: bool) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((color_description_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_color_description_present_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn chroma_loc_info_present_flag(mut self, chroma_loc_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((chroma_loc_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_chroma_loc_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn timing_info_present_flag(mut self, timing_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((timing_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_timing_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn fixed_frame_rate_flag(mut self, fixed_frame_rate_flag: bool) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((fixed_frame_rate_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_fixed_frame_rate_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn bitstream_restriction_flag(mut self, bitstream_restriction_flag: bool) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((bitstream_restriction_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_bitstream_restriction_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn nal_hrd_parameters_present_flag(
+        mut self,
+        nal_hrd_parameters_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((nal_hrd_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_nal_hrd_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vcl_hrd_parameters_present_flag(
+        mut self,
+        vcl_hrd_parameters_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vcl_hrd_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vcl_hrd_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264HrdParameters.html>"]
+pub struct StdVideoH264HrdParameters {
+    pub cpb_cnt_minus1: u8,
+    pub bit_rate_scale: u8,
+    pub cpb_size_scale: u8,
+    pub reserved1: u8,
+    pub bit_rate_value_minus1: [u32; STD_VIDEO_H264_CPB_CNT_LIST_SIZE],
+    pub cpb_size_value_minus1: [u32; STD_VIDEO_H264_CPB_CNT_LIST_SIZE],
+    pub cbr_flag: [u8; STD_VIDEO_H264_CPB_CNT_LIST_SIZE],
+    pub initial_cpb_removal_delay_length_minus1: u32,
+    pub cpb_removal_delay_length_minus1: u32,
+    pub dpb_output_delay_length_minus1: u32,
+    pub time_offset_length: u32,
+}
+impl ::std::default::Default for StdVideoH264HrdParameters {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            cpb_cnt_minus1: u8::default(),
+            bit_rate_scale: u8::default(),
+            cpb_size_scale: u8::default(),
+            reserved1: u8::default(),
+            bit_rate_value_minus1: unsafe { ::std::mem::zeroed() },
+            cpb_size_value_minus1: unsafe { ::std::mem::zeroed() },
+            cbr_flag: unsafe { ::std::mem::zeroed() },
+            initial_cpb_removal_delay_length_minus1: u32::default(),
+            cpb_removal_delay_length_minus1: u32::default(),
+            dpb_output_delay_length_minus1: u32::default(),
+            time_offset_length: u32::default(),
+        }
+    }
+}
+impl StdVideoH264HrdParameters {
+    #[inline]
+    pub fn cpb_cnt_minus1(mut self, cpb_cnt_minus1: u8) -> Self {
+        self.cpb_cnt_minus1 = cpb_cnt_minus1;
+        self
+    }
+    #[inline]
+    pub fn bit_rate_scale(mut self, bit_rate_scale: u8) -> Self {
+        self.bit_rate_scale = bit_rate_scale;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_scale(mut self, cpb_size_scale: u8) -> Self {
+        self.cpb_size_scale = cpb_size_scale;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn bit_rate_value_minus1(
+        mut self,
+        bit_rate_value_minus1: [u32; STD_VIDEO_H264_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.bit_rate_value_minus1 = bit_rate_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_value_minus1(
+        mut self,
+        cpb_size_value_minus1: [u32; STD_VIDEO_H264_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.cpb_size_value_minus1 = cpb_size_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn cbr_flag(mut self, cbr_flag: [u8; STD_VIDEO_H264_CPB_CNT_LIST_SIZE]) -> Self {
+        self.cbr_flag = cbr_flag;
+        self
+    }
+    #[inline]
+    pub fn initial_cpb_removal_delay_length_minus1(
+        mut self,
+        initial_cpb_removal_delay_length_minus1: u32,
+    ) -> Self {
+        self.initial_cpb_removal_delay_length_minus1 = initial_cpb_removal_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn cpb_removal_delay_length_minus1(mut self, cpb_removal_delay_length_minus1: u32) -> Self {
+        self.cpb_removal_delay_length_minus1 = cpb_removal_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn dpb_output_delay_length_minus1(mut self, dpb_output_delay_length_minus1: u32) -> Self {
+        self.dpb_output_delay_length_minus1 = dpb_output_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn time_offset_length(mut self, time_offset_length: u32) -> Self {
+        self.time_offset_length = time_offset_length;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264SequenceParameterSetVui.html>"]
+pub struct StdVideoH264SequenceParameterSetVui<'a> {
+    pub flags: StdVideoH264SpsVuiFlags,
+    pub aspect_ratio_idc: StdVideoH264AspectRatioIdc,
+    pub sar_width: u16,
+    pub sar_height: u16,
+    pub video_format: u8,
+    pub colour_primaries: u8,
+    pub transfer_characteristics: u8,
+    pub matrix_coefficients: u8,
+    pub num_units_in_tick: u32,
+    pub time_scale: u32,
+    pub max_num_reorder_frames: u8,
+    pub max_dec_frame_buffering: u8,
+    pub chroma_sample_loc_type_top_field: u8,
+    pub chroma_sample_loc_type_bottom_field: u8,
+    pub reserved1: u32,
+    pub p_hrd_parameters: *const StdVideoH264HrdParameters,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH264SequenceParameterSetVui<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH264SpsVuiFlags::default(),
+            aspect_ratio_idc: StdVideoH264AspectRatioIdc::default(),
+            sar_width: u16::default(),
+            sar_height: u16::default(),
+            video_format: u8::default(),
+            colour_primaries: u8::default(),
+            transfer_characteristics: u8::default(),
+            matrix_coefficients: u8::default(),
+            num_units_in_tick: u32::default(),
+            time_scale: u32::default(),
+            max_num_reorder_frames: u8::default(),
+            max_dec_frame_buffering: u8::default(),
+            chroma_sample_loc_type_top_field: u8::default(),
+            chroma_sample_loc_type_bottom_field: u8::default(),
+            reserved1: u32::default(),
+            p_hrd_parameters: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH264SequenceParameterSetVui<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH264SpsVuiFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn aspect_ratio_idc(mut self, aspect_ratio_idc: StdVideoH264AspectRatioIdc) -> Self {
+        self.aspect_ratio_idc = aspect_ratio_idc;
+        self
+    }
+    #[inline]
+    pub fn sar_width(mut self, sar_width: u16) -> Self {
+        self.sar_width = sar_width;
+        self
+    }
+    #[inline]
+    pub fn sar_height(mut self, sar_height: u16) -> Self {
+        self.sar_height = sar_height;
+        self
+    }
+    #[inline]
+    pub fn video_format(mut self, video_format: u8) -> Self {
+        self.video_format = video_format;
+        self
+    }
+    #[inline]
+    pub fn colour_primaries(mut self, colour_primaries: u8) -> Self {
+        self.colour_primaries = colour_primaries;
+        self
+    }
+    #[inline]
+    pub fn transfer_characteristics(mut self, transfer_characteristics: u8) -> Self {
+        self.transfer_characteristics = transfer_characteristics;
+        self
+    }
+    #[inline]
+    pub fn matrix_coefficients(mut self, matrix_coefficients: u8) -> Self {
+        self.matrix_coefficients = matrix_coefficients;
+        self
+    }
+    #[inline]
+    pub fn num_units_in_tick(mut self, num_units_in_tick: u32) -> Self {
+        self.num_units_in_tick = num_units_in_tick;
+        self
+    }
+    #[inline]
+    pub fn time_scale(mut self, time_scale: u32) -> Self {
+        self.time_scale = time_scale;
+        self
+    }
+    #[inline]
+    pub fn max_num_reorder_frames(mut self, max_num_reorder_frames: u8) -> Self {
+        self.max_num_reorder_frames = max_num_reorder_frames;
+        self
+    }
+    #[inline]
+    pub fn max_dec_frame_buffering(mut self, max_dec_frame_buffering: u8) -> Self {
+        self.max_dec_frame_buffering = max_dec_frame_buffering;
+        self
+    }
+    #[inline]
+    pub fn chroma_sample_loc_type_top_field(
+        mut self,
+        chroma_sample_loc_type_top_field: u8,
+    ) -> Self {
+        self.chroma_sample_loc_type_top_field = chroma_sample_loc_type_top_field;
+        self
+    }
+    #[inline]
+    pub fn chroma_sample_loc_type_bottom_field(
+        mut self,
+        chroma_sample_loc_type_bottom_field: u8,
+    ) -> Self {
+        self.chroma_sample_loc_type_bottom_field = chroma_sample_loc_type_bottom_field;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u32) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn hrd_parameters(mut self, hrd_parameters: &'a StdVideoH264HrdParameters) -> Self {
+        self.p_hrd_parameters = hrd_parameters;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264SpsFlags.html>"]
+pub struct StdVideoH264SpsFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH264SpsFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH264SpsFlags")
+            .field("constraint_set0_flag", &self.get_constraint_set0_flag())
+            .field("constraint_set1_flag", &self.get_constraint_set1_flag())
+            .field("constraint_set2_flag", &self.get_constraint_set2_flag())
+            .field("constraint_set3_flag", &self.get_constraint_set3_flag())
+            .field("constraint_set4_flag", &self.get_constraint_set4_flag())
+            .field("constraint_set5_flag", &self.get_constraint_set5_flag())
+            .field(
+                "direct_8x8_inference_flag",
+                &self.get_direct_8x8_inference_flag(),
+            )
+            .field(
+                "mb_adaptive_frame_field_flag",
+                &self.get_mb_adaptive_frame_field_flag(),
+            )
+            .field("frame_mbs_only_flag", &self.get_frame_mbs_only_flag())
+            .field(
+                "delta_pic_order_always_zero_flag",
+                &self.get_delta_pic_order_always_zero_flag(),
+            )
+            .field(
+                "separate_colour_plane_flag",
+                &self.get_separate_colour_plane_flag(),
+            )
+            .field(
+                "gaps_in_frame_num_value_allowed_flag",
+                &self.get_gaps_in_frame_num_value_allowed_flag(),
+            )
+            .field(
+                "qpprime_y_zero_transform_bypass_flag",
+                &self.get_qpprime_y_zero_transform_bypass_flag(),
+            )
+            .field("frame_cropping_flag", &self.get_frame_cropping_flag())
+            .field(
+                "seq_scaling_matrix_present_flag",
+                &self.get_seq_scaling_matrix_present_flag(),
+            )
+            .field(
+                "vui_parameters_present_flag",
+                &self.get_vui_parameters_present_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH264SpsFlags {
+    #[inline]
+    pub fn constraint_set0_flag(mut self, constraint_set0_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set0_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set0_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constraint_set1_flag(mut self, constraint_set1_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set1_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set1_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constraint_set2_flag(mut self, constraint_set2_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set2_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set2_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constraint_set3_flag(mut self, constraint_set3_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set3_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set3_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constraint_set4_flag(mut self, constraint_set4_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set4_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set4_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constraint_set5_flag(mut self, constraint_set5_flag: bool) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constraint_set5_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constraint_set5_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn direct_8x8_inference_flag(mut self, direct_8x8_inference_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((direct_8x8_inference_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_direct_8x8_inference_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn mb_adaptive_frame_field_flag(mut self, mb_adaptive_frame_field_flag: bool) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((mb_adaptive_frame_field_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_mb_adaptive_frame_field_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn frame_mbs_only_flag(mut self, frame_mbs_only_flag: bool) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((frame_mbs_only_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_frame_mbs_only_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn delta_pic_order_always_zero_flag(
+        mut self,
+        delta_pic_order_always_zero_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((delta_pic_order_always_zero_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_delta_pic_order_always_zero_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn separate_colour_plane_flag(mut self, separate_colour_plane_flag: bool) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((separate_colour_plane_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_separate_colour_plane_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn gaps_in_frame_num_value_allowed_flag(
+        mut self,
+        gaps_in_frame_num_value_allowed_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((gaps_in_frame_num_value_allowed_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_gaps_in_frame_num_value_allowed_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn qpprime_y_zero_transform_bypass_flag(
+        mut self,
+        qpprime_y_zero_transform_bypass_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((qpprime_y_zero_transform_bypass_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_qpprime_y_zero_transform_bypass_flag(&self) -> bool {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn frame_cropping_flag(mut self, frame_cropping_flag: bool) -> Self {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((frame_cropping_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_frame_cropping_flag(&self) -> bool {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn seq_scaling_matrix_present_flag(
+        mut self,
+        seq_scaling_matrix_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((seq_scaling_matrix_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_seq_scaling_matrix_present_flag(&self) -> bool {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vui_parameters_present_flag(mut self, vui_parameters_present_flag: bool) -> Self {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vui_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vui_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264ScalingLists.html>"]
+pub struct StdVideoH264ScalingLists {
+    pub scaling_list_present_mask: u16,
+    pub use_default_scaling_matrix_mask: u16,
+    pub scaling_list4x4: [[u8; STD_VIDEO_H264_SCALING_LIST_4X4_NUM_ELEMENTS];
+        STD_VIDEO_H264_SCALING_LIST_4X4_NUM_LISTS],
+    pub scaling_list8x8: [[u8; STD_VIDEO_H264_SCALING_LIST_8X8_NUM_ELEMENTS];
+        STD_VIDEO_H264_SCALING_LIST_8X8_NUM_LISTS],
+}
+impl ::std::default::Default for StdVideoH264ScalingLists {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            scaling_list_present_mask: u16::default(),
+            use_default_scaling_matrix_mask: u16::default(),
+            scaling_list4x4: unsafe { ::std::mem::zeroed() },
+            scaling_list8x8: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH264ScalingLists {
+    #[inline]
+    pub fn scaling_list_present_mask(mut self, scaling_list_present_mask: u16) -> Self {
+        self.scaling_list_present_mask = scaling_list_present_mask;
+        self
+    }
+    #[inline]
+    pub fn use_default_scaling_matrix_mask(mut self, use_default_scaling_matrix_mask: u16) -> Self {
+        self.use_default_scaling_matrix_mask = use_default_scaling_matrix_mask;
+        self
+    }
+    #[inline]
+    pub fn scaling_list4x4(
+        mut self,
+        scaling_list4x4: [[u8; STD_VIDEO_H264_SCALING_LIST_4X4_NUM_ELEMENTS];
+            STD_VIDEO_H264_SCALING_LIST_4X4_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list4x4 = scaling_list4x4;
+        self
+    }
+    #[inline]
+    pub fn scaling_list8x8(
+        mut self,
+        scaling_list8x8: [[u8; STD_VIDEO_H264_SCALING_LIST_8X8_NUM_ELEMENTS];
+            STD_VIDEO_H264_SCALING_LIST_8X8_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list8x8 = scaling_list8x8;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264SequenceParameterSet.html>"]
+pub struct StdVideoH264SequenceParameterSet<'a> {
+    pub flags: StdVideoH264SpsFlags,
+    pub profile_idc: StdVideoH264ProfileIdc,
+    pub level_idc: StdVideoH264LevelIdc,
+    pub chroma_format_idc: StdVideoH264ChromaFormatIdc,
+    pub seq_parameter_set_id: u8,
+    pub bit_depth_luma_minus8: u8,
+    pub bit_depth_chroma_minus8: u8,
+    pub log2_max_frame_num_minus4: u8,
+    pub pic_order_cnt_type: StdVideoH264PocType,
+    pub offset_for_non_ref_pic: i32,
+    pub offset_for_top_to_bottom_field: i32,
+    pub log2_max_pic_order_cnt_lsb_minus4: u8,
+    pub num_ref_frames_in_pic_order_cnt_cycle: u8,
+    pub max_num_ref_frames: u8,
+    pub reserved1: u8,
+    pub pic_width_in_mbs_minus1: u32,
+    pub pic_height_in_map_units_minus1: u32,
+    pub frame_crop_left_offset: u32,
+    pub frame_crop_right_offset: u32,
+    pub frame_crop_top_offset: u32,
+    pub frame_crop_bottom_offset: u32,
+    pub reserved2: u32,
+    pub p_offset_for_ref_frame: *const i32,
+    pub p_scaling_lists: *const StdVideoH264ScalingLists,
+    pub p_sequence_parameter_set_vui: *const StdVideoH264SequenceParameterSetVui<'a>,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH264SequenceParameterSet<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH264SpsFlags::default(),
+            profile_idc: StdVideoH264ProfileIdc::default(),
+            level_idc: StdVideoH264LevelIdc::default(),
+            chroma_format_idc: StdVideoH264ChromaFormatIdc::default(),
+            seq_parameter_set_id: u8::default(),
+            bit_depth_luma_minus8: u8::default(),
+            bit_depth_chroma_minus8: u8::default(),
+            log2_max_frame_num_minus4: u8::default(),
+            pic_order_cnt_type: StdVideoH264PocType::default(),
+            offset_for_non_ref_pic: i32::default(),
+            offset_for_top_to_bottom_field: i32::default(),
+            log2_max_pic_order_cnt_lsb_minus4: u8::default(),
+            num_ref_frames_in_pic_order_cnt_cycle: u8::default(),
+            max_num_ref_frames: u8::default(),
+            reserved1: u8::default(),
+            pic_width_in_mbs_minus1: u32::default(),
+            pic_height_in_map_units_minus1: u32::default(),
+            frame_crop_left_offset: u32::default(),
+            frame_crop_right_offset: u32::default(),
+            frame_crop_top_offset: u32::default(),
+            frame_crop_bottom_offset: u32::default(),
+            reserved2: u32::default(),
+            p_offset_for_ref_frame: ::std::ptr::null(),
+            p_scaling_lists: ::std::ptr::null(),
+            p_sequence_parameter_set_vui: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH264SequenceParameterSet<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH264SpsFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn profile_idc(mut self, profile_idc: StdVideoH264ProfileIdc) -> Self {
+        self.profile_idc = profile_idc;
+        self
+    }
+    #[inline]
+    pub fn level_idc(mut self, level_idc: StdVideoH264LevelIdc) -> Self {
+        self.level_idc = level_idc;
+        self
+    }
+    #[inline]
+    pub fn chroma_format_idc(mut self, chroma_format_idc: StdVideoH264ChromaFormatIdc) -> Self {
+        self.chroma_format_idc = chroma_format_idc;
+        self
+    }
+    #[inline]
+    pub fn seq_parameter_set_id(mut self, seq_parameter_set_id: u8) -> Self {
+        self.seq_parameter_set_id = seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn bit_depth_luma_minus8(mut self, bit_depth_luma_minus8: u8) -> Self {
+        self.bit_depth_luma_minus8 = bit_depth_luma_minus8;
+        self
+    }
+    #[inline]
+    pub fn bit_depth_chroma_minus8(mut self, bit_depth_chroma_minus8: u8) -> Self {
+        self.bit_depth_chroma_minus8 = bit_depth_chroma_minus8;
+        self
+    }
+    #[inline]
+    pub fn log2_max_frame_num_minus4(mut self, log2_max_frame_num_minus4: u8) -> Self {
+        self.log2_max_frame_num_minus4 = log2_max_frame_num_minus4;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt_type(mut self, pic_order_cnt_type: StdVideoH264PocType) -> Self {
+        self.pic_order_cnt_type = pic_order_cnt_type;
+        self
+    }
+    #[inline]
+    pub fn offset_for_non_ref_pic(mut self, offset_for_non_ref_pic: i32) -> Self {
+        self.offset_for_non_ref_pic = offset_for_non_ref_pic;
+        self
+    }
+    #[inline]
+    pub fn offset_for_top_to_bottom_field(mut self, offset_for_top_to_bottom_field: i32) -> Self {
+        self.offset_for_top_to_bottom_field = offset_for_top_to_bottom_field;
+        self
+    }
+    #[inline]
+    pub fn log2_max_pic_order_cnt_lsb_minus4(
+        mut self,
+        log2_max_pic_order_cnt_lsb_minus4: u8,
+    ) -> Self {
+        self.log2_max_pic_order_cnt_lsb_minus4 = log2_max_pic_order_cnt_lsb_minus4;
+        self
+    }
+    #[inline]
+    pub fn num_ref_frames_in_pic_order_cnt_cycle(
+        mut self,
+        num_ref_frames_in_pic_order_cnt_cycle: u8,
+    ) -> Self {
+        self.num_ref_frames_in_pic_order_cnt_cycle = num_ref_frames_in_pic_order_cnt_cycle;
+        self
+    }
+    #[inline]
+    pub fn max_num_ref_frames(mut self, max_num_ref_frames: u8) -> Self {
+        self.max_num_ref_frames = max_num_ref_frames;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn pic_width_in_mbs_minus1(mut self, pic_width_in_mbs_minus1: u32) -> Self {
+        self.pic_width_in_mbs_minus1 = pic_width_in_mbs_minus1;
+        self
+    }
+    #[inline]
+    pub fn pic_height_in_map_units_minus1(mut self, pic_height_in_map_units_minus1: u32) -> Self {
+        self.pic_height_in_map_units_minus1 = pic_height_in_map_units_minus1;
+        self
+    }
+    #[inline]
+    pub fn frame_crop_left_offset(mut self, frame_crop_left_offset: u32) -> Self {
+        self.frame_crop_left_offset = frame_crop_left_offset;
+        self
+    }
+    #[inline]
+    pub fn frame_crop_right_offset(mut self, frame_crop_right_offset: u32) -> Self {
+        self.frame_crop_right_offset = frame_crop_right_offset;
+        self
+    }
+    #[inline]
+    pub fn frame_crop_top_offset(mut self, frame_crop_top_offset: u32) -> Self {
+        self.frame_crop_top_offset = frame_crop_top_offset;
+        self
+    }
+    #[inline]
+    pub fn frame_crop_bottom_offset(mut self, frame_crop_bottom_offset: u32) -> Self {
+        self.frame_crop_bottom_offset = frame_crop_bottom_offset;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u32) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn offset_for_ref_frame(mut self, offset_for_ref_frame: &'a i32) -> Self {
+        self.p_offset_for_ref_frame = offset_for_ref_frame;
+        self
+    }
+    #[inline]
+    pub fn scaling_lists(mut self, scaling_lists: &'a StdVideoH264ScalingLists) -> Self {
+        self.p_scaling_lists = scaling_lists;
+        self
+    }
+    #[inline]
+    pub fn sequence_parameter_set_vui(
+        mut self,
+        sequence_parameter_set_vui: &'a StdVideoH264SequenceParameterSetVui<'a>,
+    ) -> Self {
+        self.p_sequence_parameter_set_vui = sequence_parameter_set_vui;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264PpsFlags.html>"]
+pub struct StdVideoH264PpsFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH264PpsFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH264PpsFlags")
+            .field(
+                "transform_8x8_mode_flag",
+                &self.get_transform_8x8_mode_flag(),
+            )
+            .field(
+                "redundant_pic_cnt_present_flag",
+                &self.get_redundant_pic_cnt_present_flag(),
+            )
+            .field(
+                "constrained_intra_pred_flag",
+                &self.get_constrained_intra_pred_flag(),
+            )
+            .field(
+                "deblocking_filter_control_present_flag",
+                &self.get_deblocking_filter_control_present_flag(),
+            )
+            .field("weighted_pred_flag", &self.get_weighted_pred_flag())
+            .field(
+                "bottom_field_pic_order_in_frame_present_flag",
+                &self.get_bottom_field_pic_order_in_frame_present_flag(),
+            )
+            .field(
+                "entropy_coding_mode_flag",
+                &self.get_entropy_coding_mode_flag(),
+            )
+            .field(
+                "pic_scaling_matrix_present_flag",
+                &self.get_pic_scaling_matrix_present_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH264PpsFlags {
+    #[inline]
+    pub fn transform_8x8_mode_flag(mut self, transform_8x8_mode_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((transform_8x8_mode_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_transform_8x8_mode_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn redundant_pic_cnt_present_flag(mut self, redundant_pic_cnt_present_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((redundant_pic_cnt_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_redundant_pic_cnt_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constrained_intra_pred_flag(mut self, constrained_intra_pred_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constrained_intra_pred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constrained_intra_pred_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn deblocking_filter_control_present_flag(
+        mut self,
+        deblocking_filter_control_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((deblocking_filter_control_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_deblocking_filter_control_present_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn weighted_pred_flag(mut self, weighted_pred_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((weighted_pred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_weighted_pred_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn bottom_field_pic_order_in_frame_present_flag(
+        mut self,
+        bottom_field_pic_order_in_frame_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((bottom_field_pic_order_in_frame_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_bottom_field_pic_order_in_frame_present_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn entropy_coding_mode_flag(mut self, entropy_coding_mode_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((entropy_coding_mode_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_entropy_coding_mode_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pic_scaling_matrix_present_flag(
+        mut self,
+        pic_scaling_matrix_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pic_scaling_matrix_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pic_scaling_matrix_present_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264PictureParameterSet.html>"]
+pub struct StdVideoH264PictureParameterSet<'a> {
+    pub flags: StdVideoH264PpsFlags,
+    pub seq_parameter_set_id: u8,
+    pub pic_parameter_set_id: u8,
+    pub num_ref_idx_l0_default_active_minus1: u8,
+    pub num_ref_idx_l1_default_active_minus1: u8,
+    pub weighted_bipred_idc: StdVideoH264WeightedBipredIdc,
+    pub pic_init_qp_minus26: i8,
+    pub pic_init_qs_minus26: i8,
+    pub chroma_qp_index_offset: i8,
+    pub second_chroma_qp_index_offset: i8,
+    pub p_scaling_lists: *const StdVideoH264ScalingLists,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH264PictureParameterSet<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH264PpsFlags::default(),
+            seq_parameter_set_id: u8::default(),
+            pic_parameter_set_id: u8::default(),
+            num_ref_idx_l0_default_active_minus1: u8::default(),
+            num_ref_idx_l1_default_active_minus1: u8::default(),
+            weighted_bipred_idc: StdVideoH264WeightedBipredIdc::default(),
+            pic_init_qp_minus26: i8::default(),
+            pic_init_qs_minus26: i8::default(),
+            chroma_qp_index_offset: i8::default(),
+            second_chroma_qp_index_offset: i8::default(),
+            p_scaling_lists: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH264PictureParameterSet<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH264PpsFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn seq_parameter_set_id(mut self, seq_parameter_set_id: u8) -> Self {
+        self.seq_parameter_set_id = seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pic_parameter_set_id(mut self, pic_parameter_set_id: u8) -> Self {
+        self.pic_parameter_set_id = pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l0_default_active_minus1(
+        mut self,
+        num_ref_idx_l0_default_active_minus1: u8,
+    ) -> Self {
+        self.num_ref_idx_l0_default_active_minus1 = num_ref_idx_l0_default_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l1_default_active_minus1(
+        mut self,
+        num_ref_idx_l1_default_active_minus1: u8,
+    ) -> Self {
+        self.num_ref_idx_l1_default_active_minus1 = num_ref_idx_l1_default_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn weighted_bipred_idc(
+        mut self,
+        weighted_bipred_idc: StdVideoH264WeightedBipredIdc,
+    ) -> Self {
+        self.weighted_bipred_idc = weighted_bipred_idc;
+        self
+    }
+    #[inline]
+    pub fn pic_init_qp_minus26(mut self, pic_init_qp_minus26: i8) -> Self {
+        self.pic_init_qp_minus26 = pic_init_qp_minus26;
+        self
+    }
+    #[inline]
+    pub fn pic_init_qs_minus26(mut self, pic_init_qs_minus26: i8) -> Self {
+        self.pic_init_qs_minus26 = pic_init_qs_minus26;
+        self
+    }
+    #[inline]
+    pub fn chroma_qp_index_offset(mut self, chroma_qp_index_offset: i8) -> Self {
+        self.chroma_qp_index_offset = chroma_qp_index_offset;
+        self
+    }
+    #[inline]
+    pub fn second_chroma_qp_index_offset(mut self, second_chroma_qp_index_offset: i8) -> Self {
+        self.second_chroma_qp_index_offset = second_chroma_qp_index_offset;
+        self
+    }
+    #[inline]
+    pub fn scaling_lists(mut self, scaling_lists: &'a StdVideoH264ScalingLists) -> Self {
+        self.p_scaling_lists = scaling_lists;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH264PictureInfoFlags.html>"]
+pub struct StdVideoDecodeH264PictureInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoDecodeH264PictureInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoDecodeH264PictureInfoFlags")
+            .field("field_pic_flag", &self.get_field_pic_flag())
+            .field("is_intra", &self.get_is_intra())
+            .field("idr_pic_flag", &self.get_idr_pic_flag())
+            .field("bottom_field_flag", &self.get_bottom_field_flag())
+            .field("is_reference", &self.get_is_reference())
+            .field(
+                "complementary_field_pair",
+                &self.get_complementary_field_pair(),
+            )
+            .finish()
+    }
+}
+impl StdVideoDecodeH264PictureInfoFlags {
+    #[inline]
+    pub fn field_pic_flag(mut self, field_pic_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((field_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_field_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn is_intra(mut self, is_intra: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_intra as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_intra(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn idr_pic_flag(mut self, idr_pic_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((idr_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_idr_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn bottom_field_flag(mut self, bottom_field_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((bottom_field_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_bottom_field_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn is_reference(mut self, is_reference: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_reference(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn complementary_field_pair(mut self, complementary_field_pair: bool) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((complementary_field_pair as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_complementary_field_pair(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH264PictureInfo.html>"]
+pub struct StdVideoDecodeH264PictureInfo {
+    pub flags: StdVideoDecodeH264PictureInfoFlags,
+    pub seq_parameter_set_id: u8,
+    pub pic_parameter_set_id: u8,
+    pub reserved1: u8,
+    pub reserved2: u8,
+    pub frame_num: u16,
+    pub idr_pic_id: u16,
+    pub pic_order_cnt: [i32; STD_VIDEO_DECODE_H264_FIELD_ORDER_COUNT_LIST_SIZE],
+}
+impl ::std::default::Default for StdVideoDecodeH264PictureInfo {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoDecodeH264PictureInfoFlags::default(),
+            seq_parameter_set_id: u8::default(),
+            pic_parameter_set_id: u8::default(),
+            reserved1: u8::default(),
+            reserved2: u8::default(),
+            frame_num: u16::default(),
+            idr_pic_id: u16::default(),
+            pic_order_cnt: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoDecodeH264PictureInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoDecodeH264PictureInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn seq_parameter_set_id(mut self, seq_parameter_set_id: u8) -> Self {
+        self.seq_parameter_set_id = seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pic_parameter_set_id(mut self, pic_parameter_set_id: u8) -> Self {
+        self.pic_parameter_set_id = pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn frame_num(mut self, frame_num: u16) -> Self {
+        self.frame_num = frame_num;
+        self
+    }
+    #[inline]
+    pub fn idr_pic_id(mut self, idr_pic_id: u16) -> Self {
+        self.idr_pic_id = idr_pic_id;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt(
+        mut self,
+        pic_order_cnt: [i32; STD_VIDEO_DECODE_H264_FIELD_ORDER_COUNT_LIST_SIZE],
+    ) -> Self {
+        self.pic_order_cnt = pic_order_cnt;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH264ReferenceInfoFlags.html>"]
+pub struct StdVideoDecodeH264ReferenceInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoDecodeH264ReferenceInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoDecodeH264ReferenceInfoFlags")
+            .field("top_field_flag", &self.get_top_field_flag())
+            .field("bottom_field_flag", &self.get_bottom_field_flag())
+            .field(
+                "used_for_long_term_reference",
+                &self.get_used_for_long_term_reference(),
+            )
+            .field("is_non_existing", &self.get_is_non_existing())
+            .finish()
+    }
+}
+impl StdVideoDecodeH264ReferenceInfoFlags {
+    #[inline]
+    pub fn top_field_flag(mut self, top_field_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((top_field_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_top_field_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn bottom_field_flag(mut self, bottom_field_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((bottom_field_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_bottom_field_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn used_for_long_term_reference(mut self, used_for_long_term_reference: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((used_for_long_term_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_used_for_long_term_reference(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn is_non_existing(mut self, is_non_existing: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_non_existing as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_non_existing(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH264ReferenceInfo.html>"]
+pub struct StdVideoDecodeH264ReferenceInfo {
+    pub flags: StdVideoDecodeH264ReferenceInfoFlags,
+    pub frame_num: u16,
+    pub reserved: u16,
+    pub pic_order_cnt: [i32; STD_VIDEO_DECODE_H264_FIELD_ORDER_COUNT_LIST_SIZE],
+}
+impl ::std::default::Default for StdVideoDecodeH264ReferenceInfo {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoDecodeH264ReferenceInfoFlags::default(),
+            frame_num: u16::default(),
+            reserved: u16::default(),
+            pic_order_cnt: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoDecodeH264ReferenceInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoDecodeH264ReferenceInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn frame_num(mut self, frame_num: u16) -> Self {
+        self.frame_num = frame_num;
+        self
+    }
+    #[inline]
+    pub fn reserved(mut self, reserved: u16) -> Self {
+        self.reserved = reserved;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt(
+        mut self,
+        pic_order_cnt: [i32; STD_VIDEO_DECODE_H264_FIELD_ORDER_COUNT_LIST_SIZE],
+    ) -> Self {
+        self.pic_order_cnt = pic_order_cnt;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264WeightTableFlags.html>"]
+pub struct StdVideoEncodeH264WeightTableFlags {
+    pub luma_weight_l0_flag: u32,
+    pub chroma_weight_l0_flag: u32,
+    pub luma_weight_l1_flag: u32,
+    pub chroma_weight_l1_flag: u32,
+}
+impl StdVideoEncodeH264WeightTableFlags {
+    #[inline]
+    pub fn luma_weight_l0_flag(mut self, luma_weight_l0_flag: u32) -> Self {
+        self.luma_weight_l0_flag = luma_weight_l0_flag;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l0_flag(mut self, chroma_weight_l0_flag: u32) -> Self {
+        self.chroma_weight_l0_flag = chroma_weight_l0_flag;
+        self
+    }
+    #[inline]
+    pub fn luma_weight_l1_flag(mut self, luma_weight_l1_flag: u32) -> Self {
+        self.luma_weight_l1_flag = luma_weight_l1_flag;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l1_flag(mut self, chroma_weight_l1_flag: u32) -> Self {
+        self.chroma_weight_l1_flag = chroma_weight_l1_flag;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264WeightTable.html>"]
+pub struct StdVideoEncodeH264WeightTable {
+    pub flags: StdVideoEncodeH264WeightTableFlags,
+    pub luma_log2_weight_denom: u8,
+    pub chroma_log2_weight_denom: u8,
+    pub luma_weight_l0: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub luma_offset_l0: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub chroma_weight_l0: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub chroma_offset_l0: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub luma_weight_l1: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub luma_offset_l1: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub chroma_weight_l1: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    pub chroma_offset_l1: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+}
+impl ::std::default::Default for StdVideoEncodeH264WeightTable {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH264WeightTableFlags::default(),
+            luma_log2_weight_denom: u8::default(),
+            chroma_log2_weight_denom: u8::default(),
+            luma_weight_l0: unsafe { ::std::mem::zeroed() },
+            luma_offset_l0: unsafe { ::std::mem::zeroed() },
+            chroma_weight_l0: unsafe { ::std::mem::zeroed() },
+            chroma_offset_l0: unsafe { ::std::mem::zeroed() },
+            luma_weight_l1: unsafe { ::std::mem::zeroed() },
+            luma_offset_l1: unsafe { ::std::mem::zeroed() },
+            chroma_weight_l1: unsafe { ::std::mem::zeroed() },
+            chroma_offset_l1: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoEncodeH264WeightTable {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH264WeightTableFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn luma_log2_weight_denom(mut self, luma_log2_weight_denom: u8) -> Self {
+        self.luma_log2_weight_denom = luma_log2_weight_denom;
+        self
+    }
+    #[inline]
+    pub fn chroma_log2_weight_denom(mut self, chroma_log2_weight_denom: u8) -> Self {
+        self.chroma_log2_weight_denom = chroma_log2_weight_denom;
+        self
+    }
+    #[inline]
+    pub fn luma_weight_l0(mut self, luma_weight_l0: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_weight_l0 = luma_weight_l0;
+        self
+    }
+    #[inline]
+    pub fn luma_offset_l0(mut self, luma_offset_l0: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_offset_l0 = luma_offset_l0;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l0(
+        mut self,
+        chroma_weight_l0: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.chroma_weight_l0 = chroma_weight_l0;
+        self
+    }
+    #[inline]
+    pub fn chroma_offset_l0(
+        mut self,
+        chroma_offset_l0: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.chroma_offset_l0 = chroma_offset_l0;
+        self
+    }
+    #[inline]
+    pub fn luma_weight_l1(mut self, luma_weight_l1: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_weight_l1 = luma_weight_l1;
+        self
+    }
+    #[inline]
+    pub fn luma_offset_l1(mut self, luma_offset_l1: [i8; STD_VIDEO_H264_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_offset_l1 = luma_offset_l1;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l1(
+        mut self,
+        chroma_weight_l1: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.chroma_weight_l1 = chroma_weight_l1;
+        self
+    }
+    #[inline]
+    pub fn chroma_offset_l1(
+        mut self,
+        chroma_offset_l1: [[i8; STD_VIDEO_H264_MAX_CHROMA_PLANES]; STD_VIDEO_H264_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.chroma_offset_l1 = chroma_offset_l1;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264SliceHeaderFlags.html>"]
+pub struct StdVideoEncodeH264SliceHeaderFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH264SliceHeaderFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH264SliceHeaderFlags")
+            .field(
+                "direct_spatial_mv_pred_flag",
+                &self.get_direct_spatial_mv_pred_flag(),
+            )
+            .field(
+                "num_ref_idx_active_override_flag",
+                &self.get_num_ref_idx_active_override_flag(),
+            )
+            .field(
+                "no_output_of_prior_pics_flag",
+                &self.get_no_output_of_prior_pics_flag(),
+            )
+            .field(
+                "adaptive_ref_pic_marking_mode_flag",
+                &self.get_adaptive_ref_pic_marking_mode_flag(),
+            )
+            .field(
+                "no_prior_references_available_flag",
+                &self.get_no_prior_references_available_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH264SliceHeaderFlags {
+    #[inline]
+    pub fn direct_spatial_mv_pred_flag(mut self, direct_spatial_mv_pred_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((direct_spatial_mv_pred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_direct_spatial_mv_pred_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn num_ref_idx_active_override_flag(
+        mut self,
+        num_ref_idx_active_override_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((num_ref_idx_active_override_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_num_ref_idx_active_override_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn no_output_of_prior_pics_flag(mut self, no_output_of_prior_pics_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((no_output_of_prior_pics_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_no_output_of_prior_pics_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn adaptive_ref_pic_marking_mode_flag(
+        mut self,
+        adaptive_ref_pic_marking_mode_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((adaptive_ref_pic_marking_mode_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_adaptive_ref_pic_marking_mode_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn no_prior_references_available_flag(
+        mut self,
+        no_prior_references_available_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((no_prior_references_available_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_no_prior_references_available_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264PictureInfoFlags.html>"]
+pub struct StdVideoEncodeH264PictureInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH264PictureInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH264PictureInfoFlags")
+            .field("idr_flag", &self.get_idr_flag())
+            .field("is_reference_flag", &self.get_is_reference_flag())
+            .field(
+                "used_for_long_term_reference",
+                &self.get_used_for_long_term_reference(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH264PictureInfoFlags {
+    #[inline]
+    pub fn idr_flag(mut self, idr_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((idr_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_idr_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn is_reference_flag(mut self, is_reference_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_reference_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_reference_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn used_for_long_term_reference(mut self, used_for_long_term_reference: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((used_for_long_term_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_used_for_long_term_reference(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264ReferenceInfoFlags.html>"]
+pub struct StdVideoEncodeH264ReferenceInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH264ReferenceInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH264ReferenceInfoFlags")
+            .field(
+                "used_for_long_term_reference",
+                &self.get_used_for_long_term_reference(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH264ReferenceInfoFlags {
+    #[inline]
+    pub fn used_for_long_term_reference(mut self, used_for_long_term_reference: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((used_for_long_term_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_used_for_long_term_reference(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264RefMgmtFlags.html>"]
+pub struct StdVideoEncodeH264RefMgmtFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH264RefMgmtFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH264RefMgmtFlags")
+            .field(
+                "ref_pic_list_modification_l0_flag",
+                &self.get_ref_pic_list_modification_l0_flag(),
+            )
+            .field(
+                "ref_pic_list_modification_l1_flag",
+                &self.get_ref_pic_list_modification_l1_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH264RefMgmtFlags {
+    #[inline]
+    pub fn ref_pic_list_modification_l0_flag(
+        mut self,
+        ref_pic_list_modification_l0_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((ref_pic_list_modification_l0_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_ref_pic_list_modification_l0_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn ref_pic_list_modification_l1_flag(
+        mut self,
+        ref_pic_list_modification_l1_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((ref_pic_list_modification_l1_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_ref_pic_list_modification_l1_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264RefListModEntry.html>"]
+pub struct StdVideoEncodeH264RefListModEntry {
+    pub modification_of_pic_nums_idc: StdVideoH264ModificationOfPicNumsIdc,
+    pub abs_diff_pic_num_minus1: u16,
+    pub long_term_pic_num: u16,
+}
+impl StdVideoEncodeH264RefListModEntry {
+    #[inline]
+    pub fn modification_of_pic_nums_idc(
+        mut self,
+        modification_of_pic_nums_idc: StdVideoH264ModificationOfPicNumsIdc,
+    ) -> Self {
+        self.modification_of_pic_nums_idc = modification_of_pic_nums_idc;
+        self
+    }
+    #[inline]
+    pub fn abs_diff_pic_num_minus1(mut self, abs_diff_pic_num_minus1: u16) -> Self {
+        self.abs_diff_pic_num_minus1 = abs_diff_pic_num_minus1;
+        self
+    }
+    #[inline]
+    pub fn long_term_pic_num(mut self, long_term_pic_num: u16) -> Self {
+        self.long_term_pic_num = long_term_pic_num;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264RefPicMarkingEntry.html>"]
+pub struct StdVideoEncodeH264RefPicMarkingEntry {
+    pub operation: StdVideoH264MemMgmtControlOp,
+    pub difference_of_pic_nums_minus1: u16,
+    pub long_term_pic_num: u16,
+    pub long_term_frame_idx: u16,
+    pub max_long_term_frame_idx_plus1: u16,
+}
+impl StdVideoEncodeH264RefPicMarkingEntry {
+    #[inline]
+    pub fn operation(mut self, operation: StdVideoH264MemMgmtControlOp) -> Self {
+        self.operation = operation;
+        self
+    }
+    #[inline]
+    pub fn difference_of_pic_nums_minus1(mut self, difference_of_pic_nums_minus1: u16) -> Self {
+        self.difference_of_pic_nums_minus1 = difference_of_pic_nums_minus1;
+        self
+    }
+    #[inline]
+    pub fn long_term_pic_num(mut self, long_term_pic_num: u16) -> Self {
+        self.long_term_pic_num = long_term_pic_num;
+        self
+    }
+    #[inline]
+    pub fn long_term_frame_idx(mut self, long_term_frame_idx: u16) -> Self {
+        self.long_term_frame_idx = long_term_frame_idx;
+        self
+    }
+    #[inline]
+    pub fn max_long_term_frame_idx_plus1(mut self, max_long_term_frame_idx_plus1: u16) -> Self {
+        self.max_long_term_frame_idx_plus1 = max_long_term_frame_idx_plus1;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264RefMemMgmtCtrlOperations.html>"]
+pub struct StdVideoEncodeH264RefMemMgmtCtrlOperations<'a> {
+    pub flags: StdVideoEncodeH264RefMgmtFlags,
+    pub ref_list0_mod_op_count: u8,
+    pub p_ref_list0_mod_operations: *const StdVideoEncodeH264RefListModEntry,
+    pub ref_list1_mod_op_count: u8,
+    pub p_ref_list1_mod_operations: *const StdVideoEncodeH264RefListModEntry,
+    pub ref_pic_marking_op_count: u8,
+    pub p_ref_pic_marking_operations: *const StdVideoEncodeH264RefPicMarkingEntry,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoEncodeH264RefMemMgmtCtrlOperations<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH264RefMgmtFlags::default(),
+            ref_list0_mod_op_count: u8::default(),
+            p_ref_list0_mod_operations: ::std::ptr::null(),
+            ref_list1_mod_op_count: u8::default(),
+            p_ref_list1_mod_operations: ::std::ptr::null(),
+            ref_pic_marking_op_count: u8::default(),
+            p_ref_pic_marking_operations: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoEncodeH264RefMemMgmtCtrlOperations<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH264RefMgmtFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn ref_list0_mod_op_count(mut self, ref_list0_mod_op_count: u8) -> Self {
+        self.ref_list0_mod_op_count = ref_list0_mod_op_count;
+        self
+    }
+    #[inline]
+    pub fn ref_list0_mod_operations(
+        mut self,
+        ref_list0_mod_operations: &'a StdVideoEncodeH264RefListModEntry,
+    ) -> Self {
+        self.p_ref_list0_mod_operations = ref_list0_mod_operations;
+        self
+    }
+    #[inline]
+    pub fn ref_list1_mod_op_count(mut self, ref_list1_mod_op_count: u8) -> Self {
+        self.ref_list1_mod_op_count = ref_list1_mod_op_count;
+        self
+    }
+    #[inline]
+    pub fn ref_list1_mod_operations(
+        mut self,
+        ref_list1_mod_operations: &'a StdVideoEncodeH264RefListModEntry,
+    ) -> Self {
+        self.p_ref_list1_mod_operations = ref_list1_mod_operations;
+        self
+    }
+    #[inline]
+    pub fn ref_pic_marking_op_count(mut self, ref_pic_marking_op_count: u8) -> Self {
+        self.ref_pic_marking_op_count = ref_pic_marking_op_count;
+        self
+    }
+    #[inline]
+    pub fn ref_pic_marking_operations(
+        mut self,
+        ref_pic_marking_operations: &'a StdVideoEncodeH264RefPicMarkingEntry,
+    ) -> Self {
+        self.p_ref_pic_marking_operations = ref_pic_marking_operations;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264PictureInfo.html>"]
+pub struct StdVideoEncodeH264PictureInfo {
+    pub flags: StdVideoEncodeH264PictureInfoFlags,
+    pub seq_parameter_set_id: u8,
+    pub pic_parameter_set_id: u8,
+    pub picture_type: StdVideoH264PictureType,
+    pub frame_num: u32,
+    pub pic_order_cnt: i32,
+}
+impl StdVideoEncodeH264PictureInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH264PictureInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn seq_parameter_set_id(mut self, seq_parameter_set_id: u8) -> Self {
+        self.seq_parameter_set_id = seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pic_parameter_set_id(mut self, pic_parameter_set_id: u8) -> Self {
+        self.pic_parameter_set_id = pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn picture_type(mut self, picture_type: StdVideoH264PictureType) -> Self {
+        self.picture_type = picture_type;
+        self
+    }
+    #[inline]
+    pub fn frame_num(mut self, frame_num: u32) -> Self {
+        self.frame_num = frame_num;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt(mut self, pic_order_cnt: i32) -> Self {
+        self.pic_order_cnt = pic_order_cnt;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264ReferenceInfo.html>"]
+pub struct StdVideoEncodeH264ReferenceInfo {
+    pub flags: StdVideoEncodeH264ReferenceInfoFlags,
+    pub frame_num: u32,
+    pub pic_order_cnt: i32,
+    pub long_term_pic_num: u16,
+    pub long_term_frame_idx: u16,
+}
+impl StdVideoEncodeH264ReferenceInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH264ReferenceInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn frame_num(mut self, frame_num: u32) -> Self {
+        self.frame_num = frame_num;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt(mut self, pic_order_cnt: i32) -> Self {
+        self.pic_order_cnt = pic_order_cnt;
+        self
+    }
+    #[inline]
+    pub fn long_term_pic_num(mut self, long_term_pic_num: u16) -> Self {
+        self.long_term_pic_num = long_term_pic_num;
+        self
+    }
+    #[inline]
+    pub fn long_term_frame_idx(mut self, long_term_frame_idx: u16) -> Self {
+        self.long_term_frame_idx = long_term_frame_idx;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH264SliceHeader.html>"]
+pub struct StdVideoEncodeH264SliceHeader<'a> {
+    pub flags: StdVideoEncodeH264SliceHeaderFlags,
+    pub first_mb_in_slice: u32,
+    pub slice_type: StdVideoH264SliceType,
+    pub idr_pic_id: u16,
+    pub num_ref_idx_l0_active_minus1: u8,
+    pub num_ref_idx_l1_active_minus1: u8,
+    pub cabac_init_idc: StdVideoH264CabacInitIdc,
+    pub disable_deblocking_filter_idc: StdVideoH264DisableDeblockingFilterIdc,
+    pub slice_alpha_c0_offset_div2: i8,
+    pub slice_beta_offset_div2: i8,
+    pub p_weight_table: *const StdVideoEncodeH264WeightTable,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoEncodeH264SliceHeader<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH264SliceHeaderFlags::default(),
+            first_mb_in_slice: u32::default(),
+            slice_type: StdVideoH264SliceType::default(),
+            idr_pic_id: u16::default(),
+            num_ref_idx_l0_active_minus1: u8::default(),
+            num_ref_idx_l1_active_minus1: u8::default(),
+            cabac_init_idc: StdVideoH264CabacInitIdc::default(),
+            disable_deblocking_filter_idc: StdVideoH264DisableDeblockingFilterIdc::default(),
+            slice_alpha_c0_offset_div2: i8::default(),
+            slice_beta_offset_div2: i8::default(),
+            p_weight_table: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoEncodeH264SliceHeader<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH264SliceHeaderFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn first_mb_in_slice(mut self, first_mb_in_slice: u32) -> Self {
+        self.first_mb_in_slice = first_mb_in_slice;
+        self
+    }
+    #[inline]
+    pub fn slice_type(mut self, slice_type: StdVideoH264SliceType) -> Self {
+        self.slice_type = slice_type;
+        self
+    }
+    #[inline]
+    pub fn idr_pic_id(mut self, idr_pic_id: u16) -> Self {
+        self.idr_pic_id = idr_pic_id;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l0_active_minus1(mut self, num_ref_idx_l0_active_minus1: u8) -> Self {
+        self.num_ref_idx_l0_active_minus1 = num_ref_idx_l0_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l1_active_minus1(mut self, num_ref_idx_l1_active_minus1: u8) -> Self {
+        self.num_ref_idx_l1_active_minus1 = num_ref_idx_l1_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn cabac_init_idc(mut self, cabac_init_idc: StdVideoH264CabacInitIdc) -> Self {
+        self.cabac_init_idc = cabac_init_idc;
+        self
+    }
+    #[inline]
+    pub fn disable_deblocking_filter_idc(
+        mut self,
+        disable_deblocking_filter_idc: StdVideoH264DisableDeblockingFilterIdc,
+    ) -> Self {
+        self.disable_deblocking_filter_idc = disable_deblocking_filter_idc;
+        self
+    }
+    #[inline]
+    pub fn slice_alpha_c0_offset_div2(mut self, slice_alpha_c0_offset_div2: i8) -> Self {
+        self.slice_alpha_c0_offset_div2 = slice_alpha_c0_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn slice_beta_offset_div2(mut self, slice_beta_offset_div2: i8) -> Self {
+        self.slice_beta_offset_div2 = slice_beta_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn weight_table(mut self, weight_table: &'a StdVideoEncodeH264WeightTable) -> Self {
+        self.p_weight_table = weight_table;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ProfileTierLevelFlags.html>"]
+pub struct StdVideoH265ProfileTierLevelFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265ProfileTierLevelFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265ProfileTierLevelFlags")
+            .field("general_tier_flag", &self.get_general_tier_flag())
+            .field(
+                "general_progressive_source_flag",
+                &self.get_general_progressive_source_flag(),
+            )
+            .field(
+                "general_interlaced_source_flag",
+                &self.get_general_interlaced_source_flag(),
+            )
+            .field(
+                "general_non_packed_constraint_flag",
+                &self.get_general_non_packed_constraint_flag(),
+            )
+            .field(
+                "general_frame_only_constraint_flag",
+                &self.get_general_frame_only_constraint_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH265ProfileTierLevelFlags {
+    #[inline]
+    pub fn general_tier_flag(mut self, general_tier_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((general_tier_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_general_tier_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn general_progressive_source_flag(
+        mut self,
+        general_progressive_source_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((general_progressive_source_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_general_progressive_source_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn general_interlaced_source_flag(mut self, general_interlaced_source_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((general_interlaced_source_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_general_interlaced_source_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn general_non_packed_constraint_flag(
+        mut self,
+        general_non_packed_constraint_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((general_non_packed_constraint_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_general_non_packed_constraint_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn general_frame_only_constraint_flag(
+        mut self,
+        general_frame_only_constraint_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((general_frame_only_constraint_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_general_frame_only_constraint_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ProfileTierLevel.html>"]
+pub struct StdVideoH265ProfileTierLevel {
+    pub flags: StdVideoH265ProfileTierLevelFlags,
+    pub general_profile_idc: StdVideoH265ProfileIdc,
+    pub general_level_idc: StdVideoH265LevelIdc,
+}
+impl StdVideoH265ProfileTierLevel {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265ProfileTierLevelFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn general_profile_idc(mut self, general_profile_idc: StdVideoH265ProfileIdc) -> Self {
+        self.general_profile_idc = general_profile_idc;
+        self
+    }
+    #[inline]
+    pub fn general_level_idc(mut self, general_level_idc: StdVideoH265LevelIdc) -> Self {
+        self.general_level_idc = general_level_idc;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265DecPicBufMgr.html>"]
+pub struct StdVideoH265DecPicBufMgr {
+    pub max_latency_increase_plus1: [u32; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    pub max_dec_pic_buffering_minus1: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    pub max_num_reorder_pics: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+}
+impl ::std::default::Default for StdVideoH265DecPicBufMgr {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            max_latency_increase_plus1: unsafe { ::std::mem::zeroed() },
+            max_dec_pic_buffering_minus1: unsafe { ::std::mem::zeroed() },
+            max_num_reorder_pics: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH265DecPicBufMgr {
+    #[inline]
+    pub fn max_latency_increase_plus1(
+        mut self,
+        max_latency_increase_plus1: [u32; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    ) -> Self {
+        self.max_latency_increase_plus1 = max_latency_increase_plus1;
+        self
+    }
+    #[inline]
+    pub fn max_dec_pic_buffering_minus1(
+        mut self,
+        max_dec_pic_buffering_minus1: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    ) -> Self {
+        self.max_dec_pic_buffering_minus1 = max_dec_pic_buffering_minus1;
+        self
+    }
+    #[inline]
+    pub fn max_num_reorder_pics(
+        mut self,
+        max_num_reorder_pics: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    ) -> Self {
+        self.max_num_reorder_pics = max_num_reorder_pics;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SubLayerHrdParameters.html>"]
+pub struct StdVideoH265SubLayerHrdParameters {
+    pub bit_rate_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    pub cpb_size_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    pub cpb_size_du_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    pub bit_rate_du_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    pub cbr_flag: u32,
+}
+impl ::std::default::Default for StdVideoH265SubLayerHrdParameters {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            bit_rate_value_minus1: unsafe { ::std::mem::zeroed() },
+            cpb_size_value_minus1: unsafe { ::std::mem::zeroed() },
+            cpb_size_du_value_minus1: unsafe { ::std::mem::zeroed() },
+            bit_rate_du_value_minus1: unsafe { ::std::mem::zeroed() },
+            cbr_flag: u32::default(),
+        }
+    }
+}
+impl StdVideoH265SubLayerHrdParameters {
+    #[inline]
+    pub fn bit_rate_value_minus1(
+        mut self,
+        bit_rate_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.bit_rate_value_minus1 = bit_rate_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_value_minus1(
+        mut self,
+        cpb_size_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.cpb_size_value_minus1 = cpb_size_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_du_value_minus1(
+        mut self,
+        cpb_size_du_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.cpb_size_du_value_minus1 = cpb_size_du_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn bit_rate_du_value_minus1(
+        mut self,
+        bit_rate_du_value_minus1: [u32; STD_VIDEO_H265_CPB_CNT_LIST_SIZE],
+    ) -> Self {
+        self.bit_rate_du_value_minus1 = bit_rate_du_value_minus1;
+        self
+    }
+    #[inline]
+    pub fn cbr_flag(mut self, cbr_flag: u32) -> Self {
+        self.cbr_flag = cbr_flag;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265HrdFlags.html>"]
+pub struct StdVideoH265HrdFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265HrdFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265HrdFlags")
+            .field(
+                "nal_hrd_parameters_present_flag",
+                &self.get_nal_hrd_parameters_present_flag(),
+            )
+            .field(
+                "vcl_hrd_parameters_present_flag",
+                &self.get_vcl_hrd_parameters_present_flag(),
+            )
+            .field(
+                "sub_pic_hrd_params_present_flag",
+                &self.get_sub_pic_hrd_params_present_flag(),
+            )
+            .field(
+                "sub_pic_cpb_params_in_pic_timing_sei_flag",
+                &self.get_sub_pic_cpb_params_in_pic_timing_sei_flag(),
+            )
+            .field(
+                "fixed_pic_rate_general_flag",
+                &self.get_fixed_pic_rate_general_flag(),
+            )
+            .field(
+                "fixed_pic_rate_within_cvs_flag",
+                &self.get_fixed_pic_rate_within_cvs_flag(),
+            )
+            .field("low_delay_hrd_flag", &self.get_low_delay_hrd_flag())
+            .finish()
+    }
+}
+impl StdVideoH265HrdFlags {
+    #[inline]
+    pub fn nal_hrd_parameters_present_flag(
+        mut self,
+        nal_hrd_parameters_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((nal_hrd_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_nal_hrd_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vcl_hrd_parameters_present_flag(
+        mut self,
+        vcl_hrd_parameters_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vcl_hrd_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vcl_hrd_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sub_pic_hrd_params_present_flag(
+        mut self,
+        sub_pic_hrd_params_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sub_pic_hrd_params_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sub_pic_hrd_params_present_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sub_pic_cpb_params_in_pic_timing_sei_flag(
+        mut self,
+        sub_pic_cpb_params_in_pic_timing_sei_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sub_pic_cpb_params_in_pic_timing_sei_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sub_pic_cpb_params_in_pic_timing_sei_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn fixed_pic_rate_general_flag(mut self, fixed_pic_rate_general_flag: u8) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((fixed_pic_rate_general_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_fixed_pic_rate_general_flag(&self) -> u8 {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) as u8
+    }
+    #[inline]
+    pub fn fixed_pic_rate_within_cvs_flag(mut self, fixed_pic_rate_within_cvs_flag: u8) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((fixed_pic_rate_within_cvs_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_fixed_pic_rate_within_cvs_flag(&self) -> u8 {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) as u8
+    }
+    #[inline]
+    pub fn low_delay_hrd_flag(mut self, low_delay_hrd_flag: u8) -> Self {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((low_delay_hrd_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_low_delay_hrd_flag(&self) -> u8 {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 8u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) as u8
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265HrdParameters.html>"]
+pub struct StdVideoH265HrdParameters<'a> {
+    pub flags: StdVideoH265HrdFlags,
+    pub tick_divisor_minus2: u8,
+    pub du_cpb_removal_delay_increment_length_minus1: u8,
+    pub dpb_output_delay_du_length_minus1: u8,
+    pub bit_rate_scale: u8,
+    pub cpb_size_scale: u8,
+    pub cpb_size_du_scale: u8,
+    pub initial_cpb_removal_delay_length_minus1: u8,
+    pub au_cpb_removal_delay_length_minus1: u8,
+    pub dpb_output_delay_length_minus1: u8,
+    pub cpb_cnt_minus1: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    pub elemental_duration_in_tc_minus1: [u16; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    pub reserved: [u16; 3],
+    pub p_sub_layer_hrd_parameters_nal: *const StdVideoH265SubLayerHrdParameters,
+    pub p_sub_layer_hrd_parameters_vcl: *const StdVideoH265SubLayerHrdParameters,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH265HrdParameters<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265HrdFlags::default(),
+            tick_divisor_minus2: u8::default(),
+            du_cpb_removal_delay_increment_length_minus1: u8::default(),
+            dpb_output_delay_du_length_minus1: u8::default(),
+            bit_rate_scale: u8::default(),
+            cpb_size_scale: u8::default(),
+            cpb_size_du_scale: u8::default(),
+            initial_cpb_removal_delay_length_minus1: u8::default(),
+            au_cpb_removal_delay_length_minus1: u8::default(),
+            dpb_output_delay_length_minus1: u8::default(),
+            cpb_cnt_minus1: unsafe { ::std::mem::zeroed() },
+            elemental_duration_in_tc_minus1: unsafe { ::std::mem::zeroed() },
+            reserved: unsafe { ::std::mem::zeroed() },
+            p_sub_layer_hrd_parameters_nal: ::std::ptr::null(),
+            p_sub_layer_hrd_parameters_vcl: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH265HrdParameters<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265HrdFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn tick_divisor_minus2(mut self, tick_divisor_minus2: u8) -> Self {
+        self.tick_divisor_minus2 = tick_divisor_minus2;
+        self
+    }
+    #[inline]
+    pub fn du_cpb_removal_delay_increment_length_minus1(
+        mut self,
+        du_cpb_removal_delay_increment_length_minus1: u8,
+    ) -> Self {
+        self.du_cpb_removal_delay_increment_length_minus1 =
+            du_cpb_removal_delay_increment_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn dpb_output_delay_du_length_minus1(
+        mut self,
+        dpb_output_delay_du_length_minus1: u8,
+    ) -> Self {
+        self.dpb_output_delay_du_length_minus1 = dpb_output_delay_du_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn bit_rate_scale(mut self, bit_rate_scale: u8) -> Self {
+        self.bit_rate_scale = bit_rate_scale;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_scale(mut self, cpb_size_scale: u8) -> Self {
+        self.cpb_size_scale = cpb_size_scale;
+        self
+    }
+    #[inline]
+    pub fn cpb_size_du_scale(mut self, cpb_size_du_scale: u8) -> Self {
+        self.cpb_size_du_scale = cpb_size_du_scale;
+        self
+    }
+    #[inline]
+    pub fn initial_cpb_removal_delay_length_minus1(
+        mut self,
+        initial_cpb_removal_delay_length_minus1: u8,
+    ) -> Self {
+        self.initial_cpb_removal_delay_length_minus1 = initial_cpb_removal_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn au_cpb_removal_delay_length_minus1(
+        mut self,
+        au_cpb_removal_delay_length_minus1: u8,
+    ) -> Self {
+        self.au_cpb_removal_delay_length_minus1 = au_cpb_removal_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn dpb_output_delay_length_minus1(mut self, dpb_output_delay_length_minus1: u8) -> Self {
+        self.dpb_output_delay_length_minus1 = dpb_output_delay_length_minus1;
+        self
+    }
+    #[inline]
+    pub fn cpb_cnt_minus1(
+        mut self,
+        cpb_cnt_minus1: [u8; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    ) -> Self {
+        self.cpb_cnt_minus1 = cpb_cnt_minus1;
+        self
+    }
+    #[inline]
+    pub fn elemental_duration_in_tc_minus1(
+        mut self,
+        elemental_duration_in_tc_minus1: [u16; STD_VIDEO_H265_SUBLAYERS_LIST_SIZE],
+    ) -> Self {
+        self.elemental_duration_in_tc_minus1 = elemental_duration_in_tc_minus1;
+        self
+    }
+    #[inline]
+    pub fn reserved(mut self, reserved: [u16; 3]) -> Self {
+        self.reserved = reserved;
+        self
+    }
+    #[inline]
+    pub fn sub_layer_hrd_parameters_nal(
+        mut self,
+        sub_layer_hrd_parameters_nal: &'a StdVideoH265SubLayerHrdParameters,
+    ) -> Self {
+        self.p_sub_layer_hrd_parameters_nal = sub_layer_hrd_parameters_nal;
+        self
+    }
+    #[inline]
+    pub fn sub_layer_hrd_parameters_vcl(
+        mut self,
+        sub_layer_hrd_parameters_vcl: &'a StdVideoH265SubLayerHrdParameters,
+    ) -> Self {
+        self.p_sub_layer_hrd_parameters_vcl = sub_layer_hrd_parameters_vcl;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265VpsFlags.html>"]
+pub struct StdVideoH265VpsFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265VpsFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265VpsFlags")
+            .field(
+                "vps_temporal_id_nesting_flag",
+                &self.get_vps_temporal_id_nesting_flag(),
+            )
+            .field(
+                "vps_sub_layer_ordering_info_present_flag",
+                &self.get_vps_sub_layer_ordering_info_present_flag(),
+            )
+            .field(
+                "vps_timing_info_present_flag",
+                &self.get_vps_timing_info_present_flag(),
+            )
+            .field(
+                "vps_poc_proportional_to_timing_flag",
+                &self.get_vps_poc_proportional_to_timing_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH265VpsFlags {
+    #[inline]
+    pub fn vps_temporal_id_nesting_flag(mut self, vps_temporal_id_nesting_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vps_temporal_id_nesting_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vps_temporal_id_nesting_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vps_sub_layer_ordering_info_present_flag(
+        mut self,
+        vps_sub_layer_ordering_info_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vps_sub_layer_ordering_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vps_sub_layer_ordering_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vps_timing_info_present_flag(mut self, vps_timing_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vps_timing_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vps_timing_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vps_poc_proportional_to_timing_flag(
+        mut self,
+        vps_poc_proportional_to_timing_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vps_poc_proportional_to_timing_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vps_poc_proportional_to_timing_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265VideoParameterSet.html>"]
+pub struct StdVideoH265VideoParameterSet<'a> {
+    pub flags: StdVideoH265VpsFlags,
+    pub vps_video_parameter_set_id: u8,
+    pub vps_max_sub_layers_minus1: u8,
+    pub reserved1: u8,
+    pub reserved2: u8,
+    pub vps_num_units_in_tick: u32,
+    pub vps_time_scale: u32,
+    pub vps_num_ticks_poc_diff_one_minus1: u32,
+    pub reserved3: u32,
+    pub p_dec_pic_buf_mgr: *const StdVideoH265DecPicBufMgr,
+    pub p_hrd_parameters: *const StdVideoH265HrdParameters<'a>,
+    pub p_profile_tier_level: *const StdVideoH265ProfileTierLevel,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH265VideoParameterSet<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265VpsFlags::default(),
+            vps_video_parameter_set_id: u8::default(),
+            vps_max_sub_layers_minus1: u8::default(),
+            reserved1: u8::default(),
+            reserved2: u8::default(),
+            vps_num_units_in_tick: u32::default(),
+            vps_time_scale: u32::default(),
+            vps_num_ticks_poc_diff_one_minus1: u32::default(),
+            reserved3: u32::default(),
+            p_dec_pic_buf_mgr: ::std::ptr::null(),
+            p_hrd_parameters: ::std::ptr::null(),
+            p_profile_tier_level: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH265VideoParameterSet<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265VpsFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn vps_video_parameter_set_id(mut self, vps_video_parameter_set_id: u8) -> Self {
+        self.vps_video_parameter_set_id = vps_video_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn vps_max_sub_layers_minus1(mut self, vps_max_sub_layers_minus1: u8) -> Self {
+        self.vps_max_sub_layers_minus1 = vps_max_sub_layers_minus1;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn vps_num_units_in_tick(mut self, vps_num_units_in_tick: u32) -> Self {
+        self.vps_num_units_in_tick = vps_num_units_in_tick;
+        self
+    }
+    #[inline]
+    pub fn vps_time_scale(mut self, vps_time_scale: u32) -> Self {
+        self.vps_time_scale = vps_time_scale;
+        self
+    }
+    #[inline]
+    pub fn vps_num_ticks_poc_diff_one_minus1(
+        mut self,
+        vps_num_ticks_poc_diff_one_minus1: u32,
+    ) -> Self {
+        self.vps_num_ticks_poc_diff_one_minus1 = vps_num_ticks_poc_diff_one_minus1;
+        self
+    }
+    #[inline]
+    pub fn reserved3(mut self, reserved3: u32) -> Self {
+        self.reserved3 = reserved3;
+        self
+    }
+    #[inline]
+    pub fn dec_pic_buf_mgr(mut self, dec_pic_buf_mgr: &'a StdVideoH265DecPicBufMgr) -> Self {
+        self.p_dec_pic_buf_mgr = dec_pic_buf_mgr;
+        self
+    }
+    #[inline]
+    pub fn hrd_parameters(mut self, hrd_parameters: &'a StdVideoH265HrdParameters<'a>) -> Self {
+        self.p_hrd_parameters = hrd_parameters;
+        self
+    }
+    #[inline]
+    pub fn profile_tier_level(
+        mut self,
+        profile_tier_level: &'a StdVideoH265ProfileTierLevel,
+    ) -> Self {
+        self.p_profile_tier_level = profile_tier_level;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ScalingLists.html>"]
+pub struct StdVideoH265ScalingLists {
+    pub scaling_list4x4: [[u8; STD_VIDEO_H265_SCALING_LIST_4X4_NUM_ELEMENTS];
+        STD_VIDEO_H265_SCALING_LIST_4X4_NUM_LISTS],
+    pub scaling_list8x8: [[u8; STD_VIDEO_H265_SCALING_LIST_8X8_NUM_ELEMENTS];
+        STD_VIDEO_H265_SCALING_LIST_8X8_NUM_LISTS],
+    pub scaling_list16x16: [[u8; STD_VIDEO_H265_SCALING_LIST_16X16_NUM_ELEMENTS];
+        STD_VIDEO_H265_SCALING_LIST_16X16_NUM_LISTS],
+    pub scaling_list32x32: [[u8; STD_VIDEO_H265_SCALING_LIST_32X32_NUM_ELEMENTS];
+        STD_VIDEO_H265_SCALING_LIST_32X32_NUM_LISTS],
+    pub scaling_list_dc_coef16x16: [u8; STD_VIDEO_H265_SCALING_LIST_16X16_NUM_LISTS],
+    pub scaling_list_dc_coef32x32: [u8; STD_VIDEO_H265_SCALING_LIST_32X32_NUM_LISTS],
+}
+impl ::std::default::Default for StdVideoH265ScalingLists {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            scaling_list4x4: unsafe { ::std::mem::zeroed() },
+            scaling_list8x8: unsafe { ::std::mem::zeroed() },
+            scaling_list16x16: unsafe { ::std::mem::zeroed() },
+            scaling_list32x32: unsafe { ::std::mem::zeroed() },
+            scaling_list_dc_coef16x16: unsafe { ::std::mem::zeroed() },
+            scaling_list_dc_coef32x32: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH265ScalingLists {
+    #[inline]
+    pub fn scaling_list4x4(
+        mut self,
+        scaling_list4x4: [[u8; STD_VIDEO_H265_SCALING_LIST_4X4_NUM_ELEMENTS];
+            STD_VIDEO_H265_SCALING_LIST_4X4_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list4x4 = scaling_list4x4;
+        self
+    }
+    #[inline]
+    pub fn scaling_list8x8(
+        mut self,
+        scaling_list8x8: [[u8; STD_VIDEO_H265_SCALING_LIST_8X8_NUM_ELEMENTS];
+            STD_VIDEO_H265_SCALING_LIST_8X8_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list8x8 = scaling_list8x8;
+        self
+    }
+    #[inline]
+    pub fn scaling_list16x16(
+        mut self,
+        scaling_list16x16: [[u8; STD_VIDEO_H265_SCALING_LIST_16X16_NUM_ELEMENTS];
+            STD_VIDEO_H265_SCALING_LIST_16X16_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list16x16 = scaling_list16x16;
+        self
+    }
+    #[inline]
+    pub fn scaling_list32x32(
+        mut self,
+        scaling_list32x32: [[u8; STD_VIDEO_H265_SCALING_LIST_32X32_NUM_ELEMENTS];
+            STD_VIDEO_H265_SCALING_LIST_32X32_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list32x32 = scaling_list32x32;
+        self
+    }
+    #[inline]
+    pub fn scaling_list_dc_coef16x16(
+        mut self,
+        scaling_list_dc_coef16x16: [u8; STD_VIDEO_H265_SCALING_LIST_16X16_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list_dc_coef16x16 = scaling_list_dc_coef16x16;
+        self
+    }
+    #[inline]
+    pub fn scaling_list_dc_coef32x32(
+        mut self,
+        scaling_list_dc_coef32x32: [u8; STD_VIDEO_H265_SCALING_LIST_32X32_NUM_LISTS],
+    ) -> Self {
+        self.scaling_list_dc_coef32x32 = scaling_list_dc_coef32x32;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ShortTermRefPicSetFlags.html>"]
+pub struct StdVideoH265ShortTermRefPicSetFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265ShortTermRefPicSetFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265ShortTermRefPicSetFlags")
+            .field(
+                "inter_ref_pic_set_prediction_flag",
+                &self.get_inter_ref_pic_set_prediction_flag(),
+            )
+            .field("delta_rps_sign", &self.get_delta_rps_sign())
+            .finish()
+    }
+}
+impl StdVideoH265ShortTermRefPicSetFlags {
+    #[inline]
+    pub fn inter_ref_pic_set_prediction_flag(
+        mut self,
+        inter_ref_pic_set_prediction_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((inter_ref_pic_set_prediction_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_inter_ref_pic_set_prediction_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn delta_rps_sign(mut self, delta_rps_sign: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((delta_rps_sign as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_delta_rps_sign(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ShortTermRefPicSet.html>"]
+pub struct StdVideoH265ShortTermRefPicSet {
+    pub flags: StdVideoH265ShortTermRefPicSetFlags,
+    pub delta_idx_minus1: u32,
+    pub use_delta_flag: u16,
+    pub abs_delta_rps_minus1: u16,
+    pub used_by_curr_pic_flag: u16,
+    pub used_by_curr_pic_s0_flag: u16,
+    pub used_by_curr_pic_s1_flag: u16,
+    pub reserved1: u16,
+    pub reserved2: u8,
+    pub reserved3: u8,
+    pub num_negative_pics: u8,
+    pub num_positive_pics: u8,
+    pub delta_poc_s0_minus1: [u16; STD_VIDEO_H265_MAX_DPB_SIZE],
+    pub delta_poc_s1_minus1: [u16; STD_VIDEO_H265_MAX_DPB_SIZE],
+}
+impl ::std::default::Default for StdVideoH265ShortTermRefPicSet {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265ShortTermRefPicSetFlags::default(),
+            delta_idx_minus1: u32::default(),
+            use_delta_flag: u16::default(),
+            abs_delta_rps_minus1: u16::default(),
+            used_by_curr_pic_flag: u16::default(),
+            used_by_curr_pic_s0_flag: u16::default(),
+            used_by_curr_pic_s1_flag: u16::default(),
+            reserved1: u16::default(),
+            reserved2: u8::default(),
+            reserved3: u8::default(),
+            num_negative_pics: u8::default(),
+            num_positive_pics: u8::default(),
+            delta_poc_s0_minus1: unsafe { ::std::mem::zeroed() },
+            delta_poc_s1_minus1: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH265ShortTermRefPicSet {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265ShortTermRefPicSetFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn delta_idx_minus1(mut self, delta_idx_minus1: u32) -> Self {
+        self.delta_idx_minus1 = delta_idx_minus1;
+        self
+    }
+    #[inline]
+    pub fn use_delta_flag(mut self, use_delta_flag: u16) -> Self {
+        self.use_delta_flag = use_delta_flag;
+        self
+    }
+    #[inline]
+    pub fn abs_delta_rps_minus1(mut self, abs_delta_rps_minus1: u16) -> Self {
+        self.abs_delta_rps_minus1 = abs_delta_rps_minus1;
+        self
+    }
+    #[inline]
+    pub fn used_by_curr_pic_flag(mut self, used_by_curr_pic_flag: u16) -> Self {
+        self.used_by_curr_pic_flag = used_by_curr_pic_flag;
+        self
+    }
+    #[inline]
+    pub fn used_by_curr_pic_s0_flag(mut self, used_by_curr_pic_s0_flag: u16) -> Self {
+        self.used_by_curr_pic_s0_flag = used_by_curr_pic_s0_flag;
+        self
+    }
+    #[inline]
+    pub fn used_by_curr_pic_s1_flag(mut self, used_by_curr_pic_s1_flag: u16) -> Self {
+        self.used_by_curr_pic_s1_flag = used_by_curr_pic_s1_flag;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u16) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn reserved3(mut self, reserved3: u8) -> Self {
+        self.reserved3 = reserved3;
+        self
+    }
+    #[inline]
+    pub fn num_negative_pics(mut self, num_negative_pics: u8) -> Self {
+        self.num_negative_pics = num_negative_pics;
+        self
+    }
+    #[inline]
+    pub fn num_positive_pics(mut self, num_positive_pics: u8) -> Self {
+        self.num_positive_pics = num_positive_pics;
+        self
+    }
+    #[inline]
+    pub fn delta_poc_s0_minus1(
+        mut self,
+        delta_poc_s0_minus1: [u16; STD_VIDEO_H265_MAX_DPB_SIZE],
+    ) -> Self {
+        self.delta_poc_s0_minus1 = delta_poc_s0_minus1;
+        self
+    }
+    #[inline]
+    pub fn delta_poc_s1_minus1(
+        mut self,
+        delta_poc_s1_minus1: [u16; STD_VIDEO_H265_MAX_DPB_SIZE],
+    ) -> Self {
+        self.delta_poc_s1_minus1 = delta_poc_s1_minus1;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265LongTermRefPicsSps.html>"]
+pub struct StdVideoH265LongTermRefPicsSps {
+    pub used_by_curr_pic_lt_sps_flag: u32,
+    pub lt_ref_pic_poc_lsb_sps: [u32; STD_VIDEO_H265_MAX_LONG_TERM_REF_PICS_SPS],
+}
+impl ::std::default::Default for StdVideoH265LongTermRefPicsSps {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            used_by_curr_pic_lt_sps_flag: u32::default(),
+            lt_ref_pic_poc_lsb_sps: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH265LongTermRefPicsSps {
+    #[inline]
+    pub fn used_by_curr_pic_lt_sps_flag(mut self, used_by_curr_pic_lt_sps_flag: u32) -> Self {
+        self.used_by_curr_pic_lt_sps_flag = used_by_curr_pic_lt_sps_flag;
+        self
+    }
+    #[inline]
+    pub fn lt_ref_pic_poc_lsb_sps(
+        mut self,
+        lt_ref_pic_poc_lsb_sps: [u32; STD_VIDEO_H265_MAX_LONG_TERM_REF_PICS_SPS],
+    ) -> Self {
+        self.lt_ref_pic_poc_lsb_sps = lt_ref_pic_poc_lsb_sps;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SpsVuiFlags.html>"]
+pub struct StdVideoH265SpsVuiFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265SpsVuiFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265SpsVuiFlags")
+            .field(
+                "aspect_ratio_info_present_flag",
+                &self.get_aspect_ratio_info_present_flag(),
+            )
+            .field(
+                "overscan_info_present_flag",
+                &self.get_overscan_info_present_flag(),
+            )
+            .field(
+                "overscan_appropriate_flag",
+                &self.get_overscan_appropriate_flag(),
+            )
+            .field(
+                "video_signal_type_present_flag",
+                &self.get_video_signal_type_present_flag(),
+            )
+            .field("video_full_range_flag", &self.get_video_full_range_flag())
+            .field(
+                "colour_description_present_flag",
+                &self.get_colour_description_present_flag(),
+            )
+            .field(
+                "chroma_loc_info_present_flag",
+                &self.get_chroma_loc_info_present_flag(),
+            )
+            .field(
+                "neutral_chroma_indication_flag",
+                &self.get_neutral_chroma_indication_flag(),
+            )
+            .field("field_seq_flag", &self.get_field_seq_flag())
+            .field(
+                "frame_field_info_present_flag",
+                &self.get_frame_field_info_present_flag(),
+            )
+            .field(
+                "default_display_window_flag",
+                &self.get_default_display_window_flag(),
+            )
+            .field(
+                "vui_timing_info_present_flag",
+                &self.get_vui_timing_info_present_flag(),
+            )
+            .field(
+                "vui_poc_proportional_to_timing_flag",
+                &self.get_vui_poc_proportional_to_timing_flag(),
+            )
+            .field(
+                "vui_hrd_parameters_present_flag",
+                &self.get_vui_hrd_parameters_present_flag(),
+            )
+            .field(
+                "bitstream_restriction_flag",
+                &self.get_bitstream_restriction_flag(),
+            )
+            .field(
+                "tiles_fixed_structure_flag",
+                &self.get_tiles_fixed_structure_flag(),
+            )
+            .field(
+                "motion_vectors_over_pic_boundaries_flag",
+                &self.get_motion_vectors_over_pic_boundaries_flag(),
+            )
+            .field(
+                "restricted_ref_pic_lists_flag",
+                &self.get_restricted_ref_pic_lists_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH265SpsVuiFlags {
+    #[inline]
+    pub fn aspect_ratio_info_present_flag(mut self, aspect_ratio_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((aspect_ratio_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_aspect_ratio_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn overscan_info_present_flag(mut self, overscan_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((overscan_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_overscan_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn overscan_appropriate_flag(mut self, overscan_appropriate_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((overscan_appropriate_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_overscan_appropriate_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn video_signal_type_present_flag(mut self, video_signal_type_present_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((video_signal_type_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_video_signal_type_present_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn video_full_range_flag(mut self, video_full_range_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((video_full_range_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_video_full_range_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn colour_description_present_flag(
+        mut self,
+        colour_description_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((colour_description_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_colour_description_present_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn chroma_loc_info_present_flag(mut self, chroma_loc_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((chroma_loc_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_chroma_loc_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn neutral_chroma_indication_flag(mut self, neutral_chroma_indication_flag: bool) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((neutral_chroma_indication_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_neutral_chroma_indication_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn field_seq_flag(mut self, field_seq_flag: bool) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((field_seq_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_field_seq_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn frame_field_info_present_flag(mut self, frame_field_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((frame_field_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_frame_field_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn default_display_window_flag(mut self, default_display_window_flag: bool) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((default_display_window_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_default_display_window_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vui_timing_info_present_flag(mut self, vui_timing_info_present_flag: bool) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vui_timing_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vui_timing_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vui_poc_proportional_to_timing_flag(
+        mut self,
+        vui_poc_proportional_to_timing_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vui_poc_proportional_to_timing_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vui_poc_proportional_to_timing_flag(&self) -> bool {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vui_hrd_parameters_present_flag(
+        mut self,
+        vui_hrd_parameters_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vui_hrd_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vui_hrd_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn bitstream_restriction_flag(mut self, bitstream_restriction_flag: bool) -> Self {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((bitstream_restriction_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_bitstream_restriction_flag(&self) -> bool {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn tiles_fixed_structure_flag(mut self, tiles_fixed_structure_flag: bool) -> Self {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((tiles_fixed_structure_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_tiles_fixed_structure_flag(&self) -> bool {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn motion_vectors_over_pic_boundaries_flag(
+        mut self,
+        motion_vectors_over_pic_boundaries_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((motion_vectors_over_pic_boundaries_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_motion_vectors_over_pic_boundaries_flag(&self) -> bool {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn restricted_ref_pic_lists_flag(mut self, restricted_ref_pic_lists_flag: bool) -> Self {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((restricted_ref_pic_lists_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_restricted_ref_pic_lists_flag(&self) -> bool {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SequenceParameterSetVui.html>"]
+pub struct StdVideoH265SequenceParameterSetVui<'a> {
+    pub flags: StdVideoH265SpsVuiFlags,
+    pub aspect_ratio_idc: StdVideoH265AspectRatioIdc,
+    pub sar_width: u16,
+    pub sar_height: u16,
+    pub video_format: u8,
+    pub colour_primaries: u8,
+    pub transfer_characteristics: u8,
+    pub matrix_coeffs: u8,
+    pub chroma_sample_loc_type_top_field: u8,
+    pub chroma_sample_loc_type_bottom_field: u8,
+    pub reserved1: u8,
+    pub reserved2: u8,
+    pub def_disp_win_left_offset: u16,
+    pub def_disp_win_right_offset: u16,
+    pub def_disp_win_top_offset: u16,
+    pub def_disp_win_bottom_offset: u16,
+    pub vui_num_units_in_tick: u32,
+    pub vui_time_scale: u32,
+    pub vui_num_ticks_poc_diff_one_minus1: u32,
+    pub min_spatial_segmentation_idc: u16,
+    pub reserved3: u16,
+    pub max_bytes_per_pic_denom: u8,
+    pub max_bits_per_min_cu_denom: u8,
+    pub log2_max_mv_length_horizontal: u8,
+    pub log2_max_mv_length_vertical: u8,
+    pub p_hrd_parameters: *const StdVideoH265HrdParameters<'a>,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH265SequenceParameterSetVui<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265SpsVuiFlags::default(),
+            aspect_ratio_idc: StdVideoH265AspectRatioIdc::default(),
+            sar_width: u16::default(),
+            sar_height: u16::default(),
+            video_format: u8::default(),
+            colour_primaries: u8::default(),
+            transfer_characteristics: u8::default(),
+            matrix_coeffs: u8::default(),
+            chroma_sample_loc_type_top_field: u8::default(),
+            chroma_sample_loc_type_bottom_field: u8::default(),
+            reserved1: u8::default(),
+            reserved2: u8::default(),
+            def_disp_win_left_offset: u16::default(),
+            def_disp_win_right_offset: u16::default(),
+            def_disp_win_top_offset: u16::default(),
+            def_disp_win_bottom_offset: u16::default(),
+            vui_num_units_in_tick: u32::default(),
+            vui_time_scale: u32::default(),
+            vui_num_ticks_poc_diff_one_minus1: u32::default(),
+            min_spatial_segmentation_idc: u16::default(),
+            reserved3: u16::default(),
+            max_bytes_per_pic_denom: u8::default(),
+            max_bits_per_min_cu_denom: u8::default(),
+            log2_max_mv_length_horizontal: u8::default(),
+            log2_max_mv_length_vertical: u8::default(),
+            p_hrd_parameters: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH265SequenceParameterSetVui<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265SpsVuiFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn aspect_ratio_idc(mut self, aspect_ratio_idc: StdVideoH265AspectRatioIdc) -> Self {
+        self.aspect_ratio_idc = aspect_ratio_idc;
+        self
+    }
+    #[inline]
+    pub fn sar_width(mut self, sar_width: u16) -> Self {
+        self.sar_width = sar_width;
+        self
+    }
+    #[inline]
+    pub fn sar_height(mut self, sar_height: u16) -> Self {
+        self.sar_height = sar_height;
+        self
+    }
+    #[inline]
+    pub fn video_format(mut self, video_format: u8) -> Self {
+        self.video_format = video_format;
+        self
+    }
+    #[inline]
+    pub fn colour_primaries(mut self, colour_primaries: u8) -> Self {
+        self.colour_primaries = colour_primaries;
+        self
+    }
+    #[inline]
+    pub fn transfer_characteristics(mut self, transfer_characteristics: u8) -> Self {
+        self.transfer_characteristics = transfer_characteristics;
+        self
+    }
+    #[inline]
+    pub fn matrix_coeffs(mut self, matrix_coeffs: u8) -> Self {
+        self.matrix_coeffs = matrix_coeffs;
+        self
+    }
+    #[inline]
+    pub fn chroma_sample_loc_type_top_field(
+        mut self,
+        chroma_sample_loc_type_top_field: u8,
+    ) -> Self {
+        self.chroma_sample_loc_type_top_field = chroma_sample_loc_type_top_field;
+        self
+    }
+    #[inline]
+    pub fn chroma_sample_loc_type_bottom_field(
+        mut self,
+        chroma_sample_loc_type_bottom_field: u8,
+    ) -> Self {
+        self.chroma_sample_loc_type_bottom_field = chroma_sample_loc_type_bottom_field;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn def_disp_win_left_offset(mut self, def_disp_win_left_offset: u16) -> Self {
+        self.def_disp_win_left_offset = def_disp_win_left_offset;
+        self
+    }
+    #[inline]
+    pub fn def_disp_win_right_offset(mut self, def_disp_win_right_offset: u16) -> Self {
+        self.def_disp_win_right_offset = def_disp_win_right_offset;
+        self
+    }
+    #[inline]
+    pub fn def_disp_win_top_offset(mut self, def_disp_win_top_offset: u16) -> Self {
+        self.def_disp_win_top_offset = def_disp_win_top_offset;
+        self
+    }
+    #[inline]
+    pub fn def_disp_win_bottom_offset(mut self, def_disp_win_bottom_offset: u16) -> Self {
+        self.def_disp_win_bottom_offset = def_disp_win_bottom_offset;
+        self
+    }
+    #[inline]
+    pub fn vui_num_units_in_tick(mut self, vui_num_units_in_tick: u32) -> Self {
+        self.vui_num_units_in_tick = vui_num_units_in_tick;
+        self
+    }
+    #[inline]
+    pub fn vui_time_scale(mut self, vui_time_scale: u32) -> Self {
+        self.vui_time_scale = vui_time_scale;
+        self
+    }
+    #[inline]
+    pub fn vui_num_ticks_poc_diff_one_minus1(
+        mut self,
+        vui_num_ticks_poc_diff_one_minus1: u32,
+    ) -> Self {
+        self.vui_num_ticks_poc_diff_one_minus1 = vui_num_ticks_poc_diff_one_minus1;
+        self
+    }
+    #[inline]
+    pub fn min_spatial_segmentation_idc(mut self, min_spatial_segmentation_idc: u16) -> Self {
+        self.min_spatial_segmentation_idc = min_spatial_segmentation_idc;
+        self
+    }
+    #[inline]
+    pub fn reserved3(mut self, reserved3: u16) -> Self {
+        self.reserved3 = reserved3;
+        self
+    }
+    #[inline]
+    pub fn max_bytes_per_pic_denom(mut self, max_bytes_per_pic_denom: u8) -> Self {
+        self.max_bytes_per_pic_denom = max_bytes_per_pic_denom;
+        self
+    }
+    #[inline]
+    pub fn max_bits_per_min_cu_denom(mut self, max_bits_per_min_cu_denom: u8) -> Self {
+        self.max_bits_per_min_cu_denom = max_bits_per_min_cu_denom;
+        self
+    }
+    #[inline]
+    pub fn log2_max_mv_length_horizontal(mut self, log2_max_mv_length_horizontal: u8) -> Self {
+        self.log2_max_mv_length_horizontal = log2_max_mv_length_horizontal;
+        self
+    }
+    #[inline]
+    pub fn log2_max_mv_length_vertical(mut self, log2_max_mv_length_vertical: u8) -> Self {
+        self.log2_max_mv_length_vertical = log2_max_mv_length_vertical;
+        self
+    }
+    #[inline]
+    pub fn hrd_parameters(mut self, hrd_parameters: &'a StdVideoH265HrdParameters<'a>) -> Self {
+        self.p_hrd_parameters = hrd_parameters;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265PredictorPaletteEntries.html>"]
+pub struct StdVideoH265PredictorPaletteEntries {
+    pub predictor_palette_entries: [[u16; STD_VIDEO_H265_PREDICTOR_PALETTE_COMP_ENTRIES_LIST_SIZE];
+        STD_VIDEO_H265_PREDICTOR_PALETTE_COMPONENTS_LIST_SIZE],
+}
+impl ::std::default::Default for StdVideoH265PredictorPaletteEntries {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            predictor_palette_entries: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoH265PredictorPaletteEntries {
+    #[inline]
+    pub fn predictor_palette_entries(
+        mut self,
+        predictor_palette_entries: [[u16; STD_VIDEO_H265_PREDICTOR_PALETTE_COMP_ENTRIES_LIST_SIZE];
+            STD_VIDEO_H265_PREDICTOR_PALETTE_COMPONENTS_LIST_SIZE],
+    ) -> Self {
+        self.predictor_palette_entries = predictor_palette_entries;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SpsFlags.html>"]
+pub struct StdVideoH265SpsFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265SpsFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265SpsFlags")
+            .field(
+                "sps_temporal_id_nesting_flag",
+                &self.get_sps_temporal_id_nesting_flag(),
+            )
+            .field(
+                "separate_colour_plane_flag",
+                &self.get_separate_colour_plane_flag(),
+            )
+            .field(
+                "conformance_window_flag",
+                &self.get_conformance_window_flag(),
+            )
+            .field(
+                "sps_sub_layer_ordering_info_present_flag",
+                &self.get_sps_sub_layer_ordering_info_present_flag(),
+            )
+            .field(
+                "scaling_list_enabled_flag",
+                &self.get_scaling_list_enabled_flag(),
+            )
+            .field(
+                "sps_scaling_list_data_present_flag",
+                &self.get_sps_scaling_list_data_present_flag(),
+            )
+            .field("amp_enabled_flag", &self.get_amp_enabled_flag())
+            .field(
+                "sample_adaptive_offset_enabled_flag",
+                &self.get_sample_adaptive_offset_enabled_flag(),
+            )
+            .field("pcm_enabled_flag", &self.get_pcm_enabled_flag())
+            .field(
+                "pcm_loop_filter_disabled_flag",
+                &self.get_pcm_loop_filter_disabled_flag(),
+            )
+            .field(
+                "long_term_ref_pics_present_flag",
+                &self.get_long_term_ref_pics_present_flag(),
+            )
+            .field(
+                "sps_temporal_mvp_enabled_flag",
+                &self.get_sps_temporal_mvp_enabled_flag(),
+            )
+            .field(
+                "strong_intra_smoothing_enabled_flag",
+                &self.get_strong_intra_smoothing_enabled_flag(),
+            )
+            .field(
+                "vui_parameters_present_flag",
+                &self.get_vui_parameters_present_flag(),
+            )
+            .field(
+                "sps_extension_present_flag",
+                &self.get_sps_extension_present_flag(),
+            )
+            .field(
+                "sps_range_extension_flag",
+                &self.get_sps_range_extension_flag(),
+            )
+            .field(
+                "transform_skip_rotation_enabled_flag",
+                &self.get_transform_skip_rotation_enabled_flag(),
+            )
+            .field(
+                "transform_skip_context_enabled_flag",
+                &self.get_transform_skip_context_enabled_flag(),
+            )
+            .field(
+                "implicit_rdpcm_enabled_flag",
+                &self.get_implicit_rdpcm_enabled_flag(),
+            )
+            .field(
+                "explicit_rdpcm_enabled_flag",
+                &self.get_explicit_rdpcm_enabled_flag(),
+            )
+            .field(
+                "extended_precision_processing_flag",
+                &self.get_extended_precision_processing_flag(),
+            )
+            .field(
+                "intra_smoothing_disabled_flag",
+                &self.get_intra_smoothing_disabled_flag(),
+            )
+            .field(
+                "high_precision_offsets_enabled_flag",
+                &self.get_high_precision_offsets_enabled_flag(),
+            )
+            .field(
+                "persistent_rice_adaptation_enabled_flag",
+                &self.get_persistent_rice_adaptation_enabled_flag(),
+            )
+            .field(
+                "cabac_bypass_alignment_enabled_flag",
+                &self.get_cabac_bypass_alignment_enabled_flag(),
+            )
+            .field("sps_scc_extension_flag", &self.get_sps_scc_extension_flag())
+            .field(
+                "sps_curr_pic_ref_enabled_flag",
+                &self.get_sps_curr_pic_ref_enabled_flag(),
+            )
+            .field(
+                "palette_mode_enabled_flag",
+                &self.get_palette_mode_enabled_flag(),
+            )
+            .field(
+                "sps_palette_predictor_initializers_present_flag",
+                &self.get_sps_palette_predictor_initializers_present_flag(),
+            )
+            .field(
+                "intra_boundary_filtering_disabled_flag",
+                &self.get_intra_boundary_filtering_disabled_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH265SpsFlags {
+    #[inline]
+    pub fn sps_temporal_id_nesting_flag(mut self, sps_temporal_id_nesting_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_temporal_id_nesting_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_temporal_id_nesting_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn separate_colour_plane_flag(mut self, separate_colour_plane_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((separate_colour_plane_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_separate_colour_plane_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn conformance_window_flag(mut self, conformance_window_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((conformance_window_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_conformance_window_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_sub_layer_ordering_info_present_flag(
+        mut self,
+        sps_sub_layer_ordering_info_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_sub_layer_ordering_info_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_sub_layer_ordering_info_present_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn scaling_list_enabled_flag(mut self, scaling_list_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((scaling_list_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_scaling_list_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_scaling_list_data_present_flag(
+        mut self,
+        sps_scaling_list_data_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_scaling_list_data_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_scaling_list_data_present_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn amp_enabled_flag(mut self, amp_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((amp_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_amp_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sample_adaptive_offset_enabled_flag(
+        mut self,
+        sample_adaptive_offset_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sample_adaptive_offset_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sample_adaptive_offset_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pcm_enabled_flag(mut self, pcm_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pcm_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pcm_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pcm_loop_filter_disabled_flag(mut self, pcm_loop_filter_disabled_flag: bool) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pcm_loop_filter_disabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pcm_loop_filter_disabled_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn long_term_ref_pics_present_flag(
+        mut self,
+        long_term_ref_pics_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((long_term_ref_pics_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_long_term_ref_pics_present_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_temporal_mvp_enabled_flag(mut self, sps_temporal_mvp_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_temporal_mvp_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_temporal_mvp_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn strong_intra_smoothing_enabled_flag(
+        mut self,
+        strong_intra_smoothing_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((strong_intra_smoothing_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_strong_intra_smoothing_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn vui_parameters_present_flag(mut self, vui_parameters_present_flag: bool) -> Self {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((vui_parameters_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_vui_parameters_present_flag(&self) -> bool {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_extension_present_flag(mut self, sps_extension_present_flag: bool) -> Self {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_extension_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_extension_present_flag(&self) -> bool {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_range_extension_flag(mut self, sps_range_extension_flag: bool) -> Self {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_range_extension_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_range_extension_flag(&self) -> bool {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn transform_skip_rotation_enabled_flag(
+        mut self,
+        transform_skip_rotation_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((transform_skip_rotation_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_transform_skip_rotation_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn transform_skip_context_enabled_flag(
+        mut self,
+        transform_skip_context_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((transform_skip_context_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_transform_skip_context_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn implicit_rdpcm_enabled_flag(mut self, implicit_rdpcm_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 18u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((implicit_rdpcm_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_implicit_rdpcm_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 18u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn explicit_rdpcm_enabled_flag(mut self, explicit_rdpcm_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 19u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((explicit_rdpcm_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_explicit_rdpcm_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 19u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn extended_precision_processing_flag(
+        mut self,
+        extended_precision_processing_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((extended_precision_processing_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_extended_precision_processing_flag(&self) -> bool {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn intra_smoothing_disabled_flag(mut self, intra_smoothing_disabled_flag: bool) -> Self {
+        const SHIFT: u8 = 21u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((intra_smoothing_disabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_intra_smoothing_disabled_flag(&self) -> bool {
+        const SHIFT: u8 = 21u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn high_precision_offsets_enabled_flag(
+        mut self,
+        high_precision_offsets_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 22u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((high_precision_offsets_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_high_precision_offsets_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 22u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn persistent_rice_adaptation_enabled_flag(
+        mut self,
+        persistent_rice_adaptation_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 23u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((persistent_rice_adaptation_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_persistent_rice_adaptation_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 23u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cabac_bypass_alignment_enabled_flag(
+        mut self,
+        cabac_bypass_alignment_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 24u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cabac_bypass_alignment_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cabac_bypass_alignment_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 24u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_scc_extension_flag(mut self, sps_scc_extension_flag: bool) -> Self {
+        const SHIFT: u8 = 25u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_scc_extension_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_scc_extension_flag(&self) -> bool {
+        const SHIFT: u8 = 25u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_curr_pic_ref_enabled_flag(mut self, sps_curr_pic_ref_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 26u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_curr_pic_ref_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_curr_pic_ref_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 26u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn palette_mode_enabled_flag(mut self, palette_mode_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 27u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((palette_mode_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_palette_mode_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 27u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sps_palette_predictor_initializers_present_flag(
+        mut self,
+        sps_palette_predictor_initializers_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 28u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sps_palette_predictor_initializers_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sps_palette_predictor_initializers_present_flag(&self) -> bool {
+        const SHIFT: u8 = 28u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn intra_boundary_filtering_disabled_flag(
+        mut self,
+        intra_boundary_filtering_disabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 29u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((intra_boundary_filtering_disabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_intra_boundary_filtering_disabled_flag(&self) -> bool {
+        const SHIFT: u8 = 29u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SequenceParameterSet.html>"]
+pub struct StdVideoH265SequenceParameterSet<'a> {
+    pub flags: StdVideoH265SpsFlags,
+    pub chroma_format_idc: StdVideoH265ChromaFormatIdc,
+    pub pic_width_in_luma_samples: u32,
+    pub pic_height_in_luma_samples: u32,
+    pub sps_video_parameter_set_id: u8,
+    pub sps_max_sub_layers_minus1: u8,
+    pub sps_seq_parameter_set_id: u8,
+    pub bit_depth_luma_minus8: u8,
+    pub bit_depth_chroma_minus8: u8,
+    pub log2_max_pic_order_cnt_lsb_minus4: u8,
+    pub log2_min_luma_coding_block_size_minus3: u8,
+    pub log2_diff_max_min_luma_coding_block_size: u8,
+    pub log2_min_luma_transform_block_size_minus2: u8,
+    pub log2_diff_max_min_luma_transform_block_size: u8,
+    pub max_transform_hierarchy_depth_inter: u8,
+    pub max_transform_hierarchy_depth_intra: u8,
+    pub num_short_term_ref_pic_sets: u8,
+    pub num_long_term_ref_pics_sps: u8,
+    pub pcm_sample_bit_depth_luma_minus1: u8,
+    pub pcm_sample_bit_depth_chroma_minus1: u8,
+    pub log2_min_pcm_luma_coding_block_size_minus3: u8,
+    pub log2_diff_max_min_pcm_luma_coding_block_size: u8,
+    pub reserved1: u8,
+    pub reserved2: u8,
+    pub palette_max_size: u8,
+    pub delta_palette_max_predictor_size: u8,
+    pub motion_vector_resolution_control_idc: u8,
+    pub sps_num_palette_predictor_initializers_minus1: u8,
+    pub conf_win_left_offset: u32,
+    pub conf_win_right_offset: u32,
+    pub conf_win_top_offset: u32,
+    pub conf_win_bottom_offset: u32,
+    pub p_profile_tier_level: *const StdVideoH265ProfileTierLevel,
+    pub p_dec_pic_buf_mgr: *const StdVideoH265DecPicBufMgr,
+    pub p_scaling_lists: *const StdVideoH265ScalingLists,
+    pub p_short_term_ref_pic_set: *const StdVideoH265ShortTermRefPicSet,
+    pub p_long_term_ref_pics_sps: *const StdVideoH265LongTermRefPicsSps,
+    pub p_sequence_parameter_set_vui: *const StdVideoH265SequenceParameterSetVui<'a>,
+    pub p_predictor_palette_entries: *const StdVideoH265PredictorPaletteEntries,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH265SequenceParameterSet<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265SpsFlags::default(),
+            chroma_format_idc: StdVideoH265ChromaFormatIdc::default(),
+            pic_width_in_luma_samples: u32::default(),
+            pic_height_in_luma_samples: u32::default(),
+            sps_video_parameter_set_id: u8::default(),
+            sps_max_sub_layers_minus1: u8::default(),
+            sps_seq_parameter_set_id: u8::default(),
+            bit_depth_luma_minus8: u8::default(),
+            bit_depth_chroma_minus8: u8::default(),
+            log2_max_pic_order_cnt_lsb_minus4: u8::default(),
+            log2_min_luma_coding_block_size_minus3: u8::default(),
+            log2_diff_max_min_luma_coding_block_size: u8::default(),
+            log2_min_luma_transform_block_size_minus2: u8::default(),
+            log2_diff_max_min_luma_transform_block_size: u8::default(),
+            max_transform_hierarchy_depth_inter: u8::default(),
+            max_transform_hierarchy_depth_intra: u8::default(),
+            num_short_term_ref_pic_sets: u8::default(),
+            num_long_term_ref_pics_sps: u8::default(),
+            pcm_sample_bit_depth_luma_minus1: u8::default(),
+            pcm_sample_bit_depth_chroma_minus1: u8::default(),
+            log2_min_pcm_luma_coding_block_size_minus3: u8::default(),
+            log2_diff_max_min_pcm_luma_coding_block_size: u8::default(),
+            reserved1: u8::default(),
+            reserved2: u8::default(),
+            palette_max_size: u8::default(),
+            delta_palette_max_predictor_size: u8::default(),
+            motion_vector_resolution_control_idc: u8::default(),
+            sps_num_palette_predictor_initializers_minus1: u8::default(),
+            conf_win_left_offset: u32::default(),
+            conf_win_right_offset: u32::default(),
+            conf_win_top_offset: u32::default(),
+            conf_win_bottom_offset: u32::default(),
+            p_profile_tier_level: ::std::ptr::null(),
+            p_dec_pic_buf_mgr: ::std::ptr::null(),
+            p_scaling_lists: ::std::ptr::null(),
+            p_short_term_ref_pic_set: ::std::ptr::null(),
+            p_long_term_ref_pics_sps: ::std::ptr::null(),
+            p_sequence_parameter_set_vui: ::std::ptr::null(),
+            p_predictor_palette_entries: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH265SequenceParameterSet<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265SpsFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn chroma_format_idc(mut self, chroma_format_idc: StdVideoH265ChromaFormatIdc) -> Self {
+        self.chroma_format_idc = chroma_format_idc;
+        self
+    }
+    #[inline]
+    pub fn pic_width_in_luma_samples(mut self, pic_width_in_luma_samples: u32) -> Self {
+        self.pic_width_in_luma_samples = pic_width_in_luma_samples;
+        self
+    }
+    #[inline]
+    pub fn pic_height_in_luma_samples(mut self, pic_height_in_luma_samples: u32) -> Self {
+        self.pic_height_in_luma_samples = pic_height_in_luma_samples;
+        self
+    }
+    #[inline]
+    pub fn sps_video_parameter_set_id(mut self, sps_video_parameter_set_id: u8) -> Self {
+        self.sps_video_parameter_set_id = sps_video_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn sps_max_sub_layers_minus1(mut self, sps_max_sub_layers_minus1: u8) -> Self {
+        self.sps_max_sub_layers_minus1 = sps_max_sub_layers_minus1;
+        self
+    }
+    #[inline]
+    pub fn sps_seq_parameter_set_id(mut self, sps_seq_parameter_set_id: u8) -> Self {
+        self.sps_seq_parameter_set_id = sps_seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn bit_depth_luma_minus8(mut self, bit_depth_luma_minus8: u8) -> Self {
+        self.bit_depth_luma_minus8 = bit_depth_luma_minus8;
+        self
+    }
+    #[inline]
+    pub fn bit_depth_chroma_minus8(mut self, bit_depth_chroma_minus8: u8) -> Self {
+        self.bit_depth_chroma_minus8 = bit_depth_chroma_minus8;
+        self
+    }
+    #[inline]
+    pub fn log2_max_pic_order_cnt_lsb_minus4(
+        mut self,
+        log2_max_pic_order_cnt_lsb_minus4: u8,
+    ) -> Self {
+        self.log2_max_pic_order_cnt_lsb_minus4 = log2_max_pic_order_cnt_lsb_minus4;
+        self
+    }
+    #[inline]
+    pub fn log2_min_luma_coding_block_size_minus3(
+        mut self,
+        log2_min_luma_coding_block_size_minus3: u8,
+    ) -> Self {
+        self.log2_min_luma_coding_block_size_minus3 = log2_min_luma_coding_block_size_minus3;
+        self
+    }
+    #[inline]
+    pub fn log2_diff_max_min_luma_coding_block_size(
+        mut self,
+        log2_diff_max_min_luma_coding_block_size: u8,
+    ) -> Self {
+        self.log2_diff_max_min_luma_coding_block_size = log2_diff_max_min_luma_coding_block_size;
+        self
+    }
+    #[inline]
+    pub fn log2_min_luma_transform_block_size_minus2(
+        mut self,
+        log2_min_luma_transform_block_size_minus2: u8,
+    ) -> Self {
+        self.log2_min_luma_transform_block_size_minus2 = log2_min_luma_transform_block_size_minus2;
+        self
+    }
+    #[inline]
+    pub fn log2_diff_max_min_luma_transform_block_size(
+        mut self,
+        log2_diff_max_min_luma_transform_block_size: u8,
+    ) -> Self {
+        self.log2_diff_max_min_luma_transform_block_size =
+            log2_diff_max_min_luma_transform_block_size;
+        self
+    }
+    #[inline]
+    pub fn max_transform_hierarchy_depth_inter(
+        mut self,
+        max_transform_hierarchy_depth_inter: u8,
+    ) -> Self {
+        self.max_transform_hierarchy_depth_inter = max_transform_hierarchy_depth_inter;
+        self
+    }
+    #[inline]
+    pub fn max_transform_hierarchy_depth_intra(
+        mut self,
+        max_transform_hierarchy_depth_intra: u8,
+    ) -> Self {
+        self.max_transform_hierarchy_depth_intra = max_transform_hierarchy_depth_intra;
+        self
+    }
+    #[inline]
+    pub fn num_short_term_ref_pic_sets(mut self, num_short_term_ref_pic_sets: u8) -> Self {
+        self.num_short_term_ref_pic_sets = num_short_term_ref_pic_sets;
+        self
+    }
+    #[inline]
+    pub fn num_long_term_ref_pics_sps(mut self, num_long_term_ref_pics_sps: u8) -> Self {
+        self.num_long_term_ref_pics_sps = num_long_term_ref_pics_sps;
+        self
+    }
+    #[inline]
+    pub fn pcm_sample_bit_depth_luma_minus1(
+        mut self,
+        pcm_sample_bit_depth_luma_minus1: u8,
+    ) -> Self {
+        self.pcm_sample_bit_depth_luma_minus1 = pcm_sample_bit_depth_luma_minus1;
+        self
+    }
+    #[inline]
+    pub fn pcm_sample_bit_depth_chroma_minus1(
+        mut self,
+        pcm_sample_bit_depth_chroma_minus1: u8,
+    ) -> Self {
+        self.pcm_sample_bit_depth_chroma_minus1 = pcm_sample_bit_depth_chroma_minus1;
+        self
+    }
+    #[inline]
+    pub fn log2_min_pcm_luma_coding_block_size_minus3(
+        mut self,
+        log2_min_pcm_luma_coding_block_size_minus3: u8,
+    ) -> Self {
+        self.log2_min_pcm_luma_coding_block_size_minus3 =
+            log2_min_pcm_luma_coding_block_size_minus3;
+        self
+    }
+    #[inline]
+    pub fn log2_diff_max_min_pcm_luma_coding_block_size(
+        mut self,
+        log2_diff_max_min_pcm_luma_coding_block_size: u8,
+    ) -> Self {
+        self.log2_diff_max_min_pcm_luma_coding_block_size =
+            log2_diff_max_min_pcm_luma_coding_block_size;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn palette_max_size(mut self, palette_max_size: u8) -> Self {
+        self.palette_max_size = palette_max_size;
+        self
+    }
+    #[inline]
+    pub fn delta_palette_max_predictor_size(
+        mut self,
+        delta_palette_max_predictor_size: u8,
+    ) -> Self {
+        self.delta_palette_max_predictor_size = delta_palette_max_predictor_size;
+        self
+    }
+    #[inline]
+    pub fn motion_vector_resolution_control_idc(
+        mut self,
+        motion_vector_resolution_control_idc: u8,
+    ) -> Self {
+        self.motion_vector_resolution_control_idc = motion_vector_resolution_control_idc;
+        self
+    }
+    #[inline]
+    pub fn sps_num_palette_predictor_initializers_minus1(
+        mut self,
+        sps_num_palette_predictor_initializers_minus1: u8,
+    ) -> Self {
+        self.sps_num_palette_predictor_initializers_minus1 =
+            sps_num_palette_predictor_initializers_minus1;
+        self
+    }
+    #[inline]
+    pub fn conf_win_left_offset(mut self, conf_win_left_offset: u32) -> Self {
+        self.conf_win_left_offset = conf_win_left_offset;
+        self
+    }
+    #[inline]
+    pub fn conf_win_right_offset(mut self, conf_win_right_offset: u32) -> Self {
+        self.conf_win_right_offset = conf_win_right_offset;
+        self
+    }
+    #[inline]
+    pub fn conf_win_top_offset(mut self, conf_win_top_offset: u32) -> Self {
+        self.conf_win_top_offset = conf_win_top_offset;
+        self
+    }
+    #[inline]
+    pub fn conf_win_bottom_offset(mut self, conf_win_bottom_offset: u32) -> Self {
+        self.conf_win_bottom_offset = conf_win_bottom_offset;
+        self
+    }
+    #[inline]
+    pub fn profile_tier_level(
+        mut self,
+        profile_tier_level: &'a StdVideoH265ProfileTierLevel,
+    ) -> Self {
+        self.p_profile_tier_level = profile_tier_level;
+        self
+    }
+    #[inline]
+    pub fn dec_pic_buf_mgr(mut self, dec_pic_buf_mgr: &'a StdVideoH265DecPicBufMgr) -> Self {
+        self.p_dec_pic_buf_mgr = dec_pic_buf_mgr;
+        self
+    }
+    #[inline]
+    pub fn scaling_lists(mut self, scaling_lists: &'a StdVideoH265ScalingLists) -> Self {
+        self.p_scaling_lists = scaling_lists;
+        self
+    }
+    #[inline]
+    pub fn short_term_ref_pic_set(
+        mut self,
+        short_term_ref_pic_set: &'a StdVideoH265ShortTermRefPicSet,
+    ) -> Self {
+        self.p_short_term_ref_pic_set = short_term_ref_pic_set;
+        self
+    }
+    #[inline]
+    pub fn long_term_ref_pics_sps(
+        mut self,
+        long_term_ref_pics_sps: &'a StdVideoH265LongTermRefPicsSps,
+    ) -> Self {
+        self.p_long_term_ref_pics_sps = long_term_ref_pics_sps;
+        self
+    }
+    #[inline]
+    pub fn sequence_parameter_set_vui(
+        mut self,
+        sequence_parameter_set_vui: &'a StdVideoH265SequenceParameterSetVui<'a>,
+    ) -> Self {
+        self.p_sequence_parameter_set_vui = sequence_parameter_set_vui;
+        self
+    }
+    #[inline]
+    pub fn predictor_palette_entries(
+        mut self,
+        predictor_palette_entries: &'a StdVideoH265PredictorPaletteEntries,
+    ) -> Self {
+        self.p_predictor_palette_entries = predictor_palette_entries;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265PpsFlags.html>"]
+pub struct StdVideoH265PpsFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoH265PpsFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoH265PpsFlags")
+            .field(
+                "dependent_slice_segments_enabled_flag",
+                &self.get_dependent_slice_segments_enabled_flag(),
+            )
+            .field(
+                "output_flag_present_flag",
+                &self.get_output_flag_present_flag(),
+            )
+            .field(
+                "sign_data_hiding_enabled_flag",
+                &self.get_sign_data_hiding_enabled_flag(),
+            )
+            .field(
+                "cabac_init_present_flag",
+                &self.get_cabac_init_present_flag(),
+            )
+            .field(
+                "constrained_intra_pred_flag",
+                &self.get_constrained_intra_pred_flag(),
+            )
+            .field(
+                "transform_skip_enabled_flag",
+                &self.get_transform_skip_enabled_flag(),
+            )
+            .field(
+                "cu_qp_delta_enabled_flag",
+                &self.get_cu_qp_delta_enabled_flag(),
+            )
+            .field(
+                "pps_slice_chroma_qp_offsets_present_flag",
+                &self.get_pps_slice_chroma_qp_offsets_present_flag(),
+            )
+            .field("weighted_pred_flag", &self.get_weighted_pred_flag())
+            .field("weighted_bipred_flag", &self.get_weighted_bipred_flag())
+            .field(
+                "transquant_bypass_enabled_flag",
+                &self.get_transquant_bypass_enabled_flag(),
+            )
+            .field("tiles_enabled_flag", &self.get_tiles_enabled_flag())
+            .field(
+                "entropy_coding_sync_enabled_flag",
+                &self.get_entropy_coding_sync_enabled_flag(),
+            )
+            .field("uniform_spacing_flag", &self.get_uniform_spacing_flag())
+            .field(
+                "loop_filter_across_tiles_enabled_flag",
+                &self.get_loop_filter_across_tiles_enabled_flag(),
+            )
+            .field(
+                "pps_loop_filter_across_slices_enabled_flag",
+                &self.get_pps_loop_filter_across_slices_enabled_flag(),
+            )
+            .field(
+                "deblocking_filter_control_present_flag",
+                &self.get_deblocking_filter_control_present_flag(),
+            )
+            .field(
+                "deblocking_filter_override_enabled_flag",
+                &self.get_deblocking_filter_override_enabled_flag(),
+            )
+            .field(
+                "pps_deblocking_filter_disabled_flag",
+                &self.get_pps_deblocking_filter_disabled_flag(),
+            )
+            .field(
+                "pps_scaling_list_data_present_flag",
+                &self.get_pps_scaling_list_data_present_flag(),
+            )
+            .field(
+                "lists_modification_present_flag",
+                &self.get_lists_modification_present_flag(),
+            )
+            .field(
+                "slice_segment_header_extension_present_flag",
+                &self.get_slice_segment_header_extension_present_flag(),
+            )
+            .field(
+                "pps_extension_present_flag",
+                &self.get_pps_extension_present_flag(),
+            )
+            .field(
+                "cross_component_prediction_enabled_flag",
+                &self.get_cross_component_prediction_enabled_flag(),
+            )
+            .field(
+                "chroma_qp_offset_list_enabled_flag",
+                &self.get_chroma_qp_offset_list_enabled_flag(),
+            )
+            .field(
+                "pps_curr_pic_ref_enabled_flag",
+                &self.get_pps_curr_pic_ref_enabled_flag(),
+            )
+            .field(
+                "residual_adaptive_colour_transform_enabled_flag",
+                &self.get_residual_adaptive_colour_transform_enabled_flag(),
+            )
+            .field(
+                "pps_slice_act_qp_offsets_present_flag",
+                &self.get_pps_slice_act_qp_offsets_present_flag(),
+            )
+            .field(
+                "pps_palette_predictor_initializers_present_flag",
+                &self.get_pps_palette_predictor_initializers_present_flag(),
+            )
+            .field(
+                "monochrome_palette_flag",
+                &self.get_monochrome_palette_flag(),
+            )
+            .field(
+                "pps_range_extension_flag",
+                &self.get_pps_range_extension_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoH265PpsFlags {
+    #[inline]
+    pub fn dependent_slice_segments_enabled_flag(
+        mut self,
+        dependent_slice_segments_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((dependent_slice_segments_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_dependent_slice_segments_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn output_flag_present_flag(mut self, output_flag_present_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((output_flag_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_output_flag_present_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn sign_data_hiding_enabled_flag(mut self, sign_data_hiding_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((sign_data_hiding_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_sign_data_hiding_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cabac_init_present_flag(mut self, cabac_init_present_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cabac_init_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cabac_init_present_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn constrained_intra_pred_flag(mut self, constrained_intra_pred_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((constrained_intra_pred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_constrained_intra_pred_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn transform_skip_enabled_flag(mut self, transform_skip_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((transform_skip_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_transform_skip_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cu_qp_delta_enabled_flag(mut self, cu_qp_delta_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cu_qp_delta_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cu_qp_delta_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_slice_chroma_qp_offsets_present_flag(
+        mut self,
+        pps_slice_chroma_qp_offsets_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_slice_chroma_qp_offsets_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_slice_chroma_qp_offsets_present_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn weighted_pred_flag(mut self, weighted_pred_flag: bool) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((weighted_pred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_weighted_pred_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn weighted_bipred_flag(mut self, weighted_bipred_flag: bool) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((weighted_bipred_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_weighted_bipred_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn transquant_bypass_enabled_flag(mut self, transquant_bypass_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((transquant_bypass_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_transquant_bypass_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn tiles_enabled_flag(mut self, tiles_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((tiles_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_tiles_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn entropy_coding_sync_enabled_flag(
+        mut self,
+        entropy_coding_sync_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((entropy_coding_sync_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_entropy_coding_sync_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn uniform_spacing_flag(mut self, uniform_spacing_flag: bool) -> Self {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((uniform_spacing_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_uniform_spacing_flag(&self) -> bool {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn loop_filter_across_tiles_enabled_flag(
+        mut self,
+        loop_filter_across_tiles_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((loop_filter_across_tiles_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_loop_filter_across_tiles_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_loop_filter_across_slices_enabled_flag(
+        mut self,
+        pps_loop_filter_across_slices_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_loop_filter_across_slices_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_loop_filter_across_slices_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn deblocking_filter_control_present_flag(
+        mut self,
+        deblocking_filter_control_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((deblocking_filter_control_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_deblocking_filter_control_present_flag(&self) -> bool {
+        const SHIFT: u8 = 16u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn deblocking_filter_override_enabled_flag(
+        mut self,
+        deblocking_filter_override_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((deblocking_filter_override_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_deblocking_filter_override_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 17u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_deblocking_filter_disabled_flag(
+        mut self,
+        pps_deblocking_filter_disabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 18u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_deblocking_filter_disabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_deblocking_filter_disabled_flag(&self) -> bool {
+        const SHIFT: u8 = 18u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_scaling_list_data_present_flag(
+        mut self,
+        pps_scaling_list_data_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 19u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_scaling_list_data_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_scaling_list_data_present_flag(&self) -> bool {
+        const SHIFT: u8 = 19u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn lists_modification_present_flag(
+        mut self,
+        lists_modification_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((lists_modification_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_lists_modification_present_flag(&self) -> bool {
+        const SHIFT: u8 = 20u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_segment_header_extension_present_flag(
+        mut self,
+        slice_segment_header_extension_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 21u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_segment_header_extension_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_segment_header_extension_present_flag(&self) -> bool {
+        const SHIFT: u8 = 21u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_extension_present_flag(mut self, pps_extension_present_flag: bool) -> Self {
+        const SHIFT: u8 = 22u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_extension_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_extension_present_flag(&self) -> bool {
+        const SHIFT: u8 = 22u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cross_component_prediction_enabled_flag(
+        mut self,
+        cross_component_prediction_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 23u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cross_component_prediction_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cross_component_prediction_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 23u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn chroma_qp_offset_list_enabled_flag(
+        mut self,
+        chroma_qp_offset_list_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 24u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((chroma_qp_offset_list_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_chroma_qp_offset_list_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 24u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_curr_pic_ref_enabled_flag(mut self, pps_curr_pic_ref_enabled_flag: bool) -> Self {
+        const SHIFT: u8 = 25u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_curr_pic_ref_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_curr_pic_ref_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 25u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn residual_adaptive_colour_transform_enabled_flag(
+        mut self,
+        residual_adaptive_colour_transform_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 26u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((residual_adaptive_colour_transform_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_residual_adaptive_colour_transform_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 26u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_slice_act_qp_offsets_present_flag(
+        mut self,
+        pps_slice_act_qp_offsets_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 27u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_slice_act_qp_offsets_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_slice_act_qp_offsets_present_flag(&self) -> bool {
+        const SHIFT: u8 = 27u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_palette_predictor_initializers_present_flag(
+        mut self,
+        pps_palette_predictor_initializers_present_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 28u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_palette_predictor_initializers_present_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_palette_predictor_initializers_present_flag(&self) -> bool {
+        const SHIFT: u8 = 28u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn monochrome_palette_flag(mut self, monochrome_palette_flag: bool) -> Self {
+        const SHIFT: u8 = 29u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((monochrome_palette_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_monochrome_palette_flag(&self) -> bool {
+        const SHIFT: u8 = 29u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pps_range_extension_flag(mut self, pps_range_extension_flag: bool) -> Self {
+        const SHIFT: u8 = 30u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pps_range_extension_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pps_range_extension_flag(&self) -> bool {
+        const SHIFT: u8 = 30u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265PictureParameterSet.html>"]
+pub struct StdVideoH265PictureParameterSet<'a> {
+    pub flags: StdVideoH265PpsFlags,
+    pub pps_pic_parameter_set_id: u8,
+    pub pps_seq_parameter_set_id: u8,
+    pub sps_video_parameter_set_id: u8,
+    pub num_extra_slice_header_bits: u8,
+    pub num_ref_idx_l0_default_active_minus1: u8,
+    pub num_ref_idx_l1_default_active_minus1: u8,
+    pub init_qp_minus26: i8,
+    pub diff_cu_qp_delta_depth: u8,
+    pub pps_cb_qp_offset: i8,
+    pub pps_cr_qp_offset: i8,
+    pub pps_beta_offset_div2: i8,
+    pub pps_tc_offset_div2: i8,
+    pub log2_parallel_merge_level_minus2: u8,
+    pub log2_max_transform_skip_block_size_minus2: u8,
+    pub diff_cu_chroma_qp_offset_depth: u8,
+    pub chroma_qp_offset_list_len_minus1: u8,
+    pub cb_qp_offset_list: [i8; STD_VIDEO_H265_CHROMA_QP_OFFSET_LIST_SIZE],
+    pub cr_qp_offset_list: [i8; STD_VIDEO_H265_CHROMA_QP_OFFSET_LIST_SIZE],
+    pub log2_sao_offset_scale_luma: u8,
+    pub log2_sao_offset_scale_chroma: u8,
+    pub pps_act_y_qp_offset_plus5: i8,
+    pub pps_act_cb_qp_offset_plus5: i8,
+    pub pps_act_cr_qp_offset_plus3: i8,
+    pub pps_num_palette_predictor_initializers: u8,
+    pub luma_bit_depth_entry_minus8: u8,
+    pub chroma_bit_depth_entry_minus8: u8,
+    pub num_tile_columns_minus1: u8,
+    pub num_tile_rows_minus1: u8,
+    pub reserved1: u8,
+    pub reserved2: u8,
+    pub column_width_minus1: [u16; STD_VIDEO_H265_CHROMA_QP_OFFSET_TILE_COLS_LIST_SIZE],
+    pub row_height_minus1: [u16; STD_VIDEO_H265_CHROMA_QP_OFFSET_TILE_ROWS_LIST_SIZE],
+    pub reserved3: u32,
+    pub p_scaling_lists: *const StdVideoH265ScalingLists,
+    pub p_predictor_palette_entries: *const StdVideoH265PredictorPaletteEntries,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoH265PictureParameterSet<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoH265PpsFlags::default(),
+            pps_pic_parameter_set_id: u8::default(),
+            pps_seq_parameter_set_id: u8::default(),
+            sps_video_parameter_set_id: u8::default(),
+            num_extra_slice_header_bits: u8::default(),
+            num_ref_idx_l0_default_active_minus1: u8::default(),
+            num_ref_idx_l1_default_active_minus1: u8::default(),
+            init_qp_minus26: i8::default(),
+            diff_cu_qp_delta_depth: u8::default(),
+            pps_cb_qp_offset: i8::default(),
+            pps_cr_qp_offset: i8::default(),
+            pps_beta_offset_div2: i8::default(),
+            pps_tc_offset_div2: i8::default(),
+            log2_parallel_merge_level_minus2: u8::default(),
+            log2_max_transform_skip_block_size_minus2: u8::default(),
+            diff_cu_chroma_qp_offset_depth: u8::default(),
+            chroma_qp_offset_list_len_minus1: u8::default(),
+            cb_qp_offset_list: unsafe { ::std::mem::zeroed() },
+            cr_qp_offset_list: unsafe { ::std::mem::zeroed() },
+            log2_sao_offset_scale_luma: u8::default(),
+            log2_sao_offset_scale_chroma: u8::default(),
+            pps_act_y_qp_offset_plus5: i8::default(),
+            pps_act_cb_qp_offset_plus5: i8::default(),
+            pps_act_cr_qp_offset_plus3: i8::default(),
+            pps_num_palette_predictor_initializers: u8::default(),
+            luma_bit_depth_entry_minus8: u8::default(),
+            chroma_bit_depth_entry_minus8: u8::default(),
+            num_tile_columns_minus1: u8::default(),
+            num_tile_rows_minus1: u8::default(),
+            reserved1: u8::default(),
+            reserved2: u8::default(),
+            column_width_minus1: unsafe { ::std::mem::zeroed() },
+            row_height_minus1: unsafe { ::std::mem::zeroed() },
+            reserved3: u32::default(),
+            p_scaling_lists: ::std::ptr::null(),
+            p_predictor_palette_entries: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoH265PictureParameterSet<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoH265PpsFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn pps_pic_parameter_set_id(mut self, pps_pic_parameter_set_id: u8) -> Self {
+        self.pps_pic_parameter_set_id = pps_pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pps_seq_parameter_set_id(mut self, pps_seq_parameter_set_id: u8) -> Self {
+        self.pps_seq_parameter_set_id = pps_seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn sps_video_parameter_set_id(mut self, sps_video_parameter_set_id: u8) -> Self {
+        self.sps_video_parameter_set_id = sps_video_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn num_extra_slice_header_bits(mut self, num_extra_slice_header_bits: u8) -> Self {
+        self.num_extra_slice_header_bits = num_extra_slice_header_bits;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l0_default_active_minus1(
+        mut self,
+        num_ref_idx_l0_default_active_minus1: u8,
+    ) -> Self {
+        self.num_ref_idx_l0_default_active_minus1 = num_ref_idx_l0_default_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l1_default_active_minus1(
+        mut self,
+        num_ref_idx_l1_default_active_minus1: u8,
+    ) -> Self {
+        self.num_ref_idx_l1_default_active_minus1 = num_ref_idx_l1_default_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn init_qp_minus26(mut self, init_qp_minus26: i8) -> Self {
+        self.init_qp_minus26 = init_qp_minus26;
+        self
+    }
+    #[inline]
+    pub fn diff_cu_qp_delta_depth(mut self, diff_cu_qp_delta_depth: u8) -> Self {
+        self.diff_cu_qp_delta_depth = diff_cu_qp_delta_depth;
+        self
+    }
+    #[inline]
+    pub fn pps_cb_qp_offset(mut self, pps_cb_qp_offset: i8) -> Self {
+        self.pps_cb_qp_offset = pps_cb_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn pps_cr_qp_offset(mut self, pps_cr_qp_offset: i8) -> Self {
+        self.pps_cr_qp_offset = pps_cr_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn pps_beta_offset_div2(mut self, pps_beta_offset_div2: i8) -> Self {
+        self.pps_beta_offset_div2 = pps_beta_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn pps_tc_offset_div2(mut self, pps_tc_offset_div2: i8) -> Self {
+        self.pps_tc_offset_div2 = pps_tc_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn log2_parallel_merge_level_minus2(
+        mut self,
+        log2_parallel_merge_level_minus2: u8,
+    ) -> Self {
+        self.log2_parallel_merge_level_minus2 = log2_parallel_merge_level_minus2;
+        self
+    }
+    #[inline]
+    pub fn log2_max_transform_skip_block_size_minus2(
+        mut self,
+        log2_max_transform_skip_block_size_minus2: u8,
+    ) -> Self {
+        self.log2_max_transform_skip_block_size_minus2 = log2_max_transform_skip_block_size_minus2;
+        self
+    }
+    #[inline]
+    pub fn diff_cu_chroma_qp_offset_depth(mut self, diff_cu_chroma_qp_offset_depth: u8) -> Self {
+        self.diff_cu_chroma_qp_offset_depth = diff_cu_chroma_qp_offset_depth;
+        self
+    }
+    #[inline]
+    pub fn chroma_qp_offset_list_len_minus1(
+        mut self,
+        chroma_qp_offset_list_len_minus1: u8,
+    ) -> Self {
+        self.chroma_qp_offset_list_len_minus1 = chroma_qp_offset_list_len_minus1;
+        self
+    }
+    #[inline]
+    pub fn cb_qp_offset_list(
+        mut self,
+        cb_qp_offset_list: [i8; STD_VIDEO_H265_CHROMA_QP_OFFSET_LIST_SIZE],
+    ) -> Self {
+        self.cb_qp_offset_list = cb_qp_offset_list;
+        self
+    }
+    #[inline]
+    pub fn cr_qp_offset_list(
+        mut self,
+        cr_qp_offset_list: [i8; STD_VIDEO_H265_CHROMA_QP_OFFSET_LIST_SIZE],
+    ) -> Self {
+        self.cr_qp_offset_list = cr_qp_offset_list;
+        self
+    }
+    #[inline]
+    pub fn log2_sao_offset_scale_luma(mut self, log2_sao_offset_scale_luma: u8) -> Self {
+        self.log2_sao_offset_scale_luma = log2_sao_offset_scale_luma;
+        self
+    }
+    #[inline]
+    pub fn log2_sao_offset_scale_chroma(mut self, log2_sao_offset_scale_chroma: u8) -> Self {
+        self.log2_sao_offset_scale_chroma = log2_sao_offset_scale_chroma;
+        self
+    }
+    #[inline]
+    pub fn pps_act_y_qp_offset_plus5(mut self, pps_act_y_qp_offset_plus5: i8) -> Self {
+        self.pps_act_y_qp_offset_plus5 = pps_act_y_qp_offset_plus5;
+        self
+    }
+    #[inline]
+    pub fn pps_act_cb_qp_offset_plus5(mut self, pps_act_cb_qp_offset_plus5: i8) -> Self {
+        self.pps_act_cb_qp_offset_plus5 = pps_act_cb_qp_offset_plus5;
+        self
+    }
+    #[inline]
+    pub fn pps_act_cr_qp_offset_plus3(mut self, pps_act_cr_qp_offset_plus3: i8) -> Self {
+        self.pps_act_cr_qp_offset_plus3 = pps_act_cr_qp_offset_plus3;
+        self
+    }
+    #[inline]
+    pub fn pps_num_palette_predictor_initializers(
+        mut self,
+        pps_num_palette_predictor_initializers: u8,
+    ) -> Self {
+        self.pps_num_palette_predictor_initializers = pps_num_palette_predictor_initializers;
+        self
+    }
+    #[inline]
+    pub fn luma_bit_depth_entry_minus8(mut self, luma_bit_depth_entry_minus8: u8) -> Self {
+        self.luma_bit_depth_entry_minus8 = luma_bit_depth_entry_minus8;
+        self
+    }
+    #[inline]
+    pub fn chroma_bit_depth_entry_minus8(mut self, chroma_bit_depth_entry_minus8: u8) -> Self {
+        self.chroma_bit_depth_entry_minus8 = chroma_bit_depth_entry_minus8;
+        self
+    }
+    #[inline]
+    pub fn num_tile_columns_minus1(mut self, num_tile_columns_minus1: u8) -> Self {
+        self.num_tile_columns_minus1 = num_tile_columns_minus1;
+        self
+    }
+    #[inline]
+    pub fn num_tile_rows_minus1(mut self, num_tile_rows_minus1: u8) -> Self {
+        self.num_tile_rows_minus1 = num_tile_rows_minus1;
+        self
+    }
+    #[inline]
+    pub fn reserved1(mut self, reserved1: u8) -> Self {
+        self.reserved1 = reserved1;
+        self
+    }
+    #[inline]
+    pub fn reserved2(mut self, reserved2: u8) -> Self {
+        self.reserved2 = reserved2;
+        self
+    }
+    #[inline]
+    pub fn column_width_minus1(
+        mut self,
+        column_width_minus1: [u16; STD_VIDEO_H265_CHROMA_QP_OFFSET_TILE_COLS_LIST_SIZE],
+    ) -> Self {
+        self.column_width_minus1 = column_width_minus1;
+        self
+    }
+    #[inline]
+    pub fn row_height_minus1(
+        mut self,
+        row_height_minus1: [u16; STD_VIDEO_H265_CHROMA_QP_OFFSET_TILE_ROWS_LIST_SIZE],
+    ) -> Self {
+        self.row_height_minus1 = row_height_minus1;
+        self
+    }
+    #[inline]
+    pub fn reserved3(mut self, reserved3: u32) -> Self {
+        self.reserved3 = reserved3;
+        self
+    }
+    #[inline]
+    pub fn scaling_lists(mut self, scaling_lists: &'a StdVideoH265ScalingLists) -> Self {
+        self.p_scaling_lists = scaling_lists;
+        self
+    }
+    #[inline]
+    pub fn predictor_palette_entries(
+        mut self,
+        predictor_palette_entries: &'a StdVideoH265PredictorPaletteEntries,
+    ) -> Self {
+        self.p_predictor_palette_entries = predictor_palette_entries;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH265PictureInfoFlags.html>"]
+pub struct StdVideoDecodeH265PictureInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoDecodeH265PictureInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoDecodeH265PictureInfoFlags")
+            .field("irap_pic_flag", &self.get_irap_pic_flag())
+            .field("idr_pic_flag", &self.get_idr_pic_flag())
+            .field("is_reference", &self.get_is_reference())
+            .field(
+                "short_term_ref_pic_set_sps_flag",
+                &self.get_short_term_ref_pic_set_sps_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoDecodeH265PictureInfoFlags {
+    #[inline]
+    pub fn irap_pic_flag(mut self, irap_pic_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((irap_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_irap_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn idr_pic_flag(mut self, idr_pic_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((idr_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_idr_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn is_reference(mut self, is_reference: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_reference(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn short_term_ref_pic_set_sps_flag(
+        mut self,
+        short_term_ref_pic_set_sps_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((short_term_ref_pic_set_sps_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_short_term_ref_pic_set_sps_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH265PictureInfo.html>"]
+pub struct StdVideoDecodeH265PictureInfo {
+    pub flags: StdVideoDecodeH265PictureInfoFlags,
+    pub sps_video_parameter_set_id: u8,
+    pub pps_seq_parameter_set_id: u8,
+    pub pps_pic_parameter_set_id: u8,
+    pub num_delta_pocs_of_ref_rps_idx: u8,
+    pub pic_order_cnt_val: i32,
+    pub num_bits_for_st_ref_pic_set_in_slice: u16,
+    pub reserved: u16,
+    pub ref_pic_set_st_curr_before: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+    pub ref_pic_set_st_curr_after: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+    pub ref_pic_set_lt_curr: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+}
+impl ::std::default::Default for StdVideoDecodeH265PictureInfo {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoDecodeH265PictureInfoFlags::default(),
+            sps_video_parameter_set_id: u8::default(),
+            pps_seq_parameter_set_id: u8::default(),
+            pps_pic_parameter_set_id: u8::default(),
+            num_delta_pocs_of_ref_rps_idx: u8::default(),
+            pic_order_cnt_val: i32::default(),
+            num_bits_for_st_ref_pic_set_in_slice: u16::default(),
+            reserved: u16::default(),
+            ref_pic_set_st_curr_before: unsafe { ::std::mem::zeroed() },
+            ref_pic_set_st_curr_after: unsafe { ::std::mem::zeroed() },
+            ref_pic_set_lt_curr: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoDecodeH265PictureInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoDecodeH265PictureInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn sps_video_parameter_set_id(mut self, sps_video_parameter_set_id: u8) -> Self {
+        self.sps_video_parameter_set_id = sps_video_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pps_seq_parameter_set_id(mut self, pps_seq_parameter_set_id: u8) -> Self {
+        self.pps_seq_parameter_set_id = pps_seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pps_pic_parameter_set_id(mut self, pps_pic_parameter_set_id: u8) -> Self {
+        self.pps_pic_parameter_set_id = pps_pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn num_delta_pocs_of_ref_rps_idx(mut self, num_delta_pocs_of_ref_rps_idx: u8) -> Self {
+        self.num_delta_pocs_of_ref_rps_idx = num_delta_pocs_of_ref_rps_idx;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt_val(mut self, pic_order_cnt_val: i32) -> Self {
+        self.pic_order_cnt_val = pic_order_cnt_val;
+        self
+    }
+    #[inline]
+    pub fn num_bits_for_st_ref_pic_set_in_slice(
+        mut self,
+        num_bits_for_st_ref_pic_set_in_slice: u16,
+    ) -> Self {
+        self.num_bits_for_st_ref_pic_set_in_slice = num_bits_for_st_ref_pic_set_in_slice;
+        self
+    }
+    #[inline]
+    pub fn reserved(mut self, reserved: u16) -> Self {
+        self.reserved = reserved;
+        self
+    }
+    #[inline]
+    pub fn ref_pic_set_st_curr_before(
+        mut self,
+        ref_pic_set_st_curr_before: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+    ) -> Self {
+        self.ref_pic_set_st_curr_before = ref_pic_set_st_curr_before;
+        self
+    }
+    #[inline]
+    pub fn ref_pic_set_st_curr_after(
+        mut self,
+        ref_pic_set_st_curr_after: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+    ) -> Self {
+        self.ref_pic_set_st_curr_after = ref_pic_set_st_curr_after;
+        self
+    }
+    #[inline]
+    pub fn ref_pic_set_lt_curr(
+        mut self,
+        ref_pic_set_lt_curr: [u8; STD_VIDEO_DECODE_H265_REF_PIC_SET_LIST_SIZE],
+    ) -> Self {
+        self.ref_pic_set_lt_curr = ref_pic_set_lt_curr;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH265ReferenceInfoFlags.html>"]
+pub struct StdVideoDecodeH265ReferenceInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoDecodeH265ReferenceInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoDecodeH265ReferenceInfoFlags")
+            .field(
+                "used_for_long_term_reference",
+                &self.get_used_for_long_term_reference(),
+            )
+            .field("unused_for_reference", &self.get_unused_for_reference())
+            .finish()
+    }
+}
+impl StdVideoDecodeH265ReferenceInfoFlags {
+    #[inline]
+    pub fn used_for_long_term_reference(mut self, used_for_long_term_reference: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((used_for_long_term_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_used_for_long_term_reference(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn unused_for_reference(mut self, unused_for_reference: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((unused_for_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_unused_for_reference(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH265ReferenceInfo.html>"]
+pub struct StdVideoDecodeH265ReferenceInfo {
+    pub flags: StdVideoDecodeH265ReferenceInfoFlags,
+    pub pic_order_cnt_val: i32,
+}
+impl StdVideoDecodeH265ReferenceInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoDecodeH265ReferenceInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt_val(mut self, pic_order_cnt_val: i32) -> Self {
+        self.pic_order_cnt_val = pic_order_cnt_val;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265WeightTableFlags.html>"]
+pub struct StdVideoEncodeH265WeightTableFlags {
+    pub luma_weight_l0_flag: u16,
+    pub chroma_weight_l0_flag: u16,
+    pub luma_weight_l1_flag: u16,
+    pub chroma_weight_l1_flag: u16,
+}
+impl StdVideoEncodeH265WeightTableFlags {
+    #[inline]
+    pub fn luma_weight_l0_flag(mut self, luma_weight_l0_flag: u16) -> Self {
+        self.luma_weight_l0_flag = luma_weight_l0_flag;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l0_flag(mut self, chroma_weight_l0_flag: u16) -> Self {
+        self.chroma_weight_l0_flag = chroma_weight_l0_flag;
+        self
+    }
+    #[inline]
+    pub fn luma_weight_l1_flag(mut self, luma_weight_l1_flag: u16) -> Self {
+        self.luma_weight_l1_flag = luma_weight_l1_flag;
+        self
+    }
+    #[inline]
+    pub fn chroma_weight_l1_flag(mut self, chroma_weight_l1_flag: u16) -> Self {
+        self.chroma_weight_l1_flag = chroma_weight_l1_flag;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265WeightTable.html>"]
+pub struct StdVideoEncodeH265WeightTable {
+    pub flags: StdVideoEncodeH265WeightTableFlags,
+    pub luma_log2_weight_denom: u8,
+    pub delta_chroma_log2_weight_denom: i8,
+    pub delta_luma_weight_l0: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub luma_offset_l0: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub delta_chroma_weight_l0:
+        [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES]; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub delta_chroma_offset_l0:
+        [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES]; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub delta_luma_weight_l1: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub luma_offset_l1: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub delta_chroma_weight_l1:
+        [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES]; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    pub delta_chroma_offset_l1:
+        [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES]; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+}
+impl ::std::default::Default for StdVideoEncodeH265WeightTable {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH265WeightTableFlags::default(),
+            luma_log2_weight_denom: u8::default(),
+            delta_chroma_log2_weight_denom: i8::default(),
+            delta_luma_weight_l0: unsafe { ::std::mem::zeroed() },
+            luma_offset_l0: unsafe { ::std::mem::zeroed() },
+            delta_chroma_weight_l0: unsafe { ::std::mem::zeroed() },
+            delta_chroma_offset_l0: unsafe { ::std::mem::zeroed() },
+            delta_luma_weight_l1: unsafe { ::std::mem::zeroed() },
+            luma_offset_l1: unsafe { ::std::mem::zeroed() },
+            delta_chroma_weight_l1: unsafe { ::std::mem::zeroed() },
+            delta_chroma_offset_l1: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoEncodeH265WeightTable {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH265WeightTableFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn luma_log2_weight_denom(mut self, luma_log2_weight_denom: u8) -> Self {
+        self.luma_log2_weight_denom = luma_log2_weight_denom;
+        self
+    }
+    #[inline]
+    pub fn delta_chroma_log2_weight_denom(mut self, delta_chroma_log2_weight_denom: i8) -> Self {
+        self.delta_chroma_log2_weight_denom = delta_chroma_log2_weight_denom;
+        self
+    }
+    #[inline]
+    pub fn delta_luma_weight_l0(
+        mut self,
+        delta_luma_weight_l0: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_luma_weight_l0 = delta_luma_weight_l0;
+        self
+    }
+    #[inline]
+    pub fn luma_offset_l0(mut self, luma_offset_l0: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_offset_l0 = luma_offset_l0;
+        self
+    }
+    #[inline]
+    pub fn delta_chroma_weight_l0(
+        mut self,
+        delta_chroma_weight_l0: [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES];
+            STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_chroma_weight_l0 = delta_chroma_weight_l0;
+        self
+    }
+    #[inline]
+    pub fn delta_chroma_offset_l0(
+        mut self,
+        delta_chroma_offset_l0: [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES];
+            STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_chroma_offset_l0 = delta_chroma_offset_l0;
+        self
+    }
+    #[inline]
+    pub fn delta_luma_weight_l1(
+        mut self,
+        delta_luma_weight_l1: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_luma_weight_l1 = delta_luma_weight_l1;
+        self
+    }
+    #[inline]
+    pub fn luma_offset_l1(mut self, luma_offset_l1: [i8; STD_VIDEO_H265_MAX_NUM_LIST_REF]) -> Self {
+        self.luma_offset_l1 = luma_offset_l1;
+        self
+    }
+    #[inline]
+    pub fn delta_chroma_weight_l1(
+        mut self,
+        delta_chroma_weight_l1: [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES];
+            STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_chroma_weight_l1 = delta_chroma_weight_l1;
+        self
+    }
+    #[inline]
+    pub fn delta_chroma_offset_l1(
+        mut self,
+        delta_chroma_offset_l1: [[i8; STD_VIDEO_H265_MAX_CHROMA_PLANES];
+            STD_VIDEO_H265_MAX_NUM_LIST_REF],
+    ) -> Self {
+        self.delta_chroma_offset_l1 = delta_chroma_offset_l1;
+        self
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265SliceSegmentLongTermRefPics.html>"]
+pub struct StdVideoEncodeH265SliceSegmentLongTermRefPics {
+    pub num_long_term_sps: u8,
+    pub num_long_term_pics: u8,
+    pub lt_idx_sps: [u8; STD_VIDEO_H265_MAX_LONG_TERM_REF_PICS_SPS],
+    pub poc_lsb_lt: [u8; STD_VIDEO_H265_MAX_LONG_TERM_PICS],
+    pub used_by_curr_pic_lt_flag: u16,
+    pub delta_poc_msb_present_flag: [u8; STD_VIDEO_H265_MAX_DELTA_POC],
+    pub delta_poc_msb_cycle_lt: [u8; STD_VIDEO_H265_MAX_DELTA_POC],
+}
+impl ::std::default::Default for StdVideoEncodeH265SliceSegmentLongTermRefPics {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            num_long_term_sps: u8::default(),
+            num_long_term_pics: u8::default(),
+            lt_idx_sps: unsafe { ::std::mem::zeroed() },
+            poc_lsb_lt: unsafe { ::std::mem::zeroed() },
+            used_by_curr_pic_lt_flag: u16::default(),
+            delta_poc_msb_present_flag: unsafe { ::std::mem::zeroed() },
+            delta_poc_msb_cycle_lt: unsafe { ::std::mem::zeroed() },
+        }
+    }
+}
+impl StdVideoEncodeH265SliceSegmentLongTermRefPics {
+    #[inline]
+    pub fn num_long_term_sps(mut self, num_long_term_sps: u8) -> Self {
+        self.num_long_term_sps = num_long_term_sps;
+        self
+    }
+    #[inline]
+    pub fn num_long_term_pics(mut self, num_long_term_pics: u8) -> Self {
+        self.num_long_term_pics = num_long_term_pics;
+        self
+    }
+    #[inline]
+    pub fn lt_idx_sps(
+        mut self,
+        lt_idx_sps: [u8; STD_VIDEO_H265_MAX_LONG_TERM_REF_PICS_SPS],
+    ) -> Self {
+        self.lt_idx_sps = lt_idx_sps;
+        self
+    }
+    #[inline]
+    pub fn poc_lsb_lt(mut self, poc_lsb_lt: [u8; STD_VIDEO_H265_MAX_LONG_TERM_PICS]) -> Self {
+        self.poc_lsb_lt = poc_lsb_lt;
+        self
+    }
+    #[inline]
+    pub fn used_by_curr_pic_lt_flag(mut self, used_by_curr_pic_lt_flag: u16) -> Self {
+        self.used_by_curr_pic_lt_flag = used_by_curr_pic_lt_flag;
+        self
+    }
+    #[inline]
+    pub fn delta_poc_msb_present_flag(
+        mut self,
+        delta_poc_msb_present_flag: [u8; STD_VIDEO_H265_MAX_DELTA_POC],
+    ) -> Self {
+        self.delta_poc_msb_present_flag = delta_poc_msb_present_flag;
+        self
+    }
+    #[inline]
+    pub fn delta_poc_msb_cycle_lt(
+        mut self,
+        delta_poc_msb_cycle_lt: [u8; STD_VIDEO_H265_MAX_DELTA_POC],
+    ) -> Self {
+        self.delta_poc_msb_cycle_lt = delta_poc_msb_cycle_lt;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265SliceSegmentHeaderFlags.html>"]
+pub struct StdVideoEncodeH265SliceSegmentHeaderFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH265SliceSegmentHeaderFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH265SliceSegmentHeaderFlags")
+            .field(
+                "first_slice_segment_in_pic_flag",
+                &self.get_first_slice_segment_in_pic_flag(),
+            )
+            .field(
+                "no_output_of_prior_pics_flag",
+                &self.get_no_output_of_prior_pics_flag(),
+            )
+            .field(
+                "dependent_slice_segment_flag",
+                &self.get_dependent_slice_segment_flag(),
+            )
+            .field("pic_output_flag", &self.get_pic_output_flag())
+            .field(
+                "short_term_ref_pic_set_sps_flag",
+                &self.get_short_term_ref_pic_set_sps_flag(),
+            )
+            .field(
+                "slice_temporal_mvp_enable_flag",
+                &self.get_slice_temporal_mvp_enable_flag(),
+            )
+            .field("slice_sao_luma_flag", &self.get_slice_sao_luma_flag())
+            .field("slice_sao_chroma_flag", &self.get_slice_sao_chroma_flag())
+            .field(
+                "num_ref_idx_active_override_flag",
+                &self.get_num_ref_idx_active_override_flag(),
+            )
+            .field("mvd_l1_zero_flag", &self.get_mvd_l1_zero_flag())
+            .field("cabac_init_flag", &self.get_cabac_init_flag())
+            .field(
+                "cu_chroma_qp_offset_enabled_flag",
+                &self.get_cu_chroma_qp_offset_enabled_flag(),
+            )
+            .field(
+                "deblocking_filter_override_flag",
+                &self.get_deblocking_filter_override_flag(),
+            )
+            .field(
+                "slice_deblocking_filter_disabled_flag",
+                &self.get_slice_deblocking_filter_disabled_flag(),
+            )
+            .field(
+                "collocated_from_l0_flag",
+                &self.get_collocated_from_l0_flag(),
+            )
+            .field(
+                "slice_loop_filter_across_slices_enabled_flag",
+                &self.get_slice_loop_filter_across_slices_enabled_flag(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH265SliceSegmentHeaderFlags {
+    #[inline]
+    pub fn first_slice_segment_in_pic_flag(
+        mut self,
+        first_slice_segment_in_pic_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((first_slice_segment_in_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_first_slice_segment_in_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn no_output_of_prior_pics_flag(mut self, no_output_of_prior_pics_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((no_output_of_prior_pics_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_no_output_of_prior_pics_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn dependent_slice_segment_flag(mut self, dependent_slice_segment_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((dependent_slice_segment_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_dependent_slice_segment_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn pic_output_flag(mut self, pic_output_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((pic_output_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_pic_output_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn short_term_ref_pic_set_sps_flag(
+        mut self,
+        short_term_ref_pic_set_sps_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((short_term_ref_pic_set_sps_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_short_term_ref_pic_set_sps_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_temporal_mvp_enable_flag(mut self, slice_temporal_mvp_enable_flag: bool) -> Self {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_temporal_mvp_enable_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_temporal_mvp_enable_flag(&self) -> bool {
+        const SHIFT: u8 = 5u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_sao_luma_flag(mut self, slice_sao_luma_flag: bool) -> Self {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_sao_luma_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_sao_luma_flag(&self) -> bool {
+        const SHIFT: u8 = 6u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_sao_chroma_flag(mut self, slice_sao_chroma_flag: bool) -> Self {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_sao_chroma_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_sao_chroma_flag(&self) -> bool {
+        const SHIFT: u8 = 7u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn num_ref_idx_active_override_flag(
+        mut self,
+        num_ref_idx_active_override_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((num_ref_idx_active_override_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_num_ref_idx_active_override_flag(&self) -> bool {
+        const SHIFT: u8 = 8u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn mvd_l1_zero_flag(mut self, mvd_l1_zero_flag: bool) -> Self {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((mvd_l1_zero_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_mvd_l1_zero_flag(&self) -> bool {
+        const SHIFT: u8 = 9u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cabac_init_flag(mut self, cabac_init_flag: bool) -> Self {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cabac_init_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cabac_init_flag(&self) -> bool {
+        const SHIFT: u8 = 10u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cu_chroma_qp_offset_enabled_flag(
+        mut self,
+        cu_chroma_qp_offset_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cu_chroma_qp_offset_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cu_chroma_qp_offset_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 11u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn deblocking_filter_override_flag(
+        mut self,
+        deblocking_filter_override_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((deblocking_filter_override_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_deblocking_filter_override_flag(&self) -> bool {
+        const SHIFT: u8 = 12u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_deblocking_filter_disabled_flag(
+        mut self,
+        slice_deblocking_filter_disabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_deblocking_filter_disabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_deblocking_filter_disabled_flag(&self) -> bool {
+        const SHIFT: u8 = 13u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn collocated_from_l0_flag(mut self, collocated_from_l0_flag: bool) -> Self {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((collocated_from_l0_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_collocated_from_l0_flag(&self) -> bool {
+        const SHIFT: u8 = 14u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn slice_loop_filter_across_slices_enabled_flag(
+        mut self,
+        slice_loop_filter_across_slices_enabled_flag: bool,
+    ) -> Self {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((slice_loop_filter_across_slices_enabled_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_slice_loop_filter_across_slices_enabled_flag(&self) -> bool {
+        const SHIFT: u8 = 15u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265SliceSegmentHeader.html>"]
+pub struct StdVideoEncodeH265SliceSegmentHeader<'a> {
+    pub flags: StdVideoEncodeH265SliceSegmentHeaderFlags,
+    pub slice_type: StdVideoH265SliceType,
+    pub slice_segment_address: u32,
+    pub short_term_ref_pic_set_idx: u8,
+    pub collocated_ref_idx: u8,
+    pub num_ref_idx_l0_active_minus1: u8,
+    pub num_ref_idx_l1_active_minus1: u8,
+    pub max_num_merge_cand: u8,
+    pub slice_cb_qp_offset: i8,
+    pub slice_cr_qp_offset: i8,
+    pub slice_beta_offset_div2: i8,
+    pub slice_tc_offset_div2: i8,
+    pub slice_act_y_qp_offset: i8,
+    pub slice_act_cb_qp_offset: i8,
+    pub slice_act_cr_qp_offset: i8,
+    pub p_short_term_ref_pic_set: *const StdVideoH265ShortTermRefPicSet,
+    pub p_long_term_ref_pics: *const StdVideoEncodeH265SliceSegmentLongTermRefPics,
+    pub p_weight_table: *const StdVideoEncodeH265WeightTable,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoEncodeH265SliceSegmentHeader<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH265SliceSegmentHeaderFlags::default(),
+            slice_type: StdVideoH265SliceType::default(),
+            slice_segment_address: u32::default(),
+            short_term_ref_pic_set_idx: u8::default(),
+            collocated_ref_idx: u8::default(),
+            num_ref_idx_l0_active_minus1: u8::default(),
+            num_ref_idx_l1_active_minus1: u8::default(),
+            max_num_merge_cand: u8::default(),
+            slice_cb_qp_offset: i8::default(),
+            slice_cr_qp_offset: i8::default(),
+            slice_beta_offset_div2: i8::default(),
+            slice_tc_offset_div2: i8::default(),
+            slice_act_y_qp_offset: i8::default(),
+            slice_act_cb_qp_offset: i8::default(),
+            slice_act_cr_qp_offset: i8::default(),
+            p_short_term_ref_pic_set: ::std::ptr::null(),
+            p_long_term_ref_pics: ::std::ptr::null(),
+            p_weight_table: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoEncodeH265SliceSegmentHeader<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH265SliceSegmentHeaderFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn slice_type(mut self, slice_type: StdVideoH265SliceType) -> Self {
+        self.slice_type = slice_type;
+        self
+    }
+    #[inline]
+    pub fn slice_segment_address(mut self, slice_segment_address: u32) -> Self {
+        self.slice_segment_address = slice_segment_address;
+        self
+    }
+    #[inline]
+    pub fn short_term_ref_pic_set_idx(mut self, short_term_ref_pic_set_idx: u8) -> Self {
+        self.short_term_ref_pic_set_idx = short_term_ref_pic_set_idx;
+        self
+    }
+    #[inline]
+    pub fn collocated_ref_idx(mut self, collocated_ref_idx: u8) -> Self {
+        self.collocated_ref_idx = collocated_ref_idx;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l0_active_minus1(mut self, num_ref_idx_l0_active_minus1: u8) -> Self {
+        self.num_ref_idx_l0_active_minus1 = num_ref_idx_l0_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn num_ref_idx_l1_active_minus1(mut self, num_ref_idx_l1_active_minus1: u8) -> Self {
+        self.num_ref_idx_l1_active_minus1 = num_ref_idx_l1_active_minus1;
+        self
+    }
+    #[inline]
+    pub fn max_num_merge_cand(mut self, max_num_merge_cand: u8) -> Self {
+        self.max_num_merge_cand = max_num_merge_cand;
+        self
+    }
+    #[inline]
+    pub fn slice_cb_qp_offset(mut self, slice_cb_qp_offset: i8) -> Self {
+        self.slice_cb_qp_offset = slice_cb_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn slice_cr_qp_offset(mut self, slice_cr_qp_offset: i8) -> Self {
+        self.slice_cr_qp_offset = slice_cr_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn slice_beta_offset_div2(mut self, slice_beta_offset_div2: i8) -> Self {
+        self.slice_beta_offset_div2 = slice_beta_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn slice_tc_offset_div2(mut self, slice_tc_offset_div2: i8) -> Self {
+        self.slice_tc_offset_div2 = slice_tc_offset_div2;
+        self
+    }
+    #[inline]
+    pub fn slice_act_y_qp_offset(mut self, slice_act_y_qp_offset: i8) -> Self {
+        self.slice_act_y_qp_offset = slice_act_y_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn slice_act_cb_qp_offset(mut self, slice_act_cb_qp_offset: i8) -> Self {
+        self.slice_act_cb_qp_offset = slice_act_cb_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn slice_act_cr_qp_offset(mut self, slice_act_cr_qp_offset: i8) -> Self {
+        self.slice_act_cr_qp_offset = slice_act_cr_qp_offset;
+        self
+    }
+    #[inline]
+    pub fn short_term_ref_pic_set(
+        mut self,
+        short_term_ref_pic_set: &'a StdVideoH265ShortTermRefPicSet,
+    ) -> Self {
+        self.p_short_term_ref_pic_set = short_term_ref_pic_set;
+        self
+    }
+    #[inline]
+    pub fn long_term_ref_pics(
+        mut self,
+        long_term_ref_pics: &'a StdVideoEncodeH265SliceSegmentLongTermRefPics,
+    ) -> Self {
+        self.p_long_term_ref_pics = long_term_ref_pics;
+        self
+    }
+    #[inline]
+    pub fn weight_table(mut self, weight_table: &'a StdVideoEncodeH265WeightTable) -> Self {
+        self.p_weight_table = weight_table;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265ReferenceModificationFlags.html>"]
+pub struct StdVideoEncodeH265ReferenceModificationFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH265ReferenceModificationFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH265ReferenceModificationFlags")
+            .field(
+                "ref_pic_list_modification_flag_l0",
+                &self.get_ref_pic_list_modification_flag_l0(),
+            )
+            .field(
+                "ref_pic_list_modification_flag_l1",
+                &self.get_ref_pic_list_modification_flag_l1(),
+            )
+            .finish()
+    }
+}
+impl StdVideoEncodeH265ReferenceModificationFlags {
+    #[inline]
+    pub fn ref_pic_list_modification_flag_l0(
+        mut self,
+        ref_pic_list_modification_flag_l0: bool,
+    ) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((ref_pic_list_modification_flag_l0 as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_ref_pic_list_modification_flag_l0(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn ref_pic_list_modification_flag_l1(
+        mut self,
+        ref_pic_list_modification_flag_l1: bool,
+    ) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((ref_pic_list_modification_flag_l1 as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_ref_pic_list_modification_flag_l1(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265ReferenceModifications.html>"]
+pub struct StdVideoEncodeH265ReferenceModifications<'a> {
+    pub flags: StdVideoEncodeH265ReferenceModificationFlags,
+    pub reference_list0_modifications_count: u8,
+    pub p_reference_list0_modifications: *const u8,
+    pub reference_list1_modifications_count: u8,
+    pub p_reference_list1_modifications: *const u8,
+    pub _marker: PhantomData<&'a ()>,
+}
+impl ::std::default::Default for StdVideoEncodeH265ReferenceModifications<'_> {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            flags: StdVideoEncodeH265ReferenceModificationFlags::default(),
+            reference_list0_modifications_count: u8::default(),
+            p_reference_list0_modifications: ::std::ptr::null(),
+            reference_list1_modifications_count: u8::default(),
+            p_reference_list1_modifications: ::std::ptr::null(),
+            _marker: PhantomData,
+        }
+    }
+}
+impl<'a> StdVideoEncodeH265ReferenceModifications<'a> {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH265ReferenceModificationFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn reference_list0_modifications_count(
+        mut self,
+        reference_list0_modifications_count: u8,
+    ) -> Self {
+        self.reference_list0_modifications_count = reference_list0_modifications_count;
+        self
+    }
+    #[inline]
+    pub fn reference_list0_modifications(mut self, reference_list0_modifications: &'a u8) -> Self {
+        self.p_reference_list0_modifications = reference_list0_modifications;
+        self
+    }
+    #[inline]
+    pub fn reference_list1_modifications_count(
+        mut self,
+        reference_list1_modifications_count: u8,
+    ) -> Self {
+        self.reference_list1_modifications_count = reference_list1_modifications_count;
+        self
+    }
+    #[inline]
+    pub fn reference_list1_modifications(mut self, reference_list1_modifications: &'a u8) -> Self {
+        self.p_reference_list1_modifications = reference_list1_modifications;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265PictureInfoFlags.html>"]
+pub struct StdVideoEncodeH265PictureInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH265PictureInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH265PictureInfoFlags")
+            .field("is_reference_flag", &self.get_is_reference_flag())
+            .field("irap_pic_flag", &self.get_irap_pic_flag())
+            .field("long_term_flag", &self.get_long_term_flag())
+            .field("discardable_flag", &self.get_discardable_flag())
+            .field("cross_layer_bla_flag", &self.get_cross_layer_bla_flag())
+            .finish()
+    }
+}
+impl StdVideoEncodeH265PictureInfoFlags {
+    #[inline]
+    pub fn is_reference_flag(mut self, is_reference_flag: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((is_reference_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_is_reference_flag(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn irap_pic_flag(mut self, irap_pic_flag: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((irap_pic_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_irap_pic_flag(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn long_term_flag(mut self, long_term_flag: bool) -> Self {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((long_term_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_long_term_flag(&self) -> bool {
+        const SHIFT: u8 = 2u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn discardable_flag(mut self, discardable_flag: bool) -> Self {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((discardable_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_discardable_flag(&self) -> bool {
+        const SHIFT: u8 = 3u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn cross_layer_bla_flag(mut self, cross_layer_bla_flag: bool) -> Self {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((cross_layer_bla_flag as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_cross_layer_bla_flag(&self) -> bool {
+        const SHIFT: u8 = 4u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265PictureInfo.html>"]
+pub struct StdVideoEncodeH265PictureInfo {
+    pub flags: StdVideoEncodeH265PictureInfoFlags,
+    pub picture_type: StdVideoH265PictureType,
+    pub sps_video_parameter_set_id: u8,
+    pub pps_seq_parameter_set_id: u8,
+    pub pps_pic_parameter_set_id: u8,
+    pub pic_order_cnt_val: i32,
+    pub temporal_id: u8,
+}
+impl StdVideoEncodeH265PictureInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH265PictureInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn picture_type(mut self, picture_type: StdVideoH265PictureType) -> Self {
+        self.picture_type = picture_type;
+        self
+    }
+    #[inline]
+    pub fn sps_video_parameter_set_id(mut self, sps_video_parameter_set_id: u8) -> Self {
+        self.sps_video_parameter_set_id = sps_video_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pps_seq_parameter_set_id(mut self, pps_seq_parameter_set_id: u8) -> Self {
+        self.pps_seq_parameter_set_id = pps_seq_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pps_pic_parameter_set_id(mut self, pps_pic_parameter_set_id: u8) -> Self {
+        self.pps_pic_parameter_set_id = pps_pic_parameter_set_id;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt_val(mut self, pic_order_cnt_val: i32) -> Self {
+        self.pic_order_cnt_val = pic_order_cnt_val;
+        self
+    }
+    #[inline]
+    pub fn temporal_id(mut self, temporal_id: u8) -> Self {
+        self.temporal_id = temporal_id;
+        self
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265ReferenceInfoFlags.html>"]
+pub struct StdVideoEncodeH265ReferenceInfoFlags {
+    pub bytes: u32,
+}
+#[cfg(feature = "debug")]
+impl fmt::Debug for StdVideoEncodeH265ReferenceInfoFlags {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("StdVideoEncodeH265ReferenceInfoFlags")
+            .field(
+                "used_for_long_term_reference",
+                &self.get_used_for_long_term_reference(),
+            )
+            .field("unused_for_reference", &self.get_unused_for_reference())
+            .finish()
+    }
+}
+impl StdVideoEncodeH265ReferenceInfoFlags {
+    #[inline]
+    pub fn used_for_long_term_reference(mut self, used_for_long_term_reference: bool) -> Self {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((used_for_long_term_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_used_for_long_term_reference(&self) -> bool {
+        const SHIFT: u8 = 0u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+    #[inline]
+    pub fn unused_for_reference(mut self, unused_for_reference: bool) -> Self {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        const CLEAR_MASK: u32 = !(MASK << SHIFT);
+        self.bytes &= CLEAR_MASK;
+        self.bytes |= ((unused_for_reference as u32) & MASK) << SHIFT;
+        self
+    }
+    #[inline]
+    pub fn get_unused_for_reference(&self) -> bool {
+        const SHIFT: u8 = 1u8;
+        const BIT_LEN: u8 = 1u8;
+        const MASK: u32 = (1 << BIT_LEN) - 1;
+        ((self.bytes >> SHIFT) & MASK) != 0
+    }
+}
+#[repr(C)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[derive(Copy, Clone, Default)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoEncodeH265ReferenceInfo.html>"]
+pub struct StdVideoEncodeH265ReferenceInfo {
+    pub flags: StdVideoEncodeH265ReferenceInfoFlags,
+    pub pic_order_cnt_val: i32,
+    pub temporal_id: u8,
+}
+impl StdVideoEncodeH265ReferenceInfo {
+    #[inline]
+    pub fn flags(mut self, flags: StdVideoEncodeH265ReferenceInfoFlags) -> Self {
+        self.flags = flags;
+        self
+    }
+    #[inline]
+    pub fn pic_order_cnt_val(mut self, pic_order_cnt_val: i32) -> Self {
+        self.pic_order_cnt_val = pic_order_cnt_val;
+        self
+    }
+    #[inline]
+    pub fn temporal_id(mut self, temporal_id: u8) -> Self {
+        self.temporal_id = temporal_id;
         self
     }
 }

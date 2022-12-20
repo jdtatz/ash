@@ -4001,6 +4001,7 @@ impl PeerMemoryFeatureFlags {
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl PipelineCreateFlags {
     pub const VIEW_INDEX_FROM_DEVICE_INDEX_KHR: Self = Self::VIEW_INDEX_FROM_DEVICE_INDEX;
+    pub const DISPATCH_BASE_KHR: Self = Self::DISPATCH_BASE;
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl StructureType {
@@ -18192,7 +18193,7 @@ impl ExtPipelinePropertiesFn {
 pub type PFN_vkGetPipelinePropertiesEXT = unsafe extern "system" fn(
     device: Device,
     p_pipeline_info: *const PipelineInfoEXT,
-    p_pipeline_properties: *mut BaseOutStructure,
+    p_pipeline_properties: *mut PipelinePropertiesIdentifierEXT,
 ) -> Result;
 #[derive(Clone)]
 pub struct ExtPipelinePropertiesFn {
@@ -18210,7 +18211,7 @@ impl ExtPipelinePropertiesFn {
                 unsafe extern "system" fn get_pipeline_properties_ext(
                     _device: Device,
                     _p_pipeline_info: *const PipelineInfoEXT,
-                    _p_pipeline_properties: *mut BaseOutStructure,
+                    _p_pipeline_properties: *mut PipelinePropertiesIdentifierEXT,
                 ) -> Result {
                     panic!(concat!(
                         "Unable to load ",

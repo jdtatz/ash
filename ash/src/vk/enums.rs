@@ -990,7 +990,40 @@ impl Result {
 impl ::std::error::Error for Result {}
 impl fmt::Display for Result {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let name = match * self { Self :: SUCCESS => Some ("Command completed successfully") , Self :: NOT_READY => Some ("A fence or query has not yet completed") , Self :: TIMEOUT => Some ("A wait operation has not completed in the specified time") , Self :: EVENT_SET => Some ("An event is signaled") , Self :: EVENT_RESET => Some ("An event is unsignaled") , Self :: INCOMPLETE => Some ("A return array was too small for the result") , Self :: ERROR_OUT_OF_HOST_MEMORY => Some ("A host memory allocation has failed") , Self :: ERROR_OUT_OF_DEVICE_MEMORY => Some ("A device memory allocation has failed") , Self :: ERROR_INITIALIZATION_FAILED => Some ("Initialization of an object has failed") , Self :: ERROR_DEVICE_LOST => Some ("The logical device has been lost. See <https://registry.khronos.org/vulkan/specs/1.3-extensions/html/vkspec.html#devsandqueues-lost-device>") , Self :: ERROR_MEMORY_MAP_FAILED => Some ("Mapping of a memory object has failed") , Self :: ERROR_LAYER_NOT_PRESENT => Some ("Layer specified does not exist") , Self :: ERROR_EXTENSION_NOT_PRESENT => Some ("Extension specified does not exist") , Self :: ERROR_FEATURE_NOT_PRESENT => Some ("Requested feature is not available on this device") , Self :: ERROR_INCOMPATIBLE_DRIVER => Some ("Unable to find a Vulkan driver") , Self :: ERROR_TOO_MANY_OBJECTS => Some ("Too many objects of the type have already been created") , Self :: ERROR_FORMAT_NOT_SUPPORTED => Some ("Requested format is not supported on this device") , Self :: ERROR_FRAGMENTED_POOL => Some ("A requested pool allocation has failed due to fragmentation of the pool's memory") , Self :: ERROR_UNKNOWN => Some ("An unknown error has occurred, due to an implementation or application bug") , _ => None , } ;
+        let name = match *self {
+            Self::SUCCESS => Some("Command completed successfully"),
+            Self::NOT_READY => Some("A fence or query has not yet completed"),
+            Self::TIMEOUT => Some("A wait operation has not completed in the specified time"),
+            Self::EVENT_SET => Some("An event is signaled"),
+            Self::EVENT_RESET => Some("An event is unsignaled"),
+            Self::INCOMPLETE => Some("A return array was too small for the result"),
+            Self::ERROR_OUT_OF_HOST_MEMORY => Some("A host memory allocation has failed"),
+            Self::ERROR_OUT_OF_DEVICE_MEMORY => Some("A device memory allocation has failed"),
+            Self::ERROR_INITIALIZATION_FAILED => Some("Initialization of an object has failed"),
+            Self::ERROR_DEVICE_LOST => {
+                Some("The logical device has been lost. See <<devsandqueues-lost-device>>")
+            }
+            Self::ERROR_MEMORY_MAP_FAILED => Some("Mapping of a memory object has failed"),
+            Self::ERROR_LAYER_NOT_PRESENT => Some("Layer specified does not exist"),
+            Self::ERROR_EXTENSION_NOT_PRESENT => Some("Extension specified does not exist"),
+            Self::ERROR_FEATURE_NOT_PRESENT => {
+                Some("Requested feature is not available on this device")
+            }
+            Self::ERROR_INCOMPATIBLE_DRIVER => Some("Unable to find a Vulkan driver"),
+            Self::ERROR_TOO_MANY_OBJECTS => {
+                Some("Too many objects of the type have already been created")
+            }
+            Self::ERROR_FORMAT_NOT_SUPPORTED => {
+                Some("Requested format is not supported on this device")
+            }
+            Self::ERROR_FRAGMENTED_POOL => Some(
+                "A requested pool allocation has failed due to fragmentation of the pool's memory",
+            ),
+            Self::ERROR_UNKNOWN => {
+                Some("An unknown error has occurred, due to an implementation or application bug")
+            }
+            _ => None,
+        };
         if let Some(x) = name {
             fmt.write_str(x)
         } else {
@@ -1733,17 +1766,17 @@ impl VendorId {
 }
 impl VendorId {
     #[doc = "Vivante vendor ID"]
-    pub const VIV: Self = Self(0x1_0001);
+    pub const VIV: Self = Self(65_537);
     #[doc = "VeriSilicon vendor ID"]
-    pub const VSI: Self = Self(0x1_0002);
+    pub const VSI: Self = Self(65_538);
     #[doc = "Kazan Software Renderer"]
-    pub const KAZAN: Self = Self(0x1_0003);
+    pub const KAZAN: Self = Self(65_539);
     #[doc = "Codeplay Software Ltd. vendor ID"]
-    pub const CODEPLAY: Self = Self(0x1_0004);
+    pub const CODEPLAY: Self = Self(65_540);
     #[doc = "Mesa vendor ID"]
-    pub const MESA: Self = Self(0x1_0005);
+    pub const MESA: Self = Self(65_541);
     #[doc = "PoCL vendor ID"]
-    pub const POCL: Self = Self(0x1_0006);
+    pub const POCL: Self = Self(65_542);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2779,6 +2812,478 @@ impl DeviceFaultVendorBinaryHeaderVersionEXT {
 }
 impl DeviceFaultVendorBinaryHeaderVersionEXT {
     pub const ONE: Self = Self(1);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264ChromaFormatIdc.html>"]
+pub struct StdVideoH264ChromaFormatIdc(pub(crate) i32);
+impl StdVideoH264ChromaFormatIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264ChromaFormatIdc {
+    pub const MONOCHROME: Self = Self(0);
+    pub const TYPE_420: Self = Self(1);
+    pub const TYPE_422: Self = Self(2);
+    pub const TYPE_444: Self = Self(3);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264ProfileIdc.html>"]
+pub struct StdVideoH264ProfileIdc(pub(crate) i32);
+impl StdVideoH264ProfileIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264ProfileIdc {
+    #[doc = "Only constrained baseline is supported"]
+    pub const BASELINE: Self = Self(66);
+    pub const MAIN: Self = Self(77);
+    pub const HIGH: Self = Self(100);
+    pub const HIGH_444_PREDICTIVE: Self = Self(244);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264LevelIdc.html>"]
+pub struct StdVideoH264LevelIdc(pub(crate) i32);
+impl StdVideoH264LevelIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264LevelIdc {
+    pub const TYPE_1_0: Self = Self(0);
+    pub const TYPE_1_1: Self = Self(1);
+    pub const TYPE_1_2: Self = Self(2);
+    pub const TYPE_1_3: Self = Self(3);
+    pub const TYPE_2_0: Self = Self(4);
+    pub const TYPE_2_1: Self = Self(5);
+    pub const TYPE_2_2: Self = Self(6);
+    pub const TYPE_3_0: Self = Self(7);
+    pub const TYPE_3_1: Self = Self(8);
+    pub const TYPE_3_2: Self = Self(9);
+    pub const TYPE_4_0: Self = Self(10);
+    pub const TYPE_4_1: Self = Self(11);
+    pub const TYPE_4_2: Self = Self(12);
+    pub const TYPE_5_0: Self = Self(13);
+    pub const TYPE_5_1: Self = Self(14);
+    pub const TYPE_5_2: Self = Self(15);
+    pub const TYPE_6_0: Self = Self(16);
+    pub const TYPE_6_1: Self = Self(17);
+    pub const TYPE_6_2: Self = Self(18);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264PocType.html>"]
+pub struct StdVideoH264PocType(pub(crate) i32);
+impl StdVideoH264PocType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264PocType {
+    pub const TYPE_0: Self = Self(0);
+    pub const TYPE_1: Self = Self(1);
+    pub const TYPE_2: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264AspectRatioIdc.html>"]
+pub struct StdVideoH264AspectRatioIdc(pub(crate) i32);
+impl StdVideoH264AspectRatioIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264AspectRatioIdc {
+    pub const UNSPECIFIED: Self = Self(0);
+    pub const SQUARE: Self = Self(1);
+    pub const TYPE_12_11: Self = Self(2);
+    pub const TYPE_10_11: Self = Self(3);
+    pub const TYPE_16_11: Self = Self(4);
+    pub const TYPE_40_33: Self = Self(5);
+    pub const TYPE_24_11: Self = Self(6);
+    pub const TYPE_20_11: Self = Self(7);
+    pub const TYPE_32_11: Self = Self(8);
+    pub const TYPE_80_33: Self = Self(9);
+    pub const TYPE_18_11: Self = Self(10);
+    pub const TYPE_15_11: Self = Self(11);
+    pub const TYPE_64_33: Self = Self(12);
+    pub const TYPE_160_99: Self = Self(13);
+    pub const TYPE_4_3: Self = Self(14);
+    pub const TYPE_3_2: Self = Self(15);
+    pub const TYPE_2_1: Self = Self(16);
+    pub const EXTENDED_SAR: Self = Self(255);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264WeightedBipredIdc.html>"]
+pub struct StdVideoH264WeightedBipredIdc(pub(crate) i32);
+impl StdVideoH264WeightedBipredIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264WeightedBipredIdc {
+    pub const DEFAULT: Self = Self(0);
+    pub const EXPLICIT: Self = Self(1);
+    pub const IMPLICIT: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264ModificationOfPicNumsIdc.html>"]
+pub struct StdVideoH264ModificationOfPicNumsIdc(pub(crate) i32);
+impl StdVideoH264ModificationOfPicNumsIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264ModificationOfPicNumsIdc {
+    pub const SHORT_TERM_SUBTRACT: Self = Self(0);
+    pub const SHORT_TERM_ADD: Self = Self(1);
+    pub const LONG_TERM: Self = Self(2);
+    pub const END: Self = Self(3);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264MemMgmtControlOp.html>"]
+pub struct StdVideoH264MemMgmtControlOp(pub(crate) i32);
+impl StdVideoH264MemMgmtControlOp {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264MemMgmtControlOp {
+    pub const END: Self = Self(0);
+    pub const UNMARK_SHORT_TERM: Self = Self(1);
+    pub const UNMARK_LONG_TERM: Self = Self(2);
+    pub const MARK_LONG_TERM: Self = Self(3);
+    pub const SET_MAX_LONG_TERM_INDEX: Self = Self(4);
+    pub const UNMARK_ALL: Self = Self(5);
+    pub const MARK_CURRENT_AS_LONG_TERM: Self = Self(6);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264CabacInitIdc.html>"]
+pub struct StdVideoH264CabacInitIdc(pub(crate) i32);
+impl StdVideoH264CabacInitIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264CabacInitIdc {
+    pub const TYPE_0: Self = Self(0);
+    pub const TYPE_1: Self = Self(1);
+    pub const TYPE_2: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264DisableDeblockingFilterIdc.html>"]
+pub struct StdVideoH264DisableDeblockingFilterIdc(pub(crate) i32);
+impl StdVideoH264DisableDeblockingFilterIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264DisableDeblockingFilterIdc {
+    pub const DISABLED: Self = Self(0);
+    pub const ENABLED: Self = Self(1);
+    pub const PARTIAL: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264SliceType.html>"]
+pub struct StdVideoH264SliceType(pub(crate) i32);
+impl StdVideoH264SliceType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264SliceType {
+    pub const P: Self = Self(0);
+    pub const B: Self = Self(1);
+    pub const I: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264PictureType.html>"]
+pub struct StdVideoH264PictureType(pub(crate) i32);
+impl StdVideoH264PictureType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264PictureType {
+    pub const P: Self = Self(0);
+    pub const B: Self = Self(1);
+    pub const I: Self = Self(2);
+    pub const IDR: Self = Self(5);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH264NonVclNaluType.html>"]
+pub struct StdVideoH264NonVclNaluType(pub(crate) i32);
+impl StdVideoH264NonVclNaluType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH264NonVclNaluType {
+    pub const SPS: Self = Self(0);
+    pub const PPS: Self = Self(1);
+    pub const AUD: Self = Self(2);
+    pub const PREFIX: Self = Self(3);
+    pub const END_OF_SEQUENCE: Self = Self(4);
+    pub const END_OF_STREAM: Self = Self(5);
+    pub const PRECODED: Self = Self(6);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoDecodeH264FieldOrderCount.html>"]
+pub struct StdVideoDecodeH264FieldOrderCount(pub(crate) i32);
+impl StdVideoDecodeH264FieldOrderCount {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoDecodeH264FieldOrderCount {
+    pub const TOP: Self = Self(0);
+    pub const BOTTOM: Self = Self(1);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ChromaFormatIdc.html>"]
+pub struct StdVideoH265ChromaFormatIdc(pub(crate) i32);
+impl StdVideoH265ChromaFormatIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265ChromaFormatIdc {
+    pub const MONOCHROME: Self = Self(0);
+    pub const TYPE_420: Self = Self(1);
+    pub const TYPE_422: Self = Self(2);
+    pub const TYPE_444: Self = Self(3);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265ProfileIdc.html>"]
+pub struct StdVideoH265ProfileIdc(pub(crate) i32);
+impl StdVideoH265ProfileIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265ProfileIdc {
+    pub const MAIN: Self = Self(1);
+    pub const MAIN_10: Self = Self(2);
+    pub const MAIN_STILL_PICTURE: Self = Self(3);
+    pub const FORMAT_RANGE_EXTENSIONS: Self = Self(4);
+    pub const SCC_EXTENSIONS: Self = Self(9);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265LevelIdc.html>"]
+pub struct StdVideoH265LevelIdc(pub(crate) i32);
+impl StdVideoH265LevelIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265LevelIdc {
+    pub const TYPE_1_0: Self = Self(0);
+    pub const TYPE_2_0: Self = Self(1);
+    pub const TYPE_2_1: Self = Self(2);
+    pub const TYPE_3_0: Self = Self(3);
+    pub const TYPE_3_1: Self = Self(4);
+    pub const TYPE_4_0: Self = Self(5);
+    pub const TYPE_4_1: Self = Self(6);
+    pub const TYPE_5_0: Self = Self(7);
+    pub const TYPE_5_1: Self = Self(8);
+    pub const TYPE_5_2: Self = Self(9);
+    pub const TYPE_6_0: Self = Self(10);
+    pub const TYPE_6_1: Self = Self(11);
+    pub const TYPE_6_2: Self = Self(12);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265SliceType.html>"]
+pub struct StdVideoH265SliceType(pub(crate) i32);
+impl StdVideoH265SliceType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265SliceType {
+    pub const B: Self = Self(0);
+    pub const P: Self = Self(1);
+    pub const I: Self = Self(2);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265PictureType.html>"]
+pub struct StdVideoH265PictureType(pub(crate) i32);
+impl StdVideoH265PictureType {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265PictureType {
+    pub const P: Self = Self(0);
+    pub const B: Self = Self(1);
+    pub const I: Self = Self(2);
+    pub const IDR: Self = Self(3);
+    pub const INVALID: Self = Self(2_147_483_647);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/StdVideoH265AspectRatioIdc.html>"]
+pub struct StdVideoH265AspectRatioIdc(pub(crate) i32);
+impl StdVideoH265AspectRatioIdc {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl StdVideoH265AspectRatioIdc {
+    pub const UNSPECIFIED: Self = Self(0);
+    pub const SQUARE: Self = Self(1);
+    pub const TYPE_12_11: Self = Self(2);
+    pub const TYPE_10_11: Self = Self(3);
+    pub const TYPE_16_11: Self = Self(4);
+    pub const TYPE_40_33: Self = Self(5);
+    pub const TYPE_24_11: Self = Self(6);
+    pub const TYPE_20_11: Self = Self(7);
+    pub const TYPE_32_11: Self = Self(8);
+    pub const TYPE_80_33: Self = Self(9);
+    pub const TYPE_18_11: Self = Self(10);
+    pub const TYPE_15_11: Self = Self(11);
+    pub const TYPE_64_33: Self = Self(12);
+    pub const TYPE_160_99: Self = Self(13);
+    pub const TYPE_4_3: Self = Self(14);
+    pub const TYPE_3_2: Self = Self(15);
+    pub const TYPE_2_1: Self = Self(16);
+    pub const EXTENDED_SAR: Self = Self(255);
+    pub const INVALID: Self = Self(2_147_483_647);
 }
 impl fmt::Debug for ObjectType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

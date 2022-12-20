@@ -33,7 +33,6 @@ pub type GgpFrameToken = u64;
 pub type IDirectFB = c_void;
 pub type IDirectFBSurface = c_void;
 pub type __IOSurface = c_void;
-pub type IOSurfaceRef = *mut __IOSurface;
 pub type MTLBuffer_id = *mut c_void;
 pub type MTLCommandQueue_id = *mut c_void;
 pub type MTLDevice_id = *mut c_void;
